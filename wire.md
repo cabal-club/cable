@@ -28,12 +28,13 @@ want to use [noise][] yourself ([which is what i2p uses][ntcp2]).
 
 # messages
 
-All messages begin with a `msg_type` varint:
+All messages begin with a `msg_len` and a `msg_type` varint:
 
 ```
-field    | type
----------+-------
-msg_type | varint 
+field    | type   | desc
+---------+--------+-------------------------------------------------------------
+msg_len  | varint | number of bytes in this message, including the msg_len field
+msg_type | varint | see fields below
 ```
 
 More fields follow after the `msg_type`.
@@ -59,6 +60,7 @@ Respond with a list of hashes.
 ```
 field      | type              | desc
 -----------+-------------------+-------------------------------------
+msg_len    | varint            | number of bytes in this message
 msg_type   | varint (=0)       |
 req_id     | u8[4]             | id this is in response to
 hash_count | varint            | number of hashes in the response
@@ -72,6 +74,7 @@ Respond with a list of results for data lookups by hash.
 ```
 field      | type              | desc
 -----------+-------------------+--------------------------
+msg_len    | varint            | number of bytes in this message
 msg_type   | varint (=1)       |
 req_id     | u8[4]             | id this is in response to
 data_len   | varint            | length of data field
@@ -88,6 +91,7 @@ Each request begins with these two fields (after the `msg_type` applicable to al
 ```
 field    | type     | desc
 ---------+----------+-----------------------------------
+msg_len  | varint   | number of bytes in this message
 msg_type | varint   |
 req_id   | u8[4]    | unique id of this request (random)
 ttl      | varint   | number of hops remaining
@@ -109,6 +113,7 @@ Request data for a set of hashes.
 ```
 field      | type              | desc
 -----------+-------------------+-------------------------------------
+msg_len    | varint            | number of bytes in this message
 msg_type   | varint            |
 req_id     | u8[4]             | unique id of this request (random)
 ttl        | varint            | number of hops remaining
@@ -128,6 +133,7 @@ using a cancel request.
 ```
 field      | type              | desc
 -----------+-------------------+-----------------------------------
+msg_len    | varint            | number of bytes in this message
 msg_type   | varint            |
 req_id     | u8[4]             | stop receiving results for this id
 ```
@@ -142,6 +148,7 @@ Request the hashes of all posts in a channel between a time start and end.
 ```
 field        | type             | desc
 -------------+------------------+----------------------------
+msg_len      | varint           | number of bytes in this message
 msg_type     | varint           |
 req_id       | u8[4]            | unique id of this request (random)
 ttl          | varint           | number of hops remaining
@@ -162,6 +169,7 @@ Request the state of a channel and subscribe to updates.
 ```
 field        | type             | desc
 -------------+------------------+-----------------------------------
+msg_len      | varint           | number of bytes in this message
 msg_type     | varint           |
 req_id       | u8[4]            | unique id of this request (random)
 ttl          | varint           | number of hops remaining
@@ -188,6 +196,7 @@ Request a list of known channels from peers.
 ```
 field        | type             | desc
 -------------+------------------+-----------------------------------
+msg_len      | varint           | number of bytes in this message
 msg_type     | varint           |
 req_id       | u8[4]            | unique id of this request (random)
 ttl          | varint           | number of hops remaining
