@@ -32,7 +32,7 @@ All messages begin with a `msg_len` and a `msg_type` varint:
 
 field    | type   | desc
 ---------|--------|-------------------------------------------------------------
-msg_len  | varint | number of bytes in this message, including the msg_len field
+msg_len  | varint | number of bytes in rest of message, i.e. not including the `msg_len` field
 msg_type | varint | see fields below
 
 More fields follow after the `msg_type`.
