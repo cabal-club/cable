@@ -30,7 +30,10 @@ want to use [noise][] yourself ([which is what i2p uses][ntcp2]).
 
 All messages begin with a `msg_len` and a `msg_type` varint:
 
-_**note**: cable uses protobuf-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). For an example implementation of varint encoding/decoding, see the [nodejs varint package](https://www.npmjs.com/package/varint)_
+_**note**: cable uses protobuf-style
+[varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). For an example
+implementation of varint encoding/decoding, see the
+[nodejs varint package](https://www.npmjs.com/package/varint)_
 
 field    | type   | desc
 ---------|--------|-------------------------------------------------------------
