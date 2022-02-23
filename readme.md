@@ -47,6 +47,11 @@ Requests and responses all have a unique `msg_type`.
 Clients may experiment with custom message types beyond the ids used by this specification
 (where `msg_type>=64`).
 
+Requests and responses may set a `circuit_id` to establish a path between nodes so that intermediate
+nodes can more intelligently route requests without duplicating messages to multiple peer
+connections. Otherwise intermediate nodes would need to reply to multiple connected peers with
+results even if those peers are not involved in a query.
+
 ## responses
 
 There are 2 types of responses:
@@ -77,6 +82,7 @@ field       | type              | desc
 msg\_len    | varint            | number of bytes in this message
 msg\_type   | varint (=1)       |
 req\_id     | u8[4]             | id this is in response to
+circuit\_id | u8[4]             | circuit for an established path or `[0,0,0,0]` for no circuit
 data\_len   | varint            | length of data field
 data        | u8[data_len]      | response payload
 ...         |                   |
@@ -88,12 +94,13 @@ Receive (`data_len`,`data`) pairs until `data_len` is 0.
 
 Each request begins with these two fields (after the `msg_type` applicable to all messages):
 
-field    | type     | desc
----------|----------|-----------------------------------
-msg_len  | varint   | number of bytes in this message
-msg_type | varint   |
-req_id   | u8[4]    | unique id of this request (random)
-ttl      | varint   | number of hops remaining
+field      | type     | desc
+-----------|----------|-----------------------------------
+msg_len    | varint   | number of bytes in this message
+msg_type   | varint   |
+req_id     | u8[4]    | unique id of this request (random)
+circuit_id | u8[4]    | circuit for an established path or `[0,0,0,0]` for no circuit
+ttl        | varint   | number of hops remaining
 
 
 More fields follow for different request types below.
@@ -109,14 +116,15 @@ detected by peers.
 
 Request data for a set of hashes.
 
-field      | type               | desc
------------|--------------------|-------------------------------------
-msg_len    | varint             | number of bytes in this message
-msg_type   | varint             |
-req_id     | u8[4]              | unique id of this request (random)
-ttl        | varint             | number of hops remaining
-hash_count | varint             | number of hashes to request
-hashes     | u8[32*hash\_count] | blake2b hashes concatenated together
+field       | type               | desc
+------------|--------------------|-------------------------------------
+msg\_len    | varint             | number of bytes in this message
+msg\_type   | varint             |
+req\_id     | u8[4]              | unique id of this request (random)
+circuit\_id | u8[4]              | circuit for an established path or `[0,0,0,0]` for no circuit
+ttl         | varint             | number of hops remaining
+hash\_count | varint             | number of hashes to request
+hashes      | u8[32*hash\_count] | blake2b hashes concatenated together
 
 Results are provided by a data response (`msg_type=1`).
 
@@ -127,11 +135,12 @@ Stop receiving results for a request.
 Some requests stay open and wait for data to arrive. You can close these long-running subscriptions
 using a cancel request.
 
-field       | type              | desc
-------------|-------------------|-----------------------------------
-msg\_len    | varint            | number of bytes in this message
-msg\_type   | varint            |
-req\_id     | u8[4]             | stop receiving results for this id
+field       | type     | desc
+------------|----------|-----------------------------------
+msg\_len    | varint   | number of bytes in this message
+msg\_type   | varint   |
+req\_id     | u8[4]    | stop receiving results for this id
+circuit\_id | u8[4]    | circuit for an established path or `[0,0,0,0]` for no circuit
 
 If a peer is forwarding results for this request, the message should be passed
 upstream accordingly.
@@ -145,6 +154,7 @@ field         | type              | desc
 msg\_len      | varint            | number of bytes in this message
 msg\_type     | varint            |
 req\_id       | u8[4]             | unique id of this request (random)
+circuit\_id   | u8[4]             | circuit for an established path or `[0,0,0,0]` for no circuit
 ttl           | varint            | number of hops remaining
 channel\_size | varint            | length of the channel in bytes
 channel       | u8[channel\_size] | channel name as a string of text
@@ -164,6 +174,7 @@ field         | type              | desc
 msg\_len      | varint            | number of bytes in this message
 msg\_type     | varint            |
 req\_id       | u8[4]             | unique id of this request (random)
+circuit\_id   | u8[4]             | circuit for an established path or `[0,0,0,0]` for no circuit
 ttl           | varint            | number of hops remaining
 channel\_size | varint            | length of the channel in bytes
 channel       | u8[channel\_size] | channel name as a string of text
@@ -184,13 +195,16 @@ reached.
 
 Request a list of known channels from peers.
 
-field        | type             | desc
--------------|------------------|-----------------------------------
-msg\_len     | varint           | number of bytes in this message
-msg\_type    | varint           |
-req\_id      | u8[4]            | unique id of this request (random)
-ttl          | varint           | number of hops remaining
-limit        | varint           | maximum number of records to return
+field        | type    | desc
+-------------|---------|-----------------------------------
+msg\_len     | varint  | number of bytes in this message
+msg\_type    | varint  |
+req\_id      | u8[4]   | unique id of this request (random)
+circuit\_id  | u8[4]   | circuit for an established path or `[0,0,0,0]` for no circuit
+ttl          | varint  | number of hops remaining
+limit        | varint  | maximum number of records to return
+
+The results for this query are provided by a data response.
 
 # post
 
