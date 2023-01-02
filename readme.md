@@ -2,7 +2,7 @@
 
 This document describes the bytes over the wire to speak the cable protocol.
 
-You will need libsodium bindings or their equivalents for:
+You will need [libsodium](https://doc.libsodium.org/) bindings or their equivalents for:
 
 * `crypto_generichash()` - to hash messages with blake2
 * `crypto_sign_keypair()` - to generate public and secret ed25519 keys
