@@ -181,7 +181,6 @@ req_id       | u8[4]            | unique id of this request (random)
 ttl          | varint           | number of hops remaining
 channel_size | varint           | length of the channel in bytes
 channel      | u8[channel_size] | channel name as a string of text
-limit        | varint           | maximum number of historic posts to return
 updates      | varint           | maximum number of live posts to return
 
 This request expects 0 or more `hash response`s in response, that pertain to
@@ -192,17 +191,17 @@ The current state of the channel at a given moment is fully described by:
 - The latest of each user's `post/join` or `post/leave` post to the channel.
 - The latest `post/topic` post to channel, made by any user who posted it while
   being a member of the channel.
-- The latest `post/info` post of each user in the channel, even if made while
-  not a member of the channel.
+- The latest `post/info` post of each user who is a member of the channel, even
+  if made while not a member of the channel.
 
-Here "historic updates(word choice?)" refers to updates that occurred in the past. A request
-for `limit=5` records would expect the 5 latest updates for the given channel.
+This request expects *all* historic posts that make up the channel state to be
+returned, followed by up to `updates` number of live posts that further alter
+this channel's state.
 
-Set `limit` to 0 to not receive any historical updates and set `updates` to 0 to not receive any
-live updates.
+Set `updates` to 0 to not receive any live state updates.
 
-The responses will keep coming until this request is cancelled or until the `updates` limit is
-reached.
+The responses will keep coming until this request is cancelled or until the
+`updates` limit is reached.
 
 ### request channel list (`msg_type=6`)
 
