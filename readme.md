@@ -159,7 +159,7 @@ more posts as they arrive, up to `limit` number of posts.
 
 ### request channel state (`msg_type=5`)
 
-Request the state of a channel and subscribe to updates.
+Request posts that describe the state of a channel, and subscribe to updates.
 
 field        | type             | desc
 -------------|------------------|-----------------------------------
@@ -169,12 +169,13 @@ req_id       | u8[4]            | unique id of this request (random)
 ttl          | varint           | number of hops remaining
 channel_size | varint           | length of the channel in bytes
 channel      | u8[channel_size] | channel name as a string of text
-limit        | varint           | maximum number of records to return
-updates      | varint           | maximum number of live updates to return
+limit        | varint           | maximum number of historic posts to return
+updates      | varint           | maximum number of live posts to return
 
 This request expects 0 or more `hash response`s in response, that pertain to
 posts that describe the current state of the channel.
 
+(TODO: consider moving me to 'definitions')
 The current state of the channel at a given moment is fully described by:
 - The latest of each user's `post/join` or `post/leave` post to the channel.
 - The latest `post/topic` post to channel, made by any user who posted it while
