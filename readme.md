@@ -135,7 +135,7 @@ upstream accordingly.
 
 ### request channel time range (`msg_type=4`)
 
-Request the hashes of all posts in a channel between a time start and end.
+Request text posts and text post deletions written to a channel between a start and end time.
 
 field        | type             | desc
 -------------|------------------|----------------------------
@@ -149,8 +149,13 @@ time_start   | varint           | seconds since the epoch
 time_end     | varint           | seconds since the epoch
 limit        | varint           | maximum number of records to return
 
-If `time_end` is 0, request all messages since `time_start` and respond with more results as they
-arrive, up to `limit` number of results.
+This request returns 0 or more `hash response` responses.
+
+This request expects the hashes of all `post/text` and `post/delete` posts made
+to a channel by members between `time_start` and `time_end`.
+
+If `time_end` is 0, request all messages since `time_start` and respond with
+more posts as they arrive, up to `limit` number of posts.
 
 ### request channel state (`msg_type=5`)
 
