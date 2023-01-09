@@ -26,6 +26,18 @@ want to use [noise][] yourself ([which is what i2p uses][ntcp2]).
 * compact over the wire
 * use any kind of database
 
+# definitions
+## "client"
+An instance of a running implementation of cable.
+
+## "latest post"
+<stuff here about how "latest" means using timestamp + links>
+
+## "member of a channel"
+A user is considered a member of a channel at a particular point in time if,
+from the client's perspective, that user has issued a `post/join` to that
+channel and has not issued a `post/leave` since.
+
 # messages
 
 All messages begin with a `msg_len` and a `msg_type` varint:
