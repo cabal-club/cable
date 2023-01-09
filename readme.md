@@ -167,9 +167,18 @@ channel      | u8[channel_size] | channel name as a string of text
 limit        | varint           | maximum number of records to return
 updates      | varint           | maximum number of live updates to return
 
-The response is a list of hashes that pertain to posts that encompass the current state of the
-channel: parts, joins, topic changes, deletes in this channel, info updates for users in this
-channel.
+This request expects 0 or more `hash response`s in response, that pertain to
+posts that describe the current state of the channel.
+
+The current state of the channel at a given moment is fully described by:
+- The latest of each user's `post/join` or `post/leave` post to the channel.
+- The latest `post/topic` post to channel, made by any user who posted it while
+  being a member of the channel.
+- The latest `post/info` post of each user in the channel, even if made while
+  not a member of the channel.
+
+Here "historic updates(word choice?)" refers to updates that occurred in the past. A request
+for `limit=5` records would expect the 5 latest updates for the given channel.
 
 Set `limit` to 0 to not receive any historical updates and set `updates` to 0 to not receive any
 live updates.
