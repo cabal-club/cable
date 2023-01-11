@@ -217,17 +217,18 @@ limit        | varint           | maximum number of records to return
 
 # post
 
-Each post type begins with the same 4 fields: 
+Each post type begins with the same 5 fields:
 
-field      | type   | desc
------------|--------|-------------------------------------------------------
-public_key | u8[32] | ed25519 key that authored this post
-signature  | u8[64] | ed25519 signature of the fields that follow
-link       | u8[32] | blake2b hash of latest message in this channel/context
-post_type  | varint | see custom post type sections below
+field      | type             | desc
+-----------|------------------|-------------------------------------------------------
+public_key | u8[32]           | ed25519 key that authored this post
+signature  | u8[64]           | ed25519 signature of the fields that follow
+num_links  | varint           | how many blake2b hashes this post links back to (0+)
+links      | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
+post_type  | varint           | see custom post type sections below
 
-The post type sections below document the fields that follow these initial 4 fields depending on the
-`post_type`. Most post types will link to the most recent post in a channel from any user (from
+The post type sections below document the fields that follow these initial 5 fields depending on the
+`post_type`. Most post types will link to the most recent posts in a channel from any user (from
 their perspective) but self-actions such as naming or moderation will link to the most recent
 self-action.
 
@@ -245,7 +246,7 @@ criteria.
 The `post_type` is a varint, so if the post types below are inadequate, you can create your own
 using unused numbers (`>64`).
 
-Use a string of 32 zeros if there is nothing to link to.
+Specify `num_links=0` if there is nothing to link to.
 
 Clients should ignore posts with a `post_type` that they don't understand or support.
 
@@ -257,7 +258,8 @@ field        | type             | desc
 -------------|------------------|---------------------------------
 public_key   | u8[32]           | ed25519 key that authored this post
 signature    | u8[64]           | ed25519 signature of the fields that follow
-link         | u8[32]           | blake2b hash of latest message in this channel/context
+num_links    | varint           | how many blake2b hashes this post links back to (0+)
+links        | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
 post_type    | varint           | see custom post type sections below
 channel_size | varint           | length of the channel in bytes
 channel      | u8[channel_size] | channel name as a string of text
@@ -273,7 +275,8 @@ field        | type             | desc
 -------------|------------------|-------------------------
 public_key   | u8[32]           | ed25519 key that authored this post
 signature    | u8[64]           | ed25519 signature of the fields that follow
-link         | u8[32]           | blake2b hash of latest message in this channel/context
+num_links    | varint           | how many blake2b hashes this post links back to (0+)
+links        | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
 post_type    | varint           | see custom post type sections below
 timestamp    | varint           | seconds since unix epoch
 hash         | u8[32]           | blake2b hash of post
@@ -290,7 +293,8 @@ field      | type           | desc
 -----------|----------------|-------------------------
 public_key | u8[32]         | ed25519 key that authored this post
 signature  | u8[64]         | ed25519 signature of the fields that follow
-link       | u8[32]         | blake2b hash of latest message in this channel/context
+num_links  | varint           | how many blake2b hashes this post links back to (0+)
+links      | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
 post_type  | varint         | see custom post type sections below
 timestamp  | varint         | seconds since unix epoch
 key_size   | varint         | length of the name field
@@ -327,7 +331,8 @@ field        | type             | desc
 -------------|------------------|-------------------------------------------------------
 public_key   | u8[32]           | ed25519 key that authored this post
 signature    | u8[64]           | ed25519 signature of the fields that follow
-link         | u8[32]           | blake2b hash of latest message in this channel/context
+num_links    | varint           | how many blake2b hashes this post links back to (0+)
+links        | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
 post_type    | varint           | see custom post type sections below
 channel_size | varint           | length of the channel in bytes
 channel      | u8[channel_size] | channel name as a string of text
@@ -345,7 +350,8 @@ field        | type             | desc
 -------------|------------------|-------------------------------------------------------
 public_key   | u8[32]           | ed25519 key that authored this post
 signature    | u8[64]           | ed25519 signature of the fields that follow
-link         | u8[32]           | blake2b hash of latest message in this channel/context
+num_links    | varint           | how many blake2b hashes this post links back to (0+)
+links        | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
 post_type    | varint           | see custom post type sections below
 channel_size | varint           | length of the channel in bytes
 channel      | u8[channel_size] | channel name as a string of text
@@ -361,7 +367,8 @@ field        | type             | desc
 -------------|------------------|-------------------------------------------------------
 public_key   | u8[32]           | ed25519 key that authored this post
 signature    | u8[64]           | ed25519 signature of the fields that follow
-link         | u8[32]           | blake2b hash of latest message in this channel/context
+num_links    | varint           | how many blake2b hashes this post links back to (0+)
+links        | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
 post_type    | varint           | see custom post type sections below
 channel_size | varint           | length of the channel in bytes
 channel      | u8[channel_size] | channel name as a string of text
