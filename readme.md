@@ -189,10 +189,10 @@ posts that describe the current state of the channel.
 (TODO: consider moving me to 'definitions')
 The current state of the channel at a given moment is fully described by:
 - The latest of each user's `post/join` or `post/leave` post to the channel.
-- The latest `post/topic` post to channel, made by any user who posted it while
-  being a member of the channel.
-- The latest `post/info` post of each user who is a member of the channel, even
-  if made while not a member of the channel.
+- The latest `post/info` post of each user who is *or was* a member of the
+  channel, even if made while not a member of the channel. (open question)
+- The latest `post/topic` post to channel, made by any user, even if they
+  weren't a member of the channel when they posted it. (open question)
 
 This request expects *all* historic posts that make up the channel state to be
 returned, followed by up to `updates` number of live posts that further alter
