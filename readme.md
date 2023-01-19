@@ -144,9 +144,9 @@ field      | type              | desc
 msg_len    | varint            | number of bytes in this message
 msg_type   | varint            |
 req_id     | u8[4]             | stop receiving results for this id
+ttl        | varint            | ignored
 
-If a peer is forwarding results for this request, the message should be passed
-upstream accordingly.
+This request should be passed along to any peers to which this peer has forwarded the original request.
 
 ### request channel time range (`msg_type=4`)
 
