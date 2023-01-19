@@ -134,7 +134,7 @@ Results are provided by a data response (`msg_type=1`).
 
 ### cancel request (`msg_type=3`)
 
-Stop receiving results for a request.
+Indicate a desire to stop receiving responses for any request.
 
 Some requests stay open and wait for data to arrive. You can close these long-running subscriptions
 using a cancel request.
