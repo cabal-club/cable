@@ -85,13 +85,16 @@ field      | type              | desc
 -----------|-------------------|--------------------------
 msg_len    | varint            | number of bytes in this message
 msg_type   | varint (=1)       |
-req_id     | u8[4]             | id this is in response to
-data_len   | varint            | length of data field
-data       | u8[data_len]      | response payload
+req_id     | u8[4]             | id that this is in response to
+data0_len  | varint            | length of first data payload
+data0      | u8[data_len]      | first data payload
+data1_len  | varint            | length of second data payload
+data1      | u8[data_len]      | second data payload
 ...        |                   |
+dataN_len  | varint            | length of Nth data payload
+dataN      | u8[data_len]      | Nth data payload
 
-
-Receive (`data_len`,`data`) pairs until `data_len` is 0.
+A recipient reads zero or more (`data_len`,`data`) pairs until `data_len` is 0.
 
 ## requests
 
