@@ -282,11 +282,9 @@ num_links    | varint           | how many blake2b hashes this post links back t
 links        | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
 post_type    | varint           | see custom post type sections below
 timestamp    | varint           | seconds since unix epoch
-hash         | u8[32]           | blake2b hash of post
+hash         | u8[32]           | blake2b hash of post to be deleted
 
 Clients may choose to interpret this message based on their moderation perspective.
-
-Clients that store data should subscribe to delete requests.
 
 ## post/info (`post_type=2`)
 
