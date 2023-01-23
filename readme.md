@@ -118,12 +118,16 @@ field      | type       | desc
 
 More fields follow for different request types below.
 
+The request ID, `req_id`, is to be a sequence of 4 bytes, generated randomly by
+the requestor, used to uniquely identify the request during its lifetime across
+the swarm of peers who may handle it.
+
 When `ttl > 0`, a peer can choose to forward a request along to other peers and forward the response
 back to the peer that made the request. Each peer performing this action should decrement the `ttl`
 by one.
 
-When forwarding a request, do not change the `req_id` so that routing loops can be more easily
-detected by peers.
+When forwarding a request, do not change the `req_id`, so that routing loops
+can be more easily detected by peers.
 
 ### request by hash (`msg_type=2`)
 
