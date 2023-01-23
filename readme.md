@@ -44,10 +44,10 @@ All messages begin with a `msg_len` and a `msg_type` varint:
 
 _**note**: cable uses protobuf-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). For an example implementation of varint encoding/decoding, see the [nodejs varint package](https://www.npmjs.com/package/varint)_
 
-field    | type   | desc
----------|--------|-------------------------------------------------------------
-msg_len  | varint | number of bytes in rest of message, i.e. not including the `msg_len` field
-msg_type | varint | see fields below
+field      | type     | desc
+-----------|----------|-------------------------------------------------------------
+`msg_len`  | `varint` | number of bytes in rest of message, i.e. not including the `msg_len` field
+`msg_type` | `varint` | see fields below
 
 More fields follow after the `msg_type`.
 
@@ -69,30 +69,30 @@ Multiple responses may be generated for a single request and results trickle in 
 
 Respond with a list of hashes.
 
-field      | type              | desc
------------|-------------------|-------------------------------------
-msg_len    | varint            | number of bytes in this message
-msg_type   | varint (=0)       |
-req_id     | u8[4]             | id this is in response to
-hash_count | varint            | number of hashes in the response
-hashes     | u8[hash_count*32] | blake2b hashes concatenated together
+field        | type                | desc
+-------------|---------------------|-------------------------------------
+`msg_len`    | `varint`            | number of bytes in this message
+`msg_type`   | `varint (=0)`       |
+`req_id`     | `u8[4]`             | id this is in response to
+`hash_count` | `varint`            | number of hashes in the response
+`hashes`     | `u8[hash_count*32]` | blake2b hashes concatenated together
 
 ### data response (`msg_type=1`)
 
 Respond with a list of results for data lookups by hash.
 
-field      | type              | desc
------------|-------------------|--------------------------
-msg_len    | varint            | number of bytes in this message
-msg_type   | varint (=1)       |
-req_id     | u8[4]             | id that this is in response to
-data0_len  | varint            | length of first data payload
-data0      | u8[data_len]      | first data payload
-data1_len  | varint            | length of second data payload
-data1      | u8[data_len]      | second data payload
-...        |                   |
-dataN_len  | varint            | length of Nth data payload
-dataN      | u8[data_len]      | Nth data payload
+field        | type                | desc
+-------------|---------------------|--------------------------
+`msg_len`    | `varint`            | number of bytes in this message
+`msg_type`   | `varint` (=1)       |
+`req_id`     | `u8[4]`             | id that this is in response to
+`data0_len`  | `varint`            | length of first data payload
+`data0`      | `u8[data_len]`      | first data payload
+`data1_len`  | `varint`            | length of second data payload
+`data1`      | `u8[data_len]`      | second data payload
+`...`        |                     |
+`dataN_len`  | `varint`            | length of Nth data payload
+`dataN`      | `u8[data_len]`      | Nth data payload
 
 A recipient reads zero or more (`data_len`,`data`) pairs until `data_len` is 0.
 
@@ -100,13 +100,12 @@ A recipient reads zero or more (`data_len`,`data`) pairs until `data_len` is 0.
 
 Each request begins with these two fields (after the `msg_type` applicable to all messages):
 
-field    | type     | desc
----------|----------|-----------------------------------
-msg_len  | varint   | number of bytes in this message
-msg_type | varint   |
-req_id   | u8[4]    | unique id of this request (random)
-ttl      | varint   | number of hops remaining
-
+field      | type       | desc
+-----------|------------|-----------------------------------
+`msg_len`  | `varint`   | number of bytes in this message
+`msg_type` | `varint`   |
+`req_id`   | `u8[4]`    | unique id of this request (random)
+`ttl`      | `varint`   | number of hops remaining
 
 More fields follow for different request types below.
 
@@ -121,14 +120,14 @@ detected by peers.
 
 Request data for a set of hashes.
 
-field      | type              | desc
------------|-------------------|-------------------------------------
-msg_len    | varint            | number of bytes in this message
-msg_type   | varint            |
-req_id     | u8[4]             | unique id of this request (random)
-ttl        | varint            | number of hops remaining
-hash_count | varint            | number of hashes to request
-hashes     | u8[32*hash_count] | blake2b hashes concatenated together
+field        | type                | desc
+-------------|---------------------|-------------------------------------
+`msg_len`    | `varint`            | number of bytes in this message
+`msg_type`   | `varint`            |
+`req_id`     | `u8[4]`             | unique id of this request (random)
+`ttl`        | `varint`            | number of hops remaining
+`hash_count` | `varint`            | number of hashes to request
+`hashes`     | `u8[32*hash_count]` | blake2b hashes concatenated together
 
 Results are provided by a data response (`msg_type=1`).
 
@@ -139,12 +138,12 @@ Indicate a desire to stop receiving responses for any request.
 Some requests stay open and wait for data to arrive. You can close these long-running subscriptions
 using a cancel request.
 
-field      | type              | desc
------------|-------------------|-----------------------------------
-msg_len    | varint            | number of bytes in this message
-msg_type   | varint            |
-req_id     | u8[4]             | stop receiving results for this id
-ttl        | varint            | ignored
+field        | type                | desc
+-------------|---------------------|-----------------------------------
+`msg_len`    | `varint`            | number of bytes in this message
+`msg_type`   | `varint`            |
+`req_id`     | `u8[4]`             | stop receiving results for this id
+`ttl`        | `varint`            | ignored
 
 This request should be passed along to any peers to which this peer has forwarded the original request.
 
@@ -152,17 +151,17 @@ This request should be passed along to any peers to which this peer has forwarde
 
 Request text posts and text post deletions written to a channel between a start and end time.
 
-field        | type             | desc
--------------|------------------|----------------------------
-msg_len      | varint           | number of bytes in this message
-msg_type     | varint           |
-req_id       | u8[4]            | unique id of this request (random)
-ttl          | varint           | number of hops remaining
-channel_size | varint           | length of the channel in bytes
-channel      | u8[channel_size] | channel name as a string of text
-time_start   | varint           | seconds since the epoch
-time_end     | varint           | seconds since the epoch
-limit        | varint           | maximum number of records to return
+field          | type               | desc
+---------------|--------------------|----------------------------
+`msg_len`      | `varint`           | number of bytes in this message
+`msg_type`     | `varint`           |
+`req_id`       | `u8[4]`            | unique id of this request (random)
+`ttl`          | `varint`           | number of hops remaining
+`channel_size` | `varint`           | length of the channel in bytes
+`channel`      | `u8[channel_size]` | channel name as a string of text
+`time_start`   | `varint`           | seconds since the epoch
+`time_end`     | `varint`           | seconds since the epoch
+`limit`        | `varint`           | maximum number of records to return
 
 This request returns 0 or more `hash response` responses.
 
@@ -176,15 +175,15 @@ more posts as they arrive, up to `limit` number of posts.
 
 Request posts that describe the state of a channel, and subscribe to updates.
 
-field        | type             | desc
--------------|------------------|-----------------------------------
-msg_len      | varint           | number of bytes in this message
-msg_type     | varint           |
-req_id       | u8[4]            | unique id of this request (random)
-ttl          | varint           | number of hops remaining
-channel_size | varint           | length of the channel in bytes
-channel      | u8[channel_size] | channel name as a string of text
-updates      | varint           | maximum number of live posts to return
+field          | type               | desc
+---------------|--------------------|-----------------------------------
+`msg_len`      | `varint`           | number of bytes in this message
+`msg_type`     | `varint`           |
+`req_id`       | `u8[4]`            | unique id of this request (random)
+`ttl`          | `varint`           | number of hops remaining
+`channel_size` | `varint`           | length of the channel in bytes
+`channel`      | `u8[channel_size]` | channel name as a string of text
+`updates`      | `varint`           | maximum number of live posts to return
 
 This request expects 0 or more `hash response`s in response, that pertain to
 posts that describe the current state of the channel.
@@ -210,25 +209,25 @@ The responses will keep coming until this request is cancelled or until the
 
 Request a list of known channels from peers.
 
-field        | type             | desc
--------------|------------------|-----------------------------------
-msg_len      | varint           | number of bytes in this message
-msg_type     | varint           |
-req_id       | u8[4]            | unique id of this request (random)
-ttl          | varint           | number of hops remaining
-limit        | varint           | maximum number of records to return
+field          | type               | desc
+---------------|--------------------|-----------------------------------
+`msg_len`      | `varint`           | number of bytes in this message
+`msg_type`     | `varint`           |
+`req_id`       | `u8[4]`            | unique id of this request (random)
+`ttl`          | `varint`           | number of hops remaining
+`limit`        | `varint`           | maximum number of records to return
 
 # post
 
 Each post type begins with the same 5 fields:
 
-field      | type             | desc
------------|------------------|-------------------------------------------------------
-public_key | u8[32]           | ed25519 key that authored this post
-signature  | u8[64]           | ed25519 signature of the fields that follow
-num_links  | varint           | how many blake2b hashes this post links back to (0+)
-links      | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
-post_type  | varint           | see custom post type sections below
+field        | type              | desc
+-------------|-------------------|-------------------------------------------------------
+`public_key` | `u8[32]`          | ed25519 key that authored this post
+`signature`  | `u8[64]`          | ed25519 signature of the fields that follow
+`num_links`  | `varint`          | how many blake2b hashes this post links back to (0+)
+`links`      | `u8[32*num_links]`| blake2b hashes of the latest messages in this channel/context
+`post_type`  | `varint`          | see custom post type sections below
 
 The post type sections below document the fields that follow these initial 5 fields depending on the
 `post_type`. Most post types will link to the most recent posts in a channel from any user (from
@@ -257,32 +256,32 @@ Clients should ignore posts with a `post_type` that they don't understand or sup
 
 Post a message in a channel.
 
-field        | type             | desc
--------------|------------------|---------------------------------
-public_key   | u8[32]           | ed25519 key that authored this post
-signature    | u8[64]           | ed25519 signature of the fields that follow
-num_links    | varint           | how many blake2b hashes this post links back to (0+)
-links        | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
-post_type    | varint           | see custom post type sections below
-channel_size | varint           | length of the channel in bytes
-channel      | u8[channel_size] | channel name as a string of text
-timestamp    | varint           | seconds since unix epoch
-text_size    | varint           | length of the text field
-text         | u8[text_size]    | message content
+field          | type               | desc
+---------------|--------------------|---------------------------------
+`public_key`   | `u8[32]`           | ed25519 key that authored this post
+`signature`    | `u8[64]`           | ed25519 signature of the fields that follow
+`num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
+`links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
+`post_type`    | `varint`           | see custom post type sections below
+`channel_size` | `varint`           | length of the channel in bytes
+`channel`      | `u8[channel_size]` | channel name as a string of text
+`timestamp`    | `varint`           | seconds since unix epoch
+`text_size`    | `varint`           | length of the text field
+`text`         | `u8[text_size]`    | message content
 
 ## post/delete (`post_type=1`)
 
 Request that peers delete a post by its hash.
 
-field        | type             | desc
--------------|------------------|-------------------------
-public_key   | u8[32]           | ed25519 key that authored this post
-signature    | u8[64]           | ed25519 signature of the fields that follow
-num_links    | varint           | how many blake2b hashes this post links back to (0+)
-links        | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
-post_type    | varint           | see custom post type sections below
-timestamp    | varint           | seconds since unix epoch
-hash         | u8[32]           | blake2b hash of post to be deleted
+field        | type               | desc
+-------------|--------------------|-------------------------
+`public_key` | `u8[32]`           | ed25519 key that authored this post
+`signature`  | `u8[64]`           | ed25519 signature of the fields that follow
+`num_links`  | `varint`           | how many blake2b hashes this post links back to (0+)
+`links`      | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
+`post_type`  | `varint`           | see custom post type sections below
+`timestamp`  | `varint`           | seconds since unix epoch
+`hash`       | `u8[32]`           | blake2b hash of post to be deleted
 
 Clients may choose to interpret this message based on their moderation perspective.
 
@@ -290,27 +289,27 @@ Clients may choose to interpret this message based on their moderation perspecti
 
 Set public information about yourself.
 
-field      | type           | desc
------------|----------------|-------------------------
-public_key | u8[32]         | ed25519 key that authored this post
-signature  | u8[64]         | ed25519 signature of the fields that follow
-num_links  | varint           | how many blake2b hashes this post links back to (0+)
-links      | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
-post_type  | varint         | see custom post type sections below
-timestamp  | varint         | seconds since unix epoch
-key_size   | varint         | length of the name field
-key        | u8[key_size]   | name string
-value_size | varint         | length of the value field
-value      | u8[value_size] | value
+field        | type               | desc
+-------------|--------------------|-------------------------
+`public_key` | `u8[32]`           | ed25519 key that authored this post
+`signature`  | `u8[64]`           | ed25519 signature of the fields that follow
+`num_links`  | `varint`           | how many blake2b hashes this post links back to (0+)
+`links`      | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
+`post_type`  | `varint`           | see custom post type sections below
+`timestamp`  | `varint`           | seconds since unix epoch
+`key_size`   | `varint`           | length of the name field
+`key`        | `u8[key_size]`     | name string
+`value_size` | `varint`           | length of the value field
+`value`      | `u8[value_size]`   | value
 
 Recommended fields for clients to support:
 
-key     | desc
---------|------------------------------------------------
-name    | handle to use as a pseudonym
-max_age | string maximum number of seconds to store posts
-blocks  | json object mapping hex keys to flag objects
-hides   | json object mapping hex keys to flag objects
+key       | desc
+----------|------------------------------------------------
+`name`    | handle to use as a pseudonym
+`max_age` | string maximum number of seconds to store posts
+`blocks`  | json object mapping hex keys to flag objects
+`hides`   | json object mapping hex keys to flag objects
 
 Set `max_age=0` to instruct peers to delete all data about you.
 
@@ -328,18 +327,18 @@ might want to swap with custom binary
 
 Set a topic for a channel.
 
-field        | type             | desc
--------------|------------------|-------------------------------------------------------
-public_key   | u8[32]           | ed25519 key that authored this post
-signature    | u8[64]           | ed25519 signature of the fields that follow
-num_links    | varint           | how many blake2b hashes this post links back to (0+)
-links        | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
-post_type    | varint           | see custom post type sections below
-channel_size | varint           | length of the channel in bytes
-channel      | u8[channel_size] | channel name as a string of text
-timestamp    | varint           | seconds since unix epoch
-topic_size   | varint           | length of the topic field
-topic        | u8[topic_size]   | topic content
+field          | type               | desc
+---------------|--------------------|-------------------------------------------------------
+`public_key`   | `u8[32]`           | ed25519 key that authored this post
+`signature`    | `u8[64]`           | ed25519 signature of the fields that follow
+`num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
+`links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
+`post_type`    | `varint`           | see custom post type sections below
+`channel_size` | `varint`           | length of the channel in bytes
+`channel`      | `u8[channel_size]` | channel name as a string of text
+`timestamp`    | `varint`           | seconds since unix epoch
+`topic_size`   | `varint`           | length of the topic field
+`topic`        | `u8[topic_size]`   | topic content
 
 Depending on moderation settings, other peers may choose to accept or reject your choice of topic.
 
@@ -347,16 +346,16 @@ Depending on moderation settings, other peers may choose to accept or reject you
 
 Join a channel.
 
-field        | type             | desc
--------------|------------------|-------------------------------------------------------
-public_key   | u8[32]           | ed25519 key that authored this post
-signature    | u8[64]           | ed25519 signature of the fields that follow
-num_links    | varint           | how many blake2b hashes this post links back to (0+)
-links        | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
-post_type    | varint           | see custom post type sections below
-channel_size | varint           | length of the channel in bytes
-channel      | u8[channel_size] | channel name as a string of text
-timestamp    | varint           | seconds since unix epoch
+field          | type               | desc
+---------------|--------------------|-------------------------------------------------------
+`public_key`   | `u8[32]`           | ed25519 key that authored this post
+`signature`    | `u8[64]`           | ed25519 signature of the fields that follow
+`num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
+`links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
+`post_type`    | `varint`           | see custom post type sections below
+`channel_size` | `varint`           | length of the channel in bytes
+`channel`      | `u8[channel_size]` | channel name as a string of text
+`timestamp`    | `varint`           | seconds since unix epoch
 
 Peers can obtain a link to anchor their join message by requesting a list of channels.
 
@@ -364,14 +363,14 @@ Peers can obtain a link to anchor their join message by requesting a list of cha
 
 Leave (part) a channel.
 
-field        | type             | desc
--------------|------------------|-------------------------------------------------------
-public_key   | u8[32]           | ed25519 key that authored this post
-signature    | u8[64]           | ed25519 signature of the fields that follow
-num_links    | varint           | how many blake2b hashes this post links back to (0+)
-links        | u8[32*num_links] | blake2b hashes of the latest messages in this channel/context
-post_type    | varint           | see custom post type sections below
-channel_size | varint           | length of the channel in bytes
-channel      | u8[channel_size] | channel name as a string of text
-timestamp    | varint           | seconds since unix epoch
+field          | type               | desc
+---------------|--------------------|-------------------------------------------------------
+`public_key`   | `u8[32]`           | ed25519 key that authored this post
+`signature`    | `u8[64]`           | ed25519 signature of the fields that follow
+`num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
+`links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
+`post_type`    | `varint`           | see custom post type sections below
+`channel_size` | `varint`           | length of the channel in bytes
+`channel`      | `u8[channel_size]` | channel name as a string of text
+`timestamp`    | `varint`           | seconds since unix epoch
 
