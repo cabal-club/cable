@@ -61,7 +61,7 @@ This example describes a binary payload that is 5 bytes long, where the one byte
 If `foo=17` and `bar=[3,6,8,64]`, the following binary payload would be expected:
 
 ```
-0x12 0x03 0x06 0x08 0x40
+0x11 0x03 0x06 0x08 0x40
 
  ^     ^^^^^^^^^^^^^^^
  |            |------------- bar = [3, 6, 8, 64]
