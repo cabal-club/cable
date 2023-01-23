@@ -48,8 +48,32 @@ is fully described by all of the following:
 - The latest `post/topic` post to channel, made by any user, regardless of
   current or past membership.
 
-## varint
-cable uses protobuf-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). For an example implementation of varint encoding/decoding, see the [nodejs varint package](https://www.npmjs.com/package/varint).
+## Binary format tables
+The binary format of messages and posts are described in this document using tables like the following:
+
+field      | type     | desc
+-----------|----------|-------------------------------------------------------------
+`foo`      | `u8`     | description of the field `foo`
+`bar`      | `u8[4]`  | description of the field `bar`
+
+This example describes a binary payload that is 5 bytes long, where the one byte of field `foo` is followed immediately by the 4 bytes describing `bar`.
+
+If `foo=17` and `bar=[3,6,8,64]`, the following binary payload would be expected:
+
+```
+0x12 0x03 0x06 0x08 0x40
+
+ ^     ^^^^^^^^^^^^^^^
+ |            |------------- bar = [3, 6, 8, 64]
+ |
+ |-------------------------- foo = 17
+```
+
+The following data types are used:
+- `u8`: a single unsigned byte
+- `u8[N]`: a sequence of exactly `N` unsigned bytes
+- `varint`: a variable-length unsigned integer. cable uses protobuf-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). (For an example implementation of varint encoding/decoding, see the [nodejs varint package](https://www.npmjs.com/package/varint).)
+
 
 # messages
 
