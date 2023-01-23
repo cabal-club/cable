@@ -89,6 +89,15 @@ When you "make a post", you are only writing to some local storage indexed by th
 content. Posts only get sent to other peers in response to queries for content matching certain
 criteria.
 
+## Request/Response Model
+Currently, all request types can generate potentially *many* responses. A
+request sent to a peer may result in several blocks of hashes or data being
+sent back by them as they scan their local database, and, if that peers
+forwards your request to its peers as well, they too may trickle back many
+responses over time.
+
+(upcoming: info about request lifetimes)
+
 # messages
 
 All messages begin with a `msg_len` and a `msg_type` varint:
