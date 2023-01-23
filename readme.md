@@ -85,6 +85,10 @@ written to local disk storage. A post always has an author (via a required
 `public_key` field), and always provides a signature (via the required
 `signature` field) to prove they authored it.
 
+When you "make a post", you are only writing to some local storage indexed by the hash of the
+content. Posts only get sent to other peers in response to queries for content matching certain
+criteria.
+
 # messages
 
 All messages begin with a `msg_len` and a `msg_type` varint:
@@ -283,10 +287,6 @@ will be in the correct order.
 
 Use `crypto_generichash()` with the default settings (`crypto_generichash_BYTES=32`) to hash
 incoming messages in order to resolve links. Hash the entire message with all fields. 
-
-When you "make a post", you are only writing to some local storage indexed by the hash of the
-content. Posts only get sent to other peers in response to queries for content matching certain
-criteria.
 
 The `post_type` is a varint, so if the post types below are inadequate, you can create your own
 using unused numbers (`>64`).
