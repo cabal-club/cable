@@ -167,7 +167,7 @@ field          | type               | desc
 `msg_type`     | `varint`           |
 `req_id`       | `u8[4]`            | unique id of this request (random)
 `ttl`          | `varint`           | number of hops remaining
-`channel_size` | `varint`           | length of the channel in bytes
+`channel_size` | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_size]` | channel name as a string of text
 `time_start`   | `varint`           | seconds since the epoch
 `time_end`     | `varint`           | seconds since the epoch
@@ -192,7 +192,7 @@ field          | type               | desc
 `msg_type`     | `varint`           |
 `req_id`       | `u8[4]`            | unique id of this request (random)
 `ttl`          | `varint`           | number of hops remaining
-`channel_size` | `varint`           | length of the channel in bytes
+`channel_size` | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_size]` | channel name as a string of text
 `historic`     | `varint`           | set to `1` to receive peer's view of current channel state; `0` to not
 `updates`      | `varint`           | maximum number of live / future posts to return
@@ -270,7 +270,7 @@ field          | type               | desc
 `num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
 `links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
-`channel_size` | `varint`           | length of the channel in bytes
+`channel_size` | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_size]` | channel name as a string of text
 `timestamp`    | `varint`           | seconds since unix epoch
 `text_size`    | `varint`           | length of the text field
@@ -337,7 +337,7 @@ field          | type               | desc
 `num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
 `links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
-`channel_size` | `varint`           | length of the channel in bytes
+`channel_size` | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_size]` | channel name as a string of text
 `timestamp`    | `varint`           | seconds since unix epoch
 `topic_size`   | `varint`           | length of the topic field
@@ -354,7 +354,7 @@ field          | type               | desc
 `num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
 `links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
-`channel_size` | `varint`           | length of the channel in bytes
+`channel_size` | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_size]` | channel name as a string of text
 `timestamp`    | `varint`           | seconds since unix epoch
 
@@ -371,7 +371,7 @@ field          | type               | desc
 `num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
 `links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
-`channel_size` | `varint`           | length of the channel in bytes
+`channel_size` | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_size]` | channel name as a string of text
 `timestamp`    | `varint`           | seconds since unix epoch
 
