@@ -30,9 +30,6 @@ want to use [noise][] yourself ([which is what i2p uses][ntcp2]).
 ## "client"
 An instance of a running implementation of cable.
 
-## "latest post"
-<stuff here about how "latest" means using timestamp + links>
-
 ## User
 A pair of ED25519 keys (public and private) is all that is needed to constitute
 a "user".
