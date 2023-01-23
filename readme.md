@@ -101,46 +101,6 @@ Requests and responses all have a unique `msg_type`.
 Clients may experiment with custom message types beyond the ids used by this specification
 (where `msg_type>=64`).
 
-## responses
-
-There are 2 types of responses:
-
-* hash response - a list of hashes (most queries return this)
-* data response - a list of data chunks (in response to a hash query)
-
-Multiple responses may be generated for a single request and results trickle in from peers.
-
-### hash response (`msg_type=0`)
-
-Respond with a list of hashes.
-
-field        | type                | desc
--------------|---------------------|-------------------------------------
-`msg_len`    | `varint`            | number of bytes in this message
-`msg_type`   | `varint (=0)`       |
-`req_id`     | `u8[4]`             | id this is in response to
-`hash_count` | `varint`            | number of hashes in the response
-`hashes`     | `u8[hash_count*32]` | blake2b hashes concatenated together
-
-### data response (`msg_type=1`)
-
-Respond with a list of results for data lookups by hash.
-
-field        | type                | desc
--------------|---------------------|--------------------------
-`msg_len`    | `varint`            | number of bytes in this message
-`msg_type`   | `varint` (=1)       |
-`req_id`     | `u8[4]`             | id that this is in response to
-`data0_len`  | `varint`            | length of first data payload
-`data0`      | `u8[data_len]`      | first data payload
-`data1_len`  | `varint`            | length of second data payload
-`data1`      | `u8[data_len]`      | second data payload
-`...`        |                     |
-`dataN_len`  | `varint`            | length of Nth data payload
-`dataN`      | `u8[data_len]`      | Nth data payload
-
-A recipient reads zero or more (`data_len`,`data`) pairs until `data_len` is 0.
-
 ## requests
 
 Each request begins with these two fields (after the `msg_type` applicable to all messages):
@@ -258,6 +218,47 @@ field          | type               | desc
 `req_id`       | `u8[4]`            | unique id of this request (random)
 `ttl`          | `varint`           | number of hops remaining
 `limit`        | `varint`           | maximum number of records to return
+
+## responses
+
+There are 2 types of responses:
+
+* hash response - a list of hashes (most queries return this)
+* data response - a list of data chunks (in response to a hash query)
+
+Multiple responses may be generated for a single request and results trickle in from peers.
+
+### hash response (`msg_type=0`)
+
+Respond with a list of hashes.
+
+field        | type                | desc
+-------------|---------------------|-------------------------------------
+`msg_len`    | `varint`            | number of bytes in this message
+`msg_type`   | `varint (=0)`       |
+`req_id`     | `u8[4]`             | id this is in response to
+`hash_count` | `varint`            | number of hashes in the response
+`hashes`     | `u8[hash_count*32]` | blake2b hashes concatenated together
+
+### data response (`msg_type=1`)
+
+Respond with a list of results for data lookups by hash.
+
+field        | type                | desc
+-------------|---------------------|--------------------------
+`msg_len`    | `varint`            | number of bytes in this message
+`msg_type`   | `varint` (=1)       |
+`req_id`     | `u8[4]`             | id that this is in response to
+`data0_len`  | `varint`            | length of first data payload
+`data0`      | `u8[data_len]`      | first data payload
+`data1_len`  | `varint`            | length of second data payload
+`data1`      | `u8[data_len]`      | second data payload
+`...`        |                     |
+`dataN_len`  | `varint`            | length of Nth data payload
+`dataN`      | `u8[data_len]`      | Nth data payload
+
+A recipient reads zero or more (`data_len`,`data`) pairs until `data_len` is 0.
+
 
 # post
 
