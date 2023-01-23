@@ -210,7 +210,7 @@ Set `updates` to 0 to not receive any live / future state changes.
 Responses from a peer will keep coming until
 - this request is cancelled, or
 - `updates` live post hashes are returned (if `updates >= 1`), and
-- all historic hashes are returned (if `historic == 1`)
+- all known historic hashes are returned (if `historic == 1`)
 
 ### request channel list (`msg_type=6`)
 
