@@ -231,8 +231,8 @@ field        | type              | desc
 
 The post type sections below document the fields that follow these initial 5 fields depending on the
 `post_type`. Most post types will link to the most recent posts in a channel from any user (from
-their perspective) but self-actions such as naming or moderation will link to the most recent
-self-action.
+their perspective) but self-actions such as setting a nickname link to the most recent
+self-action. Refer to each `post/*` type for what to expect.
 
 You can use `crypto_sign()` in combined mode to generate the signature field for the fields that
 come after `signature`, as `crypto_sign()` will prepend the signature into the output, so the fields
@@ -283,8 +283,6 @@ field        | type               | desc
 `timestamp`  | `varint`           | seconds since unix epoch
 `hash`       | `u8[32]`           | blake2b hash of post to be deleted
 
-Clients may choose to interpret this message based on their moderation perspective.
-
 ## post/info (`post_type=2`)
 
 Set public information about yourself.
@@ -308,8 +306,6 @@ key       | desc
 ----------|------------------------------------------------
 `name`    | handle to use as a pseudonym
 `max_age` | string maximum number of seconds to store posts
-`blocks`  | json object mapping hex keys to flag objects
-`hides`   | json object mapping hex keys to flag objects
 
 Set `max_age=0` to instruct peers to delete all data about you.
 
@@ -339,8 +335,6 @@ field          | type               | desc
 `timestamp`    | `varint`           | seconds since unix epoch
 `topic_size`   | `varint`           | length of the topic field
 `topic`        | `u8[topic_size]`   | topic content
-
-Depending on moderation settings, other peers may choose to accept or reject your choice of topic.
 
 ## post/join (`post_type=4`)
 
