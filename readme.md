@@ -26,17 +26,30 @@ want to use [noise][] yourself ([which is what i2p uses][ntcp2]).
 * compact over the wire
 * use any kind of database
 
-# definitions
+# Definitions
 ## "client"
 An instance of a running implementation of cable.
 
 ## "latest post"
 <stuff here about how "latest" means using timestamp + links>
 
-## "member of a channel"
+## User
+A pair of ED25519 keys (public and private) is all that is needed to constitute
+a "user".
+
+## Channel Membership
 A user is considered a member of a channel at a particular point in time if,
 from the client's perspective, that user has issued a `post/join` to that
-channel and has not issued a `post/leave` since.
+channel and has not issued a matching `post/leave` since.
+
+## Channel State
+The state of the channel at any given moment from the perspective of a client
+is fully described by all of the following:
+- The latest of each user's `post/join` or `post/leave` post to the channel.
+- The latest `post/info` post of each user who is *or was* a member of the
+  channel.
+- The latest `post/topic` post to channel, made by any user, regardless of
+  current or past membership.
 
 # messages
 
@@ -173,7 +186,8 @@ more posts as they arrive, up to `limit` number of posts.
 
 ### request channel state (`msg_type=5`)
 
-Request posts that describe the state of a channel, and subscribe to updates.
+Request posts that describe the state of a channel and its users, and
+optionally subscribe to future state changes.
 
 field          | type               | desc
 ---------------|--------------------|-----------------------------------
@@ -183,27 +197,23 @@ field          | type               | desc
 `ttl`          | `varint`           | number of hops remaining
 `channel_size` | `varint`           | length of the channel in bytes
 `channel`      | `u8[channel_size]` | channel name as a string of text
-`updates`      | `varint`           | maximum number of live posts to return
+`historic`     | `varint`           | set to `1` to receive peer's view of current channel state; `0` to not
+`updates`      | `varint`           | maximum number of live / future posts to return
 
 This request expects 0 or more `hash response`s in response, that pertain to
-posts that describe the current state of the channel.
+posts that describe the current state of the channel. See "Channel State" under
+"Definitions" for details on what posts comprise a channel's current state.
 
-(TODO: consider moving me to 'definitions')
-The current state of the channel at a given moment is fully described by:
-- The latest of each user's `post/join` or `post/leave` post to the channel.
-- The latest `post/info` post of each user who is *or was* a member of the
-  channel, even if made while not a member of the channel. (open question)
-- The latest `post/topic` post to channel, made by any user, even if they
-  weren't a member of the channel when they posted it. (open question)
+If `historic` is set to `1`, this request expects *all* historic posts that
+make up the channel state to be returned, followed by up to `updates` number of
+live posts that further alter this channel's state.
 
-This request expects *all* historic posts that make up the channel state to be
-returned, followed by up to `updates` number of live posts that further alter
-this channel's state.
+Set `updates` to 0 to not receive any live / future state changes.
 
-Set `updates` to 0 to not receive any live state updates.
-
-The responses will keep coming until this request is cancelled or until the
-`updates` limit is reached.
+Responses from a peer will keep coming until
+- this request is cancelled, or
+- `updates` live post hashes are returned (if `updates >= 1`), and
+- all historic hashes are returned (if `historic == 1`)
 
 ### request channel list (`msg_type=6`)
 
