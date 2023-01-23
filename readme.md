@@ -263,6 +263,8 @@ field        | type                | desc
 
 A recipient reads zero or more (`data_len`,`data`) pairs until `data_len` is 0.
 
+Clients can hash an entire data payload to check whether it is data that it was
+expecting (i.e. had sent out a `hash request` for).
 
 # post
 
