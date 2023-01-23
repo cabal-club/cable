@@ -27,8 +27,8 @@ want to use [noise][] yourself ([which is what i2p uses][ntcp2]).
 * use any kind of database
 
 # Definitions
-## "client"
-An instance of a running implementation of cable.
+## Client
+An running instance of an implementation of cable.
 
 ## User
 A pair of ED25519 keys (public and private) is all that is needed to constitute
@@ -74,6 +74,16 @@ The following data types are used:
 - `u8[N]`: a sequence of exactly `N` unsigned bytes
 - `varint`: a variable-length unsigned integer. cable uses protobuf-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). (For an example implementation of varint encoding/decoding, see the [nodejs varint package](https://www.npmjs.com/package/varint).)
 
+## Message
+A "message" is a specific binary payload describing the bytes that can be
+sent and received from other cable peers. These are used to request data from
+peers, and provide data to peers.
+
+## Post
+A "post" is a specific binary payload describing the bytes of signed data to be
+written to local disk storage. A post always has an author (via a required
+`public_key` field), and always provides a signature (via the required
+`signature` field) to prove they authored it.
 
 # messages
 
