@@ -26,28 +26,7 @@ want to use [noise][] yourself ([which is what i2p uses][ntcp2]).
 * compact over the wire
 * use any kind of database
 
-# Definitions
-## Client
-An running instance of an implementation of cable.
-
-## User
-A pair of ED25519 keys (public and private) is all that is needed to constitute
-a "user".
-
-## Channel Membership
-A user is considered a member of a channel at a particular point in time if,
-from the client's perspective, that user has issued a `post/join` to that
-channel and has not issued a matching `post/leave` since.
-
-## Channel State
-The state of the channel at any given moment from the perspective of a client
-is fully described by all of the following:
-- The latest of each user's `post/join` or `post/leave` post to the channel.
-- The latest `post/info` post of each user who is *or was* a member of the
-  channel.
-- The latest `post/topic` post to channel, made by any user, regardless of
-  current or past membership.
-
+# Definitions & Context
 ## Binary format tables
 The binary format of messages and posts are described in this document using tables like the following:
 
@@ -74,6 +53,23 @@ The following data types are used:
 - `u8[N]`: a sequence of exactly `N` unsigned bytes
 - `varint`: a variable-length unsigned integer. cable uses protobuf-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). (For an example implementation of varint encoding/decoding, see the [nodejs varint package](https://www.npmjs.com/package/varint).)
 
+## Channel Membership
+A user is considered a member of a channel at a particular point in time if,
+from the client's perspective, that user has issued a `post/join` to that
+channel and has not issued a matching `post/leave` since.
+
+## Channel State
+The state of the channel at any given moment from the perspective of a client
+is fully described by all of the following:
+- The latest of each user's `post/join` or `post/leave` post to the channel.
+- The latest `post/info` post of each user who is *or was* a member of the
+  channel.
+- The latest `post/topic` post to channel, made by any user, regardless of
+  current or past membership.
+
+## Client
+An running instance of an implementation of cable.
+
 ## Message
 A "message" is a specific binary payload describing the bytes that can be
 sent and received from other cable peers. These are used to request data from
@@ -97,6 +93,10 @@ forwards your request to its peers as well, they too may trickle back many
 responses over time.
 
 (upcoming: info about request lifetimes)
+
+## User
+A pair of ED25519 keys (public and private) is all that is needed to constitute
+a "user".
 
 # messages
 
