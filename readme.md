@@ -108,6 +108,9 @@ The TTL mechanism exists to allow clients with limited connectivity to peers
 (e.g. behind a strong NAT) to use the peers they can reach as a relay to
 find and retrieve data they are interested in more easily.
 
+## UNIX Epoch
+Midnight on January 1st, 1970.
+
 ## User
 A pair of ED25519 keys (public and private) is all that is needed to constitute
 a "user".
@@ -194,8 +197,8 @@ field          | type               | desc
 `ttl`          | `varint`           | number of hops remaining
 `channel_size` | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_size]` | channel name as a string of text
-`time_start`   | `varint`           | seconds since the epoch
-`time_end`     | `varint`           | seconds since the epoch
+`time_start`   | `varint`           | seconds since unix epoch
+`time_end`     | `varint`           | seconds since unix epoch
 `limit`        | `varint`           | maximum number of records to return
 
 This request returns 0 or more `hash response` responses.
@@ -397,7 +400,7 @@ To save space, discard old versions of these messages on disk.
 Flag objects have these properties (all optional):
 
 * reason (string)
-* timestamp (seconds since epoch, number)
+* timestamp (seconds since unix epoch, number)
 
 NOTE: use of json here means clients need a json implementation.
 might want to swap with custom binary
