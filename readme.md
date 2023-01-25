@@ -130,7 +130,7 @@ Clients may experiment with custom message types beyond the ids used by this spe
 
 ## requests
 
-Each request begins with these two fields (after the `msg_type` applicable to all messages):
+Every request begins with the following header:
 
 field      | type       | desc
 -----------|------------|-----------------------------------
@@ -255,6 +255,16 @@ There are 2 types of responses:
 
 Multiple responses may be generated for a single request and results trickle in from peers.
 
+Every response begins with the following header:
+
+field      | type       | desc
+-----------|------------|-----------------------------------
+`msg_len`  | `varint`   | number of bytes in this message
+`msg_type` | `varint`   |
+`req_id`   | `u8[4]`    | unique id of the request this is in response to
+
+More fields follow for different response types below.
+
 ### hash response (`msg_type=0`)
 
 Respond with a list of hashes.
@@ -291,7 +301,7 @@ expecting (i.e. had sent out a `hash request` for).
 
 # posts
 
-Each post type begins with the same 5 fields:
+Every post begins with the following 5-field header:
 
 field        | type              | desc
 -------------|-------------------|-------------------------------------------------------
@@ -300,6 +310,8 @@ field        | type              | desc
 `num_links`  | `varint`          | how many blake2b hashes this post links back to (0+)
 `links`      | `u8[32*num_links]`| blake2b hashes of the latest messages in this channel/context
 `post_type`  | `varint`          | see custom post type sections below
+
+More fields follow for different post types below.
 
 The post type sections below document the fields that follow these initial 5 fields depending on the
 `post_type`. Most post types will link to the most recent posts in a channel from any user (from
