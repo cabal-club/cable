@@ -235,9 +235,9 @@ This request expects 0 or more `hash response`s in response, that pertain to
 posts that describe the current state of the channel. See "Channel State" under
 "Definitions" for details on what posts comprise a channel's current state.
 
-If `historic` is set to `1`, this request expects *all* historic posts that
-make up the channel state to be returned, followed by up to `updates` number of
-live posts that further alter this channel's state.
+If `historic` is set to `1`, this request expects the hashes of *all* historic
+posts that make up the channel state to be returned, followed by up to
+`updates` number of live post hashes that further alter this channel's state.
 
 Set `updates` to 0 to not receive any live / future state changes.
 
