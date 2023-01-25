@@ -451,3 +451,26 @@ field          | type               | desc
 `channel`      | `u8[channel_size]` | channel name as a string of text
 `timestamp`    | `varint`           | seconds since unix epoch
 
+# Notes for Client Implementors
+
+## Channel Sync Model
+`request channel state` and `request channel time range` are sufficient to
+track a channel that a user is interested in. The former tracks state (who is
+in the channel, its topic, information about users in the channel), and the
+latter tracks chat message history.
+
+A suggested way to use `request channel time range` to track a channel is to
+maintain a "rolling window". For example, a user that wishes to stay up-to-date
+with the last week's worth of chat history would, on client start-up, issue a
+`request channel time range` request with `time_start=now()-25200` (25200
+seconds in a week) for a given channel of interest. `hash response`s with
+already-known hashes can be safely ignored, while new ones can induce `data
+request`s for their content.
+
+The purpose of keeping a rolling time window, instead of just asking for
+`time_start=last_bootup_time`, is to capture messages that were missed because
+either you or other peers were, at the time, offline or part of another
+network. This allows a client to make posts while offline, and still have them
+appear to others when they do come back online (within the client's rolling
+window's duration).
+
