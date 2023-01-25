@@ -201,7 +201,7 @@ field          | type               | desc
 `channel`      | `u8[channel_size]` | channel name as a string of text
 `time_start`   | `varint`           | seconds since unix epoch
 `time_end`     | `varint`           | seconds since unix epoch
-`limit`        | `varint`           | maximum number of records to return
+`limit`        | `varint`           | maximum number of hashes to return
 
 This request returns 0 or more `hash response` responses.
 
@@ -213,7 +213,7 @@ newest.
 If `time_end` is 0, request all messages since `time_start` and respond with
 more posts as they arrive, up to `limit` number of posts.
 
-A `limit` of 0 indicates a desire to receive an unlimited number of records.
+A `limit` of 0 indicates a desire to receive an unlimited number of hashes.
 
 ### request channel state (`msg_type=5`)
 
@@ -229,7 +229,7 @@ field          | type               | desc
 `channel_size` | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_size]` | channel name as a string of text
 `historic`     | `varint`           | set to `1` to receive peer's view of current channel state; `0` to not
-`updates`      | `varint`           | maximum number of live / future posts to return
+`updates`      | `varint`           | maximum number of live / future hashes to return
 
 This request expects 0 or more `hash response`s in response, that pertain to
 posts that describe the current state of the channel. See "Channel State" under
@@ -256,7 +256,7 @@ field          | type               | desc
 `msg_type`     | `varint`           |
 `req_id`       | `u8[4]`            | unique id of this request (random)
 `ttl`          | `varint`           | number of hops remaining
-`limit`        | `varint`           | maximum number of records to return
+`limit`        | `varint`           | maximum number of channel names to return
 
 A `limit` of 0 indicates a desire to receive the full set of known channels
 from a peer.
