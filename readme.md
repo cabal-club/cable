@@ -276,7 +276,8 @@ field          | type               | desc
 `limit`        | `varint`           | maximum number of channel names to return
 
 A `limit` of 0 indicates a desire to receive the full set of known channels
-from a peer.
+from a peer. Unlike some other requests, `limit=0` does not mean to subscribe
+to future updates; the request is concluded after a single response.
 
 ## responses
 
