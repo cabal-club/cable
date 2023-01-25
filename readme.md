@@ -70,6 +70,23 @@ is fully described by all of the following:
 ## Client
 An running instance of an implementation of cable.
 
+## `limit`
+If a request has a `limit` field specifying an upper bound on how many hashes
+it expects to get in response, and also sets a `ttl > 0`, a peer handling this
+request should try to ensure that that `limit` is honoured. This can be done by
+counting how many hashes a client sends back to the requestor, **including**
+hashes received through other peers that the client has forwarded the request
+to.
+
+For example, assume `A` sends a request to `B` with `limit=50` and `ttl=1`, and
+`B` forwards the request to `C` and `D`. `B` may send back 15 hashes to `A` at
+first, which means there are now a maximum of `50-15=35` hashes left for `C`
+and `D` combined for `B` to potentially send back. `B` can choose to track
+hashes and perform deduplication, so that if `C` and `D` were to both send back
+a hash `f88954b3e6adc067af61cca2aea7e3baecfea4238cb1594e705ecd3c92a67cb1`, `B`
+could ensure it was only passed back to `A` one time, thus reducing the
+remaining `limit` by 1 instead of 2.
+
 ## Message
 A "message" is a specific binary payload describing the bytes that can be
 sent and received from other cable peers. These are used to request data from
