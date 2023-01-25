@@ -185,6 +185,8 @@ field        | type                | desc
 
 This request should be passed along to any peers to which this peer has forwarded the original request.
 
+No response to this message is expected.
+
 ### request channel time range (`msg_type=4`)
 
 Request text posts and text post deletions written to a channel between a start and end time.
