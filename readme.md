@@ -386,24 +386,14 @@ field        | type               | desc
 `value_size` | `varint`           | length of the value field
 `value`      | `u8[value_size]`   | value
 
-Recommended fields for clients to support:
+Recommended keys for clients to support:
 
 key       | desc
 ----------|------------------------------------------------
-`name`    | handle to use as a pseudonym
-`max_age` | string maximum number of seconds to store posts
+`name`    | handle this user wishes to use as a pseudonym
 
-Set `max_age=0` to instruct peers to delete all data about you.
-
-To save space, discard old versions of these messages on disk.
-
-Flag objects have these properties (all optional):
-
-* reason (string)
-* timestamp (seconds since unix epoch, number)
-
-NOTE: use of json here means clients need a json implementation.
-might want to swap with custom binary
+To save space, client may discard from disk older versions of these messages
+from a particular user.
 
 ## post/topic (`post_type=3`)
 
