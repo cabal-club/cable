@@ -167,14 +167,17 @@ Results are provided by a data response (`msg_type=1`).
 
 Indicate a desire to stop receiving responses for any request.
 
-Some requests stay open and wait for data to arrive. You can close these long-running subscriptions
-using a cancel request.
+Some requests stay open and wait for data to arrive. You can close these
+long-running subscriptions using a cancel request.
+
+Receiving this request indicates that any further responses sent back using the
+given `req_id` may be discarded.
 
 field        | type                | desc
 -------------|---------------------|-----------------------------------
 `msg_len`    | `varint`            | number of bytes in this message
 `msg_type`   | `varint`            |
-`req_id`     | `u8[4]`             | stop receiving results for this id
+`req_id`     | `u8[4]`             | stop receiving results for this request id
 `ttl`        | `varint`            | ignored
 
 This request should be passed along to any peers to which this peer has forwarded the original request.
