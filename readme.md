@@ -204,7 +204,9 @@ field          | type               | desc
 This request returns 0 or more `hash response` responses.
 
 This request expects the hashes of all `post/text` and `post/delete` posts made
-to a channel by members between `time_start` and `time_end`.
+to a channel by members between `time_start` and `time_end`. `time_start` is
+the post with the *oldest* timestamp one is interested in, `time_end` is the
+newest.
 
 If `time_end` is 0, request all messages since `time_start` and respond with
 more posts as they arrive, up to `limit` number of posts.
