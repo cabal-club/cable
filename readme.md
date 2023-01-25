@@ -209,6 +209,8 @@ to a channel by members between `time_start` and `time_end`.
 If `time_end` is 0, request all messages since `time_start` and respond with
 more posts as they arrive, up to `limit` number of posts.
 
+A `limit` of 0 indicates a desire to receive an unlimited number of records.
+
 ### request channel state (`msg_type=5`)
 
 Request posts that describe the state of a channel and its users, and
@@ -251,6 +253,9 @@ field          | type               | desc
 `req_id`       | `u8[4]`            | unique id of this request (random)
 `ttl`          | `varint`           | number of hops remaining
 `limit`        | `varint`           | maximum number of records to return
+
+A `limit` of 0 indicates a desire to receive the full set of known channels
+from a peer.
 
 ## responses
 
