@@ -94,6 +94,20 @@ responses over time.
 
 (upcoming: info about request lifetimes)
 
+## Time to Live (TTL)
+This field, set on requests, controls *how many more times* a request may be
+forwarded to other peers. A client wishing a request not be forward beyond its
+initial destination peer would set `ttl = 0` to signal this.
+
+When an incoming request has a `ttl > 0`, a peer can choose to forward a
+request along to other peers, and then forward the responses back to the peer
+that made the request. Each peer performing this action should decrement the
+`ttl` by one. A request with `ttl == 0` should not be forwarded.
+
+The TTL mechanism exists to allow clients with limited connectivity to peers
+(e.g. behind a strong NAT) to use the peers they can reach as a relay to
+find and retrieve data they are interested in more easily.
+
 ## User
 A pair of ED25519 keys (public and private) is all that is needed to constitute
 a "user".
@@ -130,10 +144,6 @@ More fields follow for different request types below.
 The request ID, `req_id`, is to be a sequence of 4 bytes, generated randomly by
 the requestor, used to uniquely identify the request during its lifetime across
 the swarm of peers who may handle it.
-
-When `ttl > 0`, a peer can choose to forward a request along to other peers and forward the response
-back to the peer that made the request. Each peer performing this action should decrement the `ttl`
-by one.
 
 When forwarding a request, do not change the `req_id`, so that routing loops
 can be more easily detected by peers.
