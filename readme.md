@@ -438,10 +438,18 @@ field        | type               | desc
 `links`      | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`  | `varint`           | see custom post type sections below
 `timestamp`  | `varint`           | seconds since unix epoch
-`key_len`    | `varint`           | length of the name field
-`key`        | `u8[key_len] `     | name string
-`value_len`  | `varint`           | length of the value field
-`value`      | `u8[value_len] `   | value
+`key1_len`   | `varint`           | length of the first key to set
+`key1`       | `u8[key_len]`      | name of the first key to set
+`value1_len` | `varint`           | length of the first value to set, belonging to `key1`
+`value1`     | `u8[value_len]`    | value of the first key:value pair
+...          |                    |
+`keyN_len`   | `varint`           | length of the Nth key to set
+`keyN`       | `u8[key_len]`      | name of the Nth key to set
+`valueN_len` | `varint`           | length of the Nth value to set, belonging to `keyN`
+`valueN`     | `u8[value_len]`    | value of the Nth key:value pair
+
+Several key:value pairs can be set at once. A post indicates it is done setting
+pairs by setting a final `keyN_len` of zero.
 
 Recommended keys for clients to support:
 
