@@ -406,17 +406,18 @@ field          | type               | desc
 
 ## post/delete (`post_type=1`)
 
-Request that peers delete a post by its hash.
+Request that peers encountering this post delete the referenced posts by their hashes.
 
-field        | type               | desc
--------------|--------------------|-------------------------
-`public_key` | `u8[32]`           | ed25519 key that authored this post
-`signature`  | `u8[64]`           | ed25519 signature of the fields that follow
-`num_links`  | `varint`           | how many blake2b hashes this post links back to (0+)
-`links`      | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
-`post_type`  | `varint`           | see custom post type sections below
-`timestamp`  | `varint`           | seconds since unix epoch
-`hash`       | `u8[32]`           | blake2b hash of post to be deleted
+field           | type                   | desc
+----------------|------------------------|-------------------------
+`public_key`    | `u8[32]`               | ed25519 key that authored this post
+`signature`     | `u8[64]`               | ed25519 signature of the fields that follow
+`num_links`     | `varint`               | how many blake2b hashes this post links back to (0+)
+`links`         | `u8[32*num_links]`     | blake2b hashes of the latest messages in this channel/context
+`post_type`     | `varint`               | see custom post type sections below
+`timestamp`     | `varint`               | seconds since unix epoch
+`num_deletions` | `varint`               | how many hashes of posts there are to be deleted
+`hash`          | `u8[32*num_deletions]` | blake2b hashes of posts to be deleted
 
 ## post/info (`post_type=2`)
 
