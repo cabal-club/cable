@@ -87,6 +87,14 @@ a hash `f88954b3e6adc067af61cca2aea7e3baecfea4238cb1594e705ecd3c92a67cb1`, `B`
 could ensure it was only passed back to `A` one time, thus reducing the
 remaining `limit` by 1 instead of 2.
 
+## Hashes
+Nearly all data in Cable is referenced by the resulting output of putting a
+post through a hash function. Specifically, blake2b, using libsodium's
+`crypto_generichash()` function.
+
+To produce a correct hash, run `crypto_generichash()` on the entire post,
+including the post header.
+
 ## Message
 A "message" is a specific binary payload describing the bytes that can be
 sent and received from other cable peers. These are used to request data from
@@ -356,7 +364,7 @@ come after `signature`, as `crypto_sign()` will prepend the signature into the o
 will be in the correct order.
 
 Use `crypto_generichash()` with the default settings (`crypto_generichash_BYTES=32`) to hash
-incoming messages in order to resolve links. Hash the entire message with all fields. 
+incoming messages in order to resolve links. Hash the entire post with all fields. 
 
 The `post_type` is a varint, so if the post types below are inadequate, you can create your own
 using unused numbers (`>64`).
