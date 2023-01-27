@@ -67,6 +67,10 @@ is fully described by all of the following:
 - The latest `post/topic` post to channel, made by any user, regardless of
   current or past membership.
 
+Here "latest" means the relevant post with greatest causal ordering, and, if
+that's not possible, the greatest timestamp. See "Chat Message Sorting" for
+more details on links and causal ordering.
+
 ## Client
 An running instance of an implementation of cable.
 
@@ -258,7 +262,7 @@ A `limit` of 0 indicates a desire to receive an unlimited number of hashes.
 
 ### request channel state (`msg_type=5`)
 
-Request posts that describe the state of a channel and its users, and
+Request posts that describe the current state of a channel and its users, and
 optionally subscribe to future state changes.
 
 field          | type               | desc
