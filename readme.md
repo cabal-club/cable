@@ -375,6 +375,7 @@ field        | type              | desc
 `num_links`  | `varint`          | how many blake2b hashes this post links back to (0+)
 `links`      | `u8[32*num_links]`| blake2b hashes of the latest messages in this channel/context
 `post_type`  | `varint`          | see custom post type sections below
+`timestamp`  | `varint`          | seconds since unix epoch
 
 More fields follow for different post types below.
 
@@ -408,9 +409,9 @@ field          | type               | desc
 `num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
 `links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
+`timestamp`    | `varint`           | seconds since unix epoch
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
-`timestamp`    | `varint`           | seconds since unix epoch
 `text_len`     | `varint`           | length of the text field
 `text`         | `u8[text_len] `    | message content (UTF-8)
 
@@ -485,9 +486,9 @@ field          | type               | desc
 `num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
 `links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
+`timestamp`    | `varint`           | seconds since unix epoch
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
-`timestamp`    | `varint`           | seconds since unix epoch
 `topic_len`    | `varint`           | length of the topic field
 `topic`        | `u8[topic_len] `   | topic content
 
@@ -502,9 +503,9 @@ field          | type               | desc
 `num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
 `links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
+`timestamp`    | `varint`           | seconds since unix epoch
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
-`timestamp`    | `varint`           | seconds since unix epoch
 
 Peers can obtain a link to anchor their join message by requesting a list of channels.
 
@@ -519,9 +520,9 @@ field          | type               | desc
 `num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
 `links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
+`timestamp`    | `varint`           | seconds since unix epoch
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
-`timestamp`    | `varint`           | seconds since unix epoch
 
 # Notes for Client Implementors
 
