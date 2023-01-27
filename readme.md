@@ -209,6 +209,10 @@ field        | type                | desc
 
 Results are provided by a data response (`msg_type=1`).
 
+The expected behaviour is to return immediately with what data is locally
+available, rather than holding on to the request in anticipation of perhaps
+seeing the requested hashes in the future.
+
 ### cancel request (`msg_type=3`)
 
 Indicate a desire to stop receiving responses for any request.
@@ -362,7 +366,7 @@ field        | type                | desc
 A recipient reads zero or more (`data_len`,`data`) pairs until `data_len` is 0.
 
 Clients can hash an entire data payload to check whether it is data that it was
-expecting (i.e. had sent out a `hash request` for).
+expecting (i.e. had sent out a `request by hash` for).
 
 # posts
 
