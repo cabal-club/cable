@@ -237,12 +237,14 @@ field          | type               | desc
 `req_id`       | `u8[4]`            | unique id of this request (random)
 `ttl`          | `varint`           | number of hops remaining
 `channel_len`  | `varint`           | length of the channel's name, in bytes
-`channel`      | `u8[channel_len] ` | channel name as a string of text
+`channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 `time_start`   | `varint`           | seconds since unix epoch
 `time_end`     | `varint`           | seconds since unix epoch
 `limit`        | `varint`           | maximum number of hashes to return
 
 This request returns 0 or more `hash response` responses.
+
+Channel names are expected to be UTF-8 strings.
 
 This request expects the hashes of all `post/text` and `post/delete` posts made
 to a channel by members between `time_start` and `time_end`. `time_start` is
@@ -265,7 +267,7 @@ field          | type               | desc
 `msg_type`     | `varint`           |
 `req_id`       | `u8[4]`            | unique id of this request (random)
 `ttl`          | `varint`           | number of hops remaining
-`channel_len`  | `varint`           | length of the channel's name, in bytes
+`channel_len`  | `varint`           | length of the channel's name, in bytes (UTF-8)
 `channel`      | `u8[channel_len] ` | channel name as a string of text
 `historic`     | `varint`           | set to `1` to receive peer's view of current channel state; `0` to not
 `updates`      | `varint`           | maximum number of live / future hashes to return
@@ -399,10 +401,12 @@ field          | type               | desc
 `links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
 `channel_len`  | `varint`           | length of the channel's name, in bytes
-`channel`      | `u8[channel_len] ` | channel name as a string of text
+`channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 `timestamp`    | `varint`           | seconds since unix epoch
 `text_len`     | `varint`           | length of the text field
-`text`         | `u8[text_len] `    | message content
+`text`         | `u8[text_len] `    | message content (UTF-8)
+
+The `text` body of a chat message is expected to be a UTF-8 string.
 
 ## post/delete (`post_type=1`)
 
@@ -439,17 +443,19 @@ field        | type               | desc
 `post_type`  | `varint`           | see custom post type sections below
 `timestamp`  | `varint`           | seconds since unix epoch
 `key1_len`   | `varint`           | length of the first key to set
-`key1`       | `u8[key_len]`      | name of the first key to set
+`key1`       | `u8[key_len]`      | name of the first key to set (UTF-8)
 `value1_len` | `varint`           | length of the first value to set, belonging to `key1`
 `value1`     | `u8[value_len]`    | value of the first key:value pair
 ...          |                    |
 `keyN_len`   | `varint`           | length of the Nth key to set
-`keyN`       | `u8[key_len]`      | name of the Nth key to set
+`keyN`       | `u8[key_len]`      | name of the Nth key to set (UTF-8)
 `valueN_len` | `varint`           | length of the Nth value to set, belonging to `keyN`
 `valueN`     | `u8[value_len]`    | value of the Nth key:value pair
 
 Several key:value pairs can be set at once. A post indicates it is done setting
 pairs by setting a final `keyN_len` of zero.
+
+Keys are expected to be UTF-8 strings.
 
 Recommended keys for clients to support:
 
@@ -472,7 +478,7 @@ field          | type               | desc
 `links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
 `channel_len`  | `varint`           | length of the channel's name, in bytes
-`channel`      | `u8[channel_len] ` | channel name as a string of text
+`channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 `timestamp`    | `varint`           | seconds since unix epoch
 `topic_len`    | `varint`           | length of the topic field
 `topic`        | `u8[topic_len] `   | topic content
@@ -489,7 +495,7 @@ field          | type               | desc
 `links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
 `channel_len`  | `varint`           | length of the channel's name, in bytes
-`channel`      | `u8[channel_len] ` | channel name as a string of text
+`channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 `timestamp`    | `varint`           | seconds since unix epoch
 
 Peers can obtain a link to anchor their join message by requesting a list of channels.
@@ -506,7 +512,7 @@ field          | type               | desc
 `links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
 `channel_len`  | `varint`           | length of the channel's name, in bytes
-`channel`      | `u8[channel_len] ` | channel name as a string of text
+`channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 `timestamp`    | `varint`           | seconds since unix epoch
 
 # Notes for Client Implementors
