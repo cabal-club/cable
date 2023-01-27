@@ -406,7 +406,9 @@ field          | type               | desc
 
 ## post/delete (`post_type=1`)
 
-Request that peers encountering this post delete the referenced posts by their hashes.
+Request that peers encountering this post delete the referenced posts by their
+hashes from their local storage, and not store the referenced posts in the
+future.
 
 field           | type                   | desc
 ----------------|------------------------|-------------------------
@@ -418,6 +420,11 @@ field           | type                   | desc
 `timestamp`     | `varint`               | seconds since unix epoch
 `num_deletions` | `varint`               | how many hashes of posts there are to be deleted
 `hash`          | `u8[32*num_deletions]` | blake2b hashes of posts to be deleted
+
+The expected behaviour of a client interpreting this post is to only perform
+local deletion of the referenced posts if the author (`post.public_key`)
+matches the author of the post to be deleted (i.e. only the user who authored a
+post may delete it).
 
 ## post/info (`post_type=2`)
 
