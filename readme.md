@@ -168,6 +168,8 @@ Requests and responses all have a unique `msg_type`.
 Clients may experiment with custom message types beyond the ids used by this specification
 (where `msg_type>=64`).
 
+Clients encountering an unknown `msg_type` should ignore and discard them.
+
 ## requests
 
 Every request begins with the following header:
