@@ -95,6 +95,18 @@ post through a hash function. Specifically, blake2b, using libsodium's
 To produce a correct hash, run `crypto_generichash()` on the entire post,
 including the post header.
 
+## Links
+Part of the header every post is the `links` field. Every post is able to link
+to 0 or more other posts by means of referencing those posts by their hash (the
+output of running them through a specific hash function).
+
+Referencing a post by its hash provides a *causal proof*: it demonstrates that
+your post must have occurred after all of the posts you are referencing.
+
+This can be useful for ordering chat messages in particular when a client's
+hardware clock is skewed, and using post timestamps alone would provide
+confusing ordering.
+
 ## Message
 A "message" is a specific binary payload describing the bytes that can be
 sent and received from other cable peers. These are used to request data from
@@ -502,3 +514,93 @@ network. This allows a client to make posts while offline, and still have them
 appear to others when they do come back online (within the client's rolling
 window's duration).
 
+## Chat Message Sorting
+Chat messages are sorted based on two inputs: a post's `timestamp` value, and
+*causal ordering*.
+
+For example, using a timestamp alone, an ascending sort comparison function
+might look like this:
+
+```js
+function cmp (a, b) {
+  return b.timestamp - a.timestamp
+}
+```
+
+However, if a user posted a message after another user, but their clock was
+skewed backwards by an hour, their newer post would appear in the past instead
+of being sorted ahead.
+
+By allowing posts to *link* to other posts by their hash, a comparator function
+can be written that takes causal links into account, and uses the timestamp
+only as a fallback in case no link chain can be found:
+
+```js
+// Assumes an internal representation of chat messages of the form
+// {
+//   timestamp: Number,
+//   text: String,
+//   links: Array<String>
+// }
+function cmp (a, b) {
+  if (containedInLinkChain(a, hash(b))) return -1
+  if (containedInLinkChain(b, hash(a))) return +1
+  return b.timestamp - a.timestamp
+}
+
+// Recursively follows the causal link chain to determine if the hash 'h' is
+// linked to from 'msg'.
+function containedInLinkChain (msg, h) {
+  if (!msg) return false
+  if (msg.links.indexOf(h) !== -1) return true
+  for (let link of msg.links) {
+    if (containedInLinkChain(globalStoreOfAllKnownPosts[link], h)) return true
+  }
+  return false
+}
+```
+
+Given then this set of chat messages,
+```js
+const m1 = {
+  timestamp: 17,
+  text: 'hi',
+  links: []
+}
+const m2 = {
+  timestamp: 170,
+  text: 'hi from not-the-future; it is actually clock skew',
+  links: []
+}
+const m3 = {
+  timestamp: 18,
+  text: 'hi from the real future (i can prove it)',
+  links: ['85b8d0f0a48e34064b50a17df4f8eec3644bb4f1ec69aeed05fe245df7d1392b'] // m1's hash
+}
+const m4 = {
+  timestamp: 10,
+  text: 'hi from the seeming past, but actually future',
+  links: ['5297f8422fccdbd2a29b3f6b02a23a0f0d196e0d437e0303273d9aa505add4ed'] // m3's hash
+}
+```
+
+The new sort comparator using links would give
+```js
+[
+  'hi',
+  'hi from not-the-future; it is actually clock skew',
+  'hi from the real future (i can prove it)',
+  'hi from the seeming past, but actually future',
+]
+```
+
+whereas the timestamp-only comparator would give
+
+```js
+[
+  'hi from the seeming past, but actually future',
+  'hi',
+  'hi from the real future (i can prove it)',
+  'hi from not-the-future; it is actually clock skew',
+]
+```
