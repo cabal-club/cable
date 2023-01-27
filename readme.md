@@ -301,11 +301,15 @@ field          | type               | desc
 `msg_type`     | `varint`           |
 `req_id`       | `u8[4]`            | unique id of this request (random)
 `ttl`          | `varint`           | number of hops remaining
+`offset`       | `varint`           | number of channel names to skip (`0` to skip none)
 `limit`        | `varint`           | maximum number of channel names to return
 
 A `limit` of 0 indicates a desire to receive the full set of known channels
 from a peer. Unlike some other requests, `limit=0` does not mean to subscribe
 to future updates; the request is concluded after a single response.
+
+The `offset` field can be combined with the `limit` field to allow clients to
+paginate through the list of all channel names known by a peer.
 
 ## responses
 
