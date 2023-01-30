@@ -321,10 +321,11 @@ paginate through the list of all channel names known by a peer.
 
 ## responses
 
-There are 2 types of responses:
+There are 3 types of responses:
 
 * hash response - a list of hashes (most queries return this)
 * data response - a list of data chunks (in response to a hash query)
+* channel list response - a list of the names of known channels
 
 Multiple responses may be generated for a single request and results trickle in from peers.
 
@@ -371,6 +372,27 @@ A recipient reads zero or more (`data_len`,`data`) pairs until `data_len` is 0.
 
 Clients can hash an entire data payload to check whether it is data that it was
 expecting (i.e. had sent out a `request by hash` for).
+
+### channel list response (`msg_type=7`)
+
+Respond with a list of names of known channels.
+
+field          | type                | desc
+---------------|---------------------|-------------------------------------
+`msg_len`      | `varint`            | number of bytes in this message
+`msg_type`     | `varint (=0)`       |
+`req_id`       | `u8[4]`             | id this is in response to
+`channel0_len` | `varint`            | length in bytes of the first channel name
+`channel0`     | `u8[channel_len]`   | the first channel name (UTF-8)
+`...`          |                     |
+`channelN_len` | `varint`            | length in bytes of the Nth channel name
+`channelN`     | `u8[channel_len]`   | the Nth channel name (UTF-8)
+
+A recipient reads the zero or more (`channel_len`,`channel`) pairs until
+`channel_len` is 0.
+
+In order for pagination to work properly, clients are expected to use a *stable
+sort order* for channel names.
 
 # posts
 
