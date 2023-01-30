@@ -49,9 +49,9 @@ If `foo=17` and `bar=[3,6,8,64]`, the following binary payload would be expected
 ```
 
 The following data types are used:
-- `u8`: a single unsigned byte
-- `u8[N]`: a sequence of exactly `N` unsigned bytes
-- `varint`: a variable-length unsigned integer. cable uses protobuf-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). (For an example implementation of varint encoding/decoding, see the [nodejs varint package](https://www.npmjs.com/package/varint).)
+- `u8`: a single unsigned byte.
+- `u8[N]`: a sequence of exactly `N` unsigned bytes.
+- `varint`: a variable-length unsigned integer. (details under `varint` below)
 
 ## Channel Membership
 A user is considered a member of a channel at a particular point in time if,
@@ -155,6 +155,16 @@ Midnight on January 1st, 1970.
 ## User
 A pair of ED25519 keys (public and private) is all that is needed to constitute
 a "user".
+
+## `varint`
+A variable-length unsigned integer. Cable uses protobuf-style
+[varints](https://developers.google.com/protocol-buffers/docs/encoding#varints),
+but with the expectation that clients do not use values greater than `2^31-1`.
+This is to ensure that 32-bit machines running Cable will function without the
+need to have special logic for 64-bit integers.
+
+For an example implementation of varint encoding/decoding, see the [nodejs
+varint package](https://www.npmjs.com/package/varint).
 
 # messages
 
