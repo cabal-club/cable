@@ -215,6 +215,9 @@ The expected behaviour is to return immediately with what data is locally
 available, rather than holding on to the request in anticipation of perhaps
 seeing the requested hashes in the future.
 
+Responders are free to return the data for any subset of the requested hashes
+(including none).
+
 ### cancel request (`msg_type=3`)
 
 Indicate a desire to stop receiving responses for any request.
