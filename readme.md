@@ -209,6 +209,8 @@ field        | type                | desc
 
 Results are provided by a data response (`msg_type=1`).
 
+This request expects one or more `data response` responses.
+
 The expected behaviour is to return immediately with what data is locally
 available, rather than holding on to the request in anticipation of perhaps
 seeing the requested hashes in the future.
@@ -254,9 +256,9 @@ This request returns 0 or more `hash response` responses.
 
 Channel names are expected to be UTF-8 strings.
 
-This request expects the hashes of all `post/text` and `post/delete` posts made
-to a channel by members between `time_start` and `time_end`. `time_start` is
-the post with the *oldest* timestamp one is interested in, `time_end` is the
+Expected are the hashes of all `post/text` and `post/delete` posts made to a
+channel by members between `time_start` and `time_end`. `time_start` is the
+post with the *oldest* timestamp one is interested in, `time_end` is the
 newest.
 
 If `time_end` is 0, request all messages since `time_start` and respond with
@@ -307,6 +309,8 @@ field          | type               | desc
 `ttl`          | `varint`           | number of hops remaining
 `offset`       | `varint`           | number of channel names to skip (`0` to skip none)
 `limit`        | `varint`           | maximum number of channel names to return
+
+This request returns zero or more `channel list response`s.
 
 A `limit` of 0 indicates a desire to receive the full set of known channels
 from a peer. Unlike some other requests, `limit=0` does not mean to subscribe
