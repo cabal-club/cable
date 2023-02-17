@@ -2,10 +2,15 @@
 
 This document describes the bytes over the wire to speak the cable protocol.
 
-You will need [libsodium](https://doc.libsodium.org/) bindings or their equivalents for:
+Implementing the cable wire protocol requires access to implementations of the following crytographic functions:
 
-* `crypto_generichash()` - to hash messages with blake2
-* `crypto_sign_keypair()` - to generate public and secret ed25519 keys
+- [BLAKE2b cryptographic hash](https://www.rfc-editor.org/rfc/rfc7693.txt) - RFC 7693; set to output 32-byte digests.
+- [ED25519](https://ed25519.cr.yp.to/) - A public-key signature system. Used to generate, sign posts, and verify post signatures.
+
+These required cryptographic functions can be provided by [libsodium](https://libsodium.org) 1.0.18-stable, if bindings exist for one's implementation language of choice. In particular, these functions can be utilized:
+
+* `crypto_generichash()` - to hash messages with BLAKE2b
+* `crypto_sign_keypair()` - to generate public and secret ED25519 keys
 * `crypto_sign()` - to calculate the signature of a post (in combined mode)
 * `crypto_sign_open()` - to verify the signature of a post (in combined mode)
 
@@ -418,12 +423,12 @@ The post type sections below document the fields that follow these initial 5 fie
 their perspective) but self-actions such as setting a nickname link to the most recent
 self-action. Refer to each `post/*` type for what to expect.
 
-You can use `crypto_sign()` in combined mode to generate the signature field for the fields that
-come after `signature`, as `crypto_sign()` will prepend the signature into the output, so the fields
-will be in the correct order.
+If using libsodium, one can use `crypto_sign()` in combined mode to generate
+the signature field for the fields that come after `signature`, as
+`crypto_sign()` will prepend the signature into the output, so the fields will
+be in the correct order.
 
-Use `crypto_generichash()` with the default settings (`crypto_generichash_BYTES=32`) to hash
-incoming messages in order to resolve links. Hash the entire post with all fields. 
+The hash of an incoming post is produced by hashing the entire post, including *all* fields.
 
 The `post_type` is a varint, so if the post types below are inadequate, you can create your own
 using unused numbers (`>64`).
