@@ -69,6 +69,9 @@ A **hash**, which acts as a reference to the post which hashes to said hash.
 ## UNIX Epoch
 Midnight on January 1st, 1970.
 
+## UNIX Time
+A point in time, represented by the number of seconds since the UNIX Epoch. Here, this value is assumed to be non-negative, meaning dates before the UNIX Epoch can not be represented.
+
 # cryptographic dependencies
 
 Implementing the cable wire protocol requires access to implementations of the following crytographic functions:
