@@ -69,7 +69,7 @@ A message, traversing the network to the peer who originally made a request with
 A private group chat that a number of users can participate in, comprised of zero or more **channel**s.
 
 ## Channel
-An object with its own unique name, a set of member users, which chat posts can be written to.
+A conceptual object with its own unique name, a set of member users, and a set of chat posts written to it.
 
 ## Hash
 A 32-byte BLAKE2b digest of a particular sequence of bytes.
