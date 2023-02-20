@@ -18,6 +18,10 @@ Cable is designed to be:
 * compact over the wire
 * independent of whatever kind of database an implementation may use
 
+This protocol does not currently include encryption or authentication of the
+connection. It may be provided by other layers (e.g. Tor, I2P), or may be
+expanded upon in future iterations of this document.
+
 ## overview (wip)
 Cabal operates in a fashion differently from the typical server-client model,
 where no machine is either an official nor de-facto authority over others in
@@ -77,7 +81,7 @@ A point in time, represented by the number of seconds since the UNIX Epoch. Here
 
 ## Cryptography
 
-Implementing the cable wire protocol requires access to implementations of the following:
+Implementing cable requires access to implementations of the following:
 
 - [BLAKE2b](https://www.rfc-editor.org/rfc/rfc7693.txt) - Hash function described by RFC 7693. To be set to output 32-byte digests.
 - [ED25519](https://ed25519.cr.yp.to/) - A public-key signature system. Used to generate, sign posts, and verify post signatures.
@@ -89,7 +93,28 @@ This cryptographic functionality can be provided by [libsodium](https://libsodiu
 * `crypto_sign()` - to calculate the signature of a post (in combined mode)
 * `crypto_sign_open()` - to verify the signature of a post (in combined mode)
 
-# Message Wire Formats
+# data model & format (wip)
+
+## high-level data model
+- users
+  - which values win & how
+  - name string restrictions
+  - key string restrictions
+  - value string restrictions
+- channels (fields/properties, verbs upon them, how chat msgs in channels are sorted)
+  - which values win & how
+  - name string restrictions
+  - topic string restrictions
+  - chat msg string restrictions
+
+## mid-level model: posts, sync, ingestion, materialized views
+- posts, their fields, their handling, ingestion
+
+## low-level model: requests & responses, sync
+- request/response model and lifetimes
+- sync (of channels, of chat msgs)
+
+# message wire formats
 
 ## Field tables
 This section makes heavy use of tables to convey the expected ordering of bytes for various message types, such as the following:
@@ -632,14 +657,16 @@ whereas the timestamp-only comparator would give
 ]
 ```
 
-# concepts (wip)
+# data model notes (wip)
 
-## Channel Membership
+## Channels
+
+### Channel Membership
 A user is considered a member of a channel at a particular point in time if,
 from the client's perspective, that user has issued a `post/join` to that
 channel and has not issued a matching `post/leave` since.
 
-## Channel State
+### Channel State
 The state of the channel at any given moment from the perspective of a client
 is fully described by all of the following:
 - The latest of each user's `post/join` or `post/leave` post to the channel.
@@ -652,7 +679,30 @@ Here "latest" means the relevant post with greatest causal ordering, and, if
 that's not possible, the greatest timestamp. See "Chat Message Sorting" for
 more details on links and causal ordering.
 
-## `limit`
+## Request/Response Model
+Currently, all request types can generate potentially *many* responses. A
+request sent to a peer may result in several blocks of hashes or data being
+sent back by them as they scan their local database, and, if that peers
+forwards your request to its peers as well, they too may trickle back many
+responses over time.
+
+(upcoming: info about request lifetimes)
+
+### Time to Live (`ttl`)
+This field, set on requests, controls *how many more times* a request may be
+forwarded to other peers. A client wishing a request not be forward beyond its
+initial destination peer would set `ttl = 0` to signal this.
+
+When an incoming request has a `ttl > 0`, a peer can choose to forward a
+request along to other peers, and then forward the responses back to the peer
+that made the request. Each peer performing this action should decrement the
+`ttl` by one. A request with `ttl == 0` should not be forwarded.
+
+The TTL mechanism exists to allow clients with limited connectivity to peers
+(e.g. behind a strong NAT) to use the peers they can reach as a relay to
+find and retrieve data they are interested in more easily.
+
+### Limits (`limit`)
 If a request has a `limit` field specifying an upper bound on how many hashes
 it expects to get in response, and also sets a `ttl > 0`, a peer handling this
 request should try to ensure that that `limit` is honoured. This can be done by
@@ -669,7 +719,24 @@ a hash `f88954b3e6adc067af61cca2aea7e3baecfea4238cb1594e705ecd3c92a67cb1`, `B`
 could ensure it was only passed back to `A` one time, thus reducing the
 remaining `limit` by 1 instead of 2.
 
-## Links
+## Posts
+local disk storage. A post always has an author (via a required `public_key`
+field), and always provides a signature (via the required `signature` field) to
+prove they authored it.
+
+When you "make a post", you are only writing to some local storage indexed by the hash of the
+content. Posts only get sent to other peers in response to queries for content matching certain
+criteria.
+
+### Hash
+All **post**s in Cable is referenced by the resulting output of putting a post
+through a hash function. Specifically, 32-byte BLAKE2b (optionally using
+libsodium's `crypto_generichash()` function).
+
+To produce a correct hash, run `crypto_generichash()` on the entire post,
+including the post header.
+
+### Links
 Part of the header every post is the `links` field. Every post is able to link
 to 0 or more other posts by means of referencing those posts by their hash (the
 output of running them through a specific hash function).
@@ -680,49 +747,4 @@ your post must have occurred after all of the posts you are referencing.
 This can be useful for ordering chat messages in particular when a client's
 hardware clock is skewed, and using post timestamps alone would provide
 confusing ordering.
-
-## Post
-local disk storage. A post always has an author (via a required `public_key`
-field), and always provides a signature (via the required `signature` field) to
-prove they authored it.
-
-When you "make a post", you are only writing to some local storage indexed by the hash of the
-content. Posts only get sent to other peers in response to queries for content matching certain
-criteria.
-
-## Request/Response Model
-Currently, all request types can generate potentially *many* responses. A
-request sent to a peer may result in several blocks of hashes or data being
-sent back by them as they scan their local database, and, if that peers
-forwards your request to its peers as well, they too may trickle back many
-responses over time.
-
-(upcoming: info about request lifetimes)
-
-## Time to Live (TTL)
-This field, set on requests, controls *how many more times* a request may be
-forwarded to other peers. A client wishing a request not be forward beyond its
-initial destination peer would set `ttl = 0` to signal this.
-
-When an incoming request has a `ttl > 0`, a peer can choose to forward a
-request along to other peers, and then forward the responses back to the peer
-that made the request. Each peer performing this action should decrement the
-`ttl` by one. A request with `ttl == 0` should not be forwarded.
-
-The TTL mechanism exists to allow clients with limited connectivity to peers
-(e.g. behind a strong NAT) to use the peers they can reach as a relay to
-find and retrieve data they are interested in more easily.
-
-## Hash
-All **post**s in Cable is referenced by the resulting output of putting a post
-through a hash function. Specifically, 32-byte BLAKE2b (optionally using
-libsodium's `crypto_generichash()` function).
-
-To produce a correct hash, run `crypto_generichash()` on the entire post,
-including the post header.
-
-## note? where to put?
-This protocol does not include encryption or authentication of the connection, which may
-be provided by other layers, or may be further expanded upon in future
-iterations of this specification.
 
