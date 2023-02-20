@@ -4,6 +4,8 @@ Version: 1.0 (draft)
 
 Author: Kira Oakley
 
+Contributors: Alex Cobleigh, Noelle Leigh, Henry (cryptix)
+
 ## abstract
 
 This document describes the cable wire protocol. That is, the specific bytes
