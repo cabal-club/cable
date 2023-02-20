@@ -1,6 +1,75 @@
-# cable (cabal protocol)
+# cable
 
-This document describes the bytes over the wire to speak the cable protocol.
+## abstract
+
+This document describes the cable wire protocol. That is, the specific bytes
+sent "over the wire" between peers wishing to speak the protocol to each other.
+
+## introduction
+Cable is the wire protocol for [Cabal](https://cabal.chat), a distributed
+peer-to-peer computer program for private group conversations over the
+Internet, local network, or more esoteric types of networks.
+
+Cable is designed to be:
+* fairly simple to implement in any language with only a single dependency (libsodium)
+* able to bridge across different network transports
+* useful, even if written as a partial implementation
+* efficient in its use of network resources, by syncing relevant subsets of the full dataset
+* compact over the wire
+* independent of whatever kind of database an implementation may use
+
+## overview (wip)
+Cabal operates in a fashion where, unlike the server-client model, no machine
+is either an official nor de-facto authority over others in the network.
+
+Users of Cabal are identified by their ED25519 public key, and use shared
+knowledge of their key combined with their private key to prove themselves as
+verifiable authors of data shared with other peers.
+
+All durable data exchanged over the protocol are called Posts, and are always
+cryptographically signed by their author's private key. Any post may be
+referred to by its 32-byte BLAKE2b hash. This protocol primary aim is to
+faciliate the exchange of these posts between peers.
+
+# Definitions
+## Client
+An running instance of an implementation of cable.
+
+## User
+An ED25519 public key.
+
+## Post
+An authored binary payload, signed by the private key of its creator **user**.
+
+## Message
+An informative binary payload sent by and received from other cable peers. Each
+message is either a **request** or a **response**.
+
+## Peer
+A machine that a client is connected to over some network protocol who is also speaking the cable protocol.
+
+## Request
+A message originating from a particular **peer**, identified by a unique request ID.
+
+## Response
+A message, traversing the network to the peer who originally made a request with the same request ID.
+
+## Cabal
+A private group chat that a number of users can participate in, comprised of zero or more **channel**s.
+
+## Channel
+An object with its own unique name, a set of member users, which chat posts can be written to.
+
+## Hash
+A 32-byte BLAKE2b digest of a particular sequence of bytes.
+
+## Link
+A **hash**, which acts as a reference to the post which hashes to said hash.
+
+## UNIX Epoch
+Midnight on January 1st, 1970.
+
+# cryptographic dependencies
 
 Implementing the cable wire protocol requires access to implementations of the following crytographic functions:
 
@@ -22,18 +91,10 @@ want to use [noise][] yourself ([which is what i2p uses][ntcp2]).
 [noise]: http://noiseprotocol.org/
 [ntcp2]: https://geti2p.net/spec/ntcp2
 
-# goals
+# messages
 
-* simple to implement in any language with only libsodium dependency
-* bridge across different network transports
-* partial implementations are still useful
-* sparse access
-* compact over the wire
-* use any kind of database
-
-# Definitions & Context
 ## Binary format tables
-The binary format of messages and posts are described in this document using tables like the following:
+This section makes heavy use of tables to convey the expected ordering of bytes for various message types, such as the following:
 
 field      | type     | desc
 -----------|----------|-------------------------------------------------------------
@@ -58,110 +119,7 @@ The following data types are used:
 - `u8[N]`: a sequence of exactly `N` unsigned bytes
 - `varint`: a variable-length unsigned integer. cable uses protobuf-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). (For an example implementation of varint encoding/decoding, see the [nodejs varint package](https://www.npmjs.com/package/varint).)
 
-## Channel Membership
-A user is considered a member of a channel at a particular point in time if,
-from the client's perspective, that user has issued a `post/join` to that
-channel and has not issued a matching `post/leave` since.
-
-## Channel State
-The state of the channel at any given moment from the perspective of a client
-is fully described by all of the following:
-- The latest of each user's `post/join` or `post/leave` post to the channel.
-- The latest `post/info` post of each user who is *or was* a member of the
-  channel.
-- The latest `post/topic` post to channel, made by any user, regardless of
-  current or past membership.
-
-Here "latest" means the relevant post with greatest causal ordering, and, if
-that's not possible, the greatest timestamp. See "Chat Message Sorting" for
-more details on links and causal ordering.
-
-## Client
-An running instance of an implementation of cable.
-
-## `limit`
-If a request has a `limit` field specifying an upper bound on how many hashes
-it expects to get in response, and also sets a `ttl > 0`, a peer handling this
-request should try to ensure that that `limit` is honoured. This can be done by
-counting how many hashes a client sends back to the requestor, **including**
-hashes received through other peers that the client has forwarded the request
-to.
-
-For example, assume `A` sends a request to `B` with `limit=50` and `ttl=1`, and
-`B` forwards the request to `C` and `D`. `B` may send back 15 hashes to `A` at
-first, which means there are now a maximum of `50-15=35` hashes left for `C`
-and `D` combined for `B` to potentially send back. `B` can choose to track
-hashes and perform deduplication, so that if `C` and `D` were to both send back
-a hash `f88954b3e6adc067af61cca2aea7e3baecfea4238cb1594e705ecd3c92a67cb1`, `B`
-could ensure it was only passed back to `A` one time, thus reducing the
-remaining `limit` by 1 instead of 2.
-
-## Hashes
-Nearly all data in Cable is referenced by the resulting output of putting a
-post through a hash function. Specifically, blake2b, using libsodium's
-`crypto_generichash()` function.
-
-To produce a correct hash, run `crypto_generichash()` on the entire post,
-including the post header.
-
-## Links
-Part of the header every post is the `links` field. Every post is able to link
-to 0 or more other posts by means of referencing those posts by their hash (the
-output of running them through a specific hash function).
-
-Referencing a post by its hash provides a *causal proof*: it demonstrates that
-your post must have occurred after all of the posts you are referencing.
-
-This can be useful for ordering chat messages in particular when a client's
-hardware clock is skewed, and using post timestamps alone would provide
-confusing ordering.
-
-## Message
-A "message" is a specific binary payload describing the bytes that can be
-sent and received from other cable peers. These are used to request data from
-peers, and provide data to peers.
-
-## Post
-A "post" is a specific binary payload describing the bytes of signed data to be
-written to local disk storage. A post always has an author (via a required
-`public_key` field), and always provides a signature (via the required
-`signature` field) to prove they authored it.
-
-When you "make a post", you are only writing to some local storage indexed by the hash of the
-content. Posts only get sent to other peers in response to queries for content matching certain
-criteria.
-
-## Request/Response Model
-Currently, all request types can generate potentially *many* responses. A
-request sent to a peer may result in several blocks of hashes or data being
-sent back by them as they scan their local database, and, if that peers
-forwards your request to its peers as well, they too may trickle back many
-responses over time.
-
-(upcoming: info about request lifetimes)
-
-## Time to Live (TTL)
-This field, set on requests, controls *how many more times* a request may be
-forwarded to other peers. A client wishing a request not be forward beyond its
-initial destination peer would set `ttl = 0` to signal this.
-
-When an incoming request has a `ttl > 0`, a peer can choose to forward a
-request along to other peers, and then forward the responses back to the peer
-that made the request. Each peer performing this action should decrement the
-`ttl` by one. A request with `ttl == 0` should not be forwarded.
-
-The TTL mechanism exists to allow clients with limited connectivity to peers
-(e.g. behind a strong NAT) to use the peers they can reach as a relay to
-find and retrieve data they are interested in more easily.
-
-## UNIX Epoch
-Midnight on January 1st, 1970.
-
-## User
-A pair of ED25519 keys (public and private) is all that is needed to constitute
-a "user".
-
-# messages
+## message header
 
 All messages begin with a `msg_len` and a `msg_type` varint:
 
@@ -676,3 +634,93 @@ whereas the timestamp-only comparator would give
   'hi from not-the-future; it is actually clock skew',
 ]
 ```
+
+# concepts (wip)
+
+## Channel Membership
+A user is considered a member of a channel at a particular point in time if,
+from the client's perspective, that user has issued a `post/join` to that
+channel and has not issued a matching `post/leave` since.
+
+## Channel State
+The state of the channel at any given moment from the perspective of a client
+is fully described by all of the following:
+- The latest of each user's `post/join` or `post/leave` post to the channel.
+- The latest `post/info` post of each user who is *or was* a member of the
+  channel.
+- The latest `post/topic` post to channel, made by any user, regardless of
+  current or past membership.
+
+Here "latest" means the relevant post with greatest causal ordering, and, if
+that's not possible, the greatest timestamp. See "Chat Message Sorting" for
+more details on links and causal ordering.
+
+## `limit`
+If a request has a `limit` field specifying an upper bound on how many hashes
+it expects to get in response, and also sets a `ttl > 0`, a peer handling this
+request should try to ensure that that `limit` is honoured. This can be done by
+counting how many hashes a client sends back to the requestor, **including**
+hashes received through other peers that the client has forwarded the request
+to.
+
+For example, assume `A` sends a request to `B` with `limit=50` and `ttl=1`, and
+`B` forwards the request to `C` and `D`. `B` may send back 15 hashes to `A` at
+first, which means there are now a maximum of `50-15=35` hashes left for `C`
+and `D` combined for `B` to potentially send back. `B` can choose to track
+hashes and perform deduplication, so that if `C` and `D` were to both send back
+a hash `f88954b3e6adc067af61cca2aea7e3baecfea4238cb1594e705ecd3c92a67cb1`, `B`
+could ensure it was only passed back to `A` one time, thus reducing the
+remaining `limit` by 1 instead of 2.
+
+## Links
+Part of the header every post is the `links` field. Every post is able to link
+to 0 or more other posts by means of referencing those posts by their hash (the
+output of running them through a specific hash function).
+
+Referencing a post by its hash provides a *causal proof*: it demonstrates that
+your post must have occurred after all of the posts you are referencing.
+
+This can be useful for ordering chat messages in particular when a client's
+hardware clock is skewed, and using post timestamps alone would provide
+confusing ordering.
+
+## Post
+local disk storage. A post always has an author (via a required `public_key`
+field), and always provides a signature (via the required `signature` field) to
+prove they authored it.
+
+When you "make a post", you are only writing to some local storage indexed by the hash of the
+content. Posts only get sent to other peers in response to queries for content matching certain
+criteria.
+
+## Request/Response Model
+Currently, all request types can generate potentially *many* responses. A
+request sent to a peer may result in several blocks of hashes or data being
+sent back by them as they scan their local database, and, if that peers
+forwards your request to its peers as well, they too may trickle back many
+responses over time.
+
+(upcoming: info about request lifetimes)
+
+## Time to Live (TTL)
+This field, set on requests, controls *how many more times* a request may be
+forwarded to other peers. A client wishing a request not be forward beyond its
+initial destination peer would set `ttl = 0` to signal this.
+
+When an incoming request has a `ttl > 0`, a peer can choose to forward a
+request along to other peers, and then forward the responses back to the peer
+that made the request. Each peer performing this action should decrement the
+`ttl` by one. A request with `ttl == 0` should not be forwarded.
+
+The TTL mechanism exists to allow clients with limited connectivity to peers
+(e.g. behind a strong NAT) to use the peers they can reach as a relay to
+find and retrieve data they are interested in more easily.
+
+## Hash
+All **post**s in Cable is referenced by the resulting output of putting a post
+through a hash function. Specifically, 32-byte BLAKE2b (optionally using
+libsodium's `crypto_generichash()` function).
+
+To produce a correct hash, run `crypto_generichash()` on the entire post,
+including the post header.
+
