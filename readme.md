@@ -1,5 +1,8 @@
 # cable
 
+Version: 1.0 (draft)
+Author: Kira Oakley
+
 ## abstract
 
 This document describes the cable wire protocol. That is, the specific bytes
