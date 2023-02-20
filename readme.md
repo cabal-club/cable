@@ -7,8 +7,8 @@ sent "over the wire" between peers wishing to speak the protocol to each other.
 
 ## introduction
 Cable is the wire protocol for [Cabal](https://cabal.chat), a distributed
-peer-to-peer computer program for private group conversations over the
-Internet, local network, or more esoteric types of networks.
+peer-to-peer computer program for private group chat over the Internet, local
+networks, or other, more esoteric types of networks.
 
 Cable is designed to be:
 * fairly simple to implement in any language with only a single dependency (libsodium)
@@ -19,8 +19,9 @@ Cable is designed to be:
 * independent of whatever kind of database an implementation may use
 
 ## overview (wip)
-Cabal operates in a fashion where, unlike the server-client model, no machine
-is either an official nor de-facto authority over others in the network.
+Cabal operates in a fashion differently from the typical server-client model,
+where no machine is either an official nor de-facto authority over others in
+the network.
 
 Users of Cabal are identified by their ED25519 public key, and use shared
 knowledge of their key combined with their private key to prove themselves as
@@ -72,31 +73,25 @@ Midnight on January 1st, 1970.
 ## UNIX Time
 A point in time, represented by the number of seconds since the UNIX Epoch. Here, this value is assumed to be non-negative, meaning dates before the UNIX Epoch can not be represented.
 
-# cryptographic dependencies
+# software dependencies
 
-Implementing the cable wire protocol requires access to implementations of the following crytographic functions:
+## Cryptography
 
-- [BLAKE2b cryptographic hash](https://www.rfc-editor.org/rfc/rfc7693.txt) - RFC 7693; set to output 32-byte digests.
+Implementing the cable wire protocol requires access to implementations of the following:
+
+- [BLAKE2b](https://www.rfc-editor.org/rfc/rfc7693.txt) - Hash function described by RFC 7693. To be set to output 32-byte digests.
 - [ED25519](https://ed25519.cr.yp.to/) - A public-key signature system. Used to generate, sign posts, and verify post signatures.
 
-These required cryptographic functions can be provided by [libsodium](https://libsodium.org) 1.0.18-stable, if bindings exist for one's implementation language of choice. In particular, these functions can be utilized:
+This cryptographic functionality can be provided by [libsodium](https://libsodium.org) 1.0.18-stable, if bindings exist for one's implementation language of choice. In particular, these functions may be utilized, with their default settings:
 
 * `crypto_generichash()` - to hash messages with BLAKE2b
 * `crypto_sign_keypair()` - to generate public and secret ED25519 keys
 * `crypto_sign()` - to calculate the signature of a post (in combined mode)
 * `crypto_sign_open()` - to verify the signature of a post (in combined mode)
 
-This does not include encryption or authentication of the connection, which are provided by other
-layers. For example, if you are using i2p, the network already provides you with an authentication
-mechanism as part of the network routing and messages are already encrypted. Otherwise you might
-want to use [noise][] yourself ([which is what i2p uses][ntcp2]).
+# Message Wire Formats
 
-[noise]: http://noiseprotocol.org/
-[ntcp2]: https://geti2p.net/spec/ntcp2
-
-# messages
-
-## Binary format tables
+## Field tables
 This section makes heavy use of tables to convey the expected ordering of bytes for various message types, such as the following:
 
 field      | type     | desc
@@ -124,7 +119,7 @@ The following data types are used:
 
 ## message header
 
-All messages begin with a `msg_len` and a `msg_type` varint:
+All messages begin with a `msg_len` and a `msg_type` varint, and a reserved 4-byte `circuit_id` field:
 
 field         | type     | desc
 --------------|----------|-------------------------------------------------------------
@@ -132,14 +127,13 @@ field         | type     | desc
 `msg_type`    | `varint` | see fields below
 `circuit_id`  | `u8[4]`  | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 
-More fields follow after the `msg_type`.
+Message-specific fields follow after the `circuit_id`.
 
-Requests and responses all have a unique `msg_type`.
+Each request and response type has a unique `msg_type` (see below).
 
-Clients may experiment with custom message types beyond the ids used by this specification
-(where `msg_type>=64`).
+Clients may experiment with custom message types beyond the ids used by this specification (where `msg_type >= 64`).
 
-Clients encountering an unknown `msg_type` should ignore and discard them.
+Clients encountering an unknown `msg_type` should ignore and discard it.
 
 ## requests
 
@@ -726,4 +720,9 @@ libsodium's `crypto_generichash()` function).
 
 To produce a correct hash, run `crypto_generichash()` on the entire post,
 including the post header.
+
+## note? where to put?
+This protocol does not include encryption or authentication of the connection, which may
+be provided by other layers, or may be further expanded upon in future
+iterations of this specification.
 
