@@ -6,15 +6,22 @@ Author: Kira Oakley
 
 Contributors: Alex Cobleigh, Noelle Leigh, Henry (cryptix)
 
-## abstract
+## Abstract
 
 This document describes the cable wire protocol. That is, the specific bytes
 sent "over the wire" between peers wishing to speak the protocol to each other.
 
-## introduction
-Cable is the wire protocol for [Cabal](https://cabal.chat), a distributed
-peer-to-peer computer program for private group chat over the Internet, local
-networks, or other, more esoteric types of networks.
+## 0. Background
+Cabal is a distributed peer-to-peer computer program for private group chat. It
+operates in a fashion differently from the typical server-client model, where
+no machine is either an official nor de-facto authority over others in the
+network. Instead, peers collaborate with each other to share documents to build
+an eventually-consistent view of the shared data.
+
+## 1. Introduction
+The scope of the cable wire protocol is the facilitation of members of a Cabal
+group chat to exchange crytographically signed documents with each other, such
+as chat messages, spread across various user-defined topics.
 
 Cable is designed to be:
 * fairly simple to implement in any language with only a single dependency (libsodium)
@@ -24,68 +31,54 @@ Cable is designed to be:
 * compact over the wire
 * independent of whatever kind of database an implementation may use
 
-This protocol does not currently include encryption or authentication of the
-connection. It may be provided by other layers (e.g. Tor, I2P), or may be
-expanded upon in future iterations of this document.
+This protocol does not include encryption or authentication of the connection.
+It may be provided by other layers (e.g. Tor, I2P) or expanded upon in future
+iterations of this document.
 
-## overview (wip)
-Cabal operates in a fashion differently from the typical server-client model,
-where no machine is either an official nor de-facto authority over others in
-the network.
-
-Users of Cabal are identified by their ED25519 public key, and use shared
-knowledge of their key combined with their private key to prove themselves as
-verifiable authors of data shared with other peers.
-
-All durable data exchanged over the protocol are called Posts, and are always
-cryptographically signed by their author's private key. Any post may be
-referred to by its 32-byte BLAKE2b hash. This protocol primary aim is to
-faciliate the exchange of these posts between peers.
-
-# Definitions
-## Client
+## 2. Definitions
+### 2.1 Client
 An running instance of an implementation of cable.
 
-## User
+### 2.2 User
 An ED25519 public key.
 
-## Post
+### 2.3 Post
 An authored binary payload, signed by the private key of its creator **user**.
 
-## Message
+### 2.4 Message
 An informative binary payload sent by and received from other cable peers. Each
 message is either a **request** or a **response**.
 
-## Peer
+### Peer
 A machine that a client is connected to over some network protocol who is also speaking the cable protocol.
 
-## Request
+### Request
 A message originating from a particular **peer**, identified by a unique request ID.
 
-## Response
+### Response
 A message, traversing the network to the peer who originally made a request with the same request ID.
 
-## Cabal
+### Cabal
 A private group chat that a number of users can participate in, comprised of zero or more **channel**s.
 
-## Channel
+### Channel
 A conceptual object with its own unique name, a set of member users, and a set of chat posts written to it.
 
-## Hash
+### Hash
 A 32-byte BLAKE2b digest of a particular sequence of bytes.
 
-## Link
+### Link
 A **hash**, which acts as a reference to the post which hashes to said hash.
 
-## UNIX Epoch
+### UNIX Epoch
 Midnight on January 1st, 1970.
 
-## UNIX Time
+### UNIX Time
 A point in time, represented by the number of seconds since the UNIX Epoch. Here, this value is assumed to be non-negative, meaning dates before the UNIX Epoch can not be represented.
 
-# software dependencies
+## 3. software dependencies
 
-## Cryptography
+### 3.1 Cryptography
 
 Implementing cable requires access to implementations of the following:
 
@@ -99,9 +92,9 @@ This cryptographic functionality can be provided by [libsodium](https://libsodiu
 * `crypto_sign()` - to calculate the signature of a post (in combined mode)
 * `crypto_sign_open()` - to verify the signature of a post (in combined mode)
 
-# data model & format (wip)
+## 4. data model & format (wip)
 
-## high-level data model
+### high-level data model
 - users
   - which values win & how
   - name string restrictions
@@ -113,16 +106,16 @@ This cryptographic functionality can be provided by [libsodium](https://libsodiu
   - topic string restrictions
   - chat msg string restrictions
 
-## mid-level model: posts, sync, ingestion, materialized views
+### mid-level model: posts, sync, ingestion, materialized views
 - posts, their fields, their handling, ingestion
 
-## low-level model: requests & responses, sync
+### low-level model: requests & responses, sync
 - request/response model and lifetimes
 - sync (of channels, of chat msgs)
 
-# message wire formats
+## 5. Wire Format: Messages
 
-## Field tables
+### 5.1 Field tables
 This section makes heavy use of tables to convey the expected ordering of bytes for various message types, such as the following:
 
 field      | type     | desc
@@ -148,7 +141,7 @@ The following data types are used:
 - `u8[N]`: a sequence of exactly `N` unsigned bytes
 - `varint`: a variable-length unsigned integer. cable uses protobuf-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). (For an example implementation of varint encoding/decoding, see the [nodejs varint package](https://www.npmjs.com/package/varint).)
 
-## message header
+### 5.2 message header
 
 All messages begin with a `msg_len` and a `msg_type` varint, and a reserved 4-byte `circuit_id` field:
 
@@ -166,7 +159,7 @@ Clients may experiment with custom message types beyond the ids used by this spe
 
 Clients encountering an unknown `msg_type` should ignore and discard it.
 
-## requests
+### 5.3 requests
 
 Every request begins with the following header:
 
@@ -186,7 +179,7 @@ the swarm of peers who may handle it.
 When forwarding a request, do not change the `req_id`, so that routing loops
 can be more easily detected by peers.
 
-### request by hash (`msg_type=2`)
+#### request by hash (`msg_type=2`)
 
 Request data for a set of hashes.
 
@@ -210,7 +203,7 @@ seeing the requested hashes in the future.
 Responders are free to return the data for any subset of the requested hashes
 (including none).
 
-### cancel request (`msg_type=3`)
+#### cancel request (`msg_type=3`)
 
 Indicate a desire to stop receiving responses for any request.
 
@@ -231,7 +224,7 @@ This request should be passed along to any peers to which this peer has forwarde
 
 No response to this message is expected.
 
-### request channel time range (`msg_type=4`)
+#### request channel time range (`msg_type=4`)
 
 Request text posts and text post deletions written to a channel between a start and end time.
 
@@ -261,7 +254,7 @@ more posts as they arrive, up to `limit` number of posts.
 
 A `limit` of 0 indicates a desire to receive an unlimited number of hashes.
 
-### request channel state (`msg_type=5`)
+#### request channel state (`msg_type=5`)
 
 Request posts that describe the current state of a channel and its users, and
 optionally subscribe to future state changes.
@@ -292,7 +285,7 @@ Responses from a peer will keep coming until
 - `updates` live post hashes are returned (if `updates >= 1`), and
 - all known historic hashes are returned (if `historic == 1`)
 
-### request channel list (`msg_type=6`)
+#### request channel list (`msg_type=6`)
 
 Request a list of known channels from peers.
 
@@ -314,7 +307,7 @@ to future updates; the request is concluded after a single response.
 The `offset` field can be combined with the `limit` field to allow clients to
 paginate through the list of all channel names known by a peer.
 
-## responses
+### 5.4 responses
 
 There are 3 types of responses:
 
@@ -334,7 +327,7 @@ field      | type       | desc
 
 More fields follow for different response types below.
 
-### hash response (`msg_type=0`)
+#### hash response (`msg_type=0`)
 
 Respond with a list of hashes.
 
@@ -346,7 +339,7 @@ field        | type                | desc
 `hash_count` | `varint`            | number of hashes in the response
 `hashes`     | `u8[hash_count*32]` | blake2b hashes concatenated together
 
-### data response (`msg_type=1`)
+#### data response (`msg_type=1`)
 
 Respond with a list of results for data lookups by hash.
 
@@ -368,7 +361,7 @@ A recipient reads zero or more (`data_len`,`data`) pairs until `data_len` is 0.
 Clients can hash an entire data payload to check whether it is data that it was
 expecting (i.e. had sent out a `request by hash` for).
 
-### channel list response (`msg_type=7`)
+#### channel list response (`msg_type=7`)
 
 Respond with a list of names of known channels.
 
@@ -389,7 +382,7 @@ A recipient reads the zero or more (`channel_len`,`channel`) pairs until
 In order for pagination to work properly, clients are expected to use a *stable
 sort order* for channel names.
 
-# posts
+## 6. Wire Format: Posts
 
 Every post begins with the following 5-field header:
 
@@ -423,7 +416,7 @@ Specify `num_links=0` if there is nothing to link to.
 
 Clients should ignore posts with a `post_type` that they don't understand or support.
 
-## post/text (`post_type=0`)
+### post/text (`post_type=0`)
 
 Post a message in a channel.
 
@@ -442,7 +435,7 @@ field          | type               | desc
 
 The `text` body of a chat message is expected to be a UTF-8 string.
 
-## post/delete (`post_type=1`)
+### post/delete (`post_type=1`)
 
 Request that peers encountering this post delete the referenced posts by their
 hashes from their local storage, and not store the referenced posts in the
@@ -464,7 +457,7 @@ local deletion of the referenced posts if the author (`post.public_key`)
 matches the author of the post to be deleted (i.e. only the user who authored a
 post may delete it).
 
-## post/info (`post_type=2`)
+### post/info (`post_type=2`)
 
 Set public information about yourself.
 
@@ -500,7 +493,7 @@ key       | desc
 To save space, client may discard from disk older versions of these messages
 from a particular user.
 
-## post/topic (`post_type=3`)
+### post/topic (`post_type=3`)
 
 Set a topic for a channel.
 
@@ -517,7 +510,7 @@ field          | type               | desc
 `topic_len`    | `varint`           | length of the topic field
 `topic`        | `u8[topic_len] `   | topic content
 
-## post/join (`post_type=4`)
+### post/join (`post_type=4`)
 
 Join a channel.
 
@@ -534,7 +527,7 @@ field          | type               | desc
 
 Peers can obtain a link to anchor their join message by requesting a list of channels.
 
-## post/leave (`post_type=5`)
+### post/leave (`post_type=5`)
 
 Leave (part) a channel.
 
@@ -549,7 +542,17 @@ field          | type               | desc
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 
-# Notes for Client Implementors
+
+## 7. Security Considerations
+- this layer does NOT provide peer authentication; security assumption is that if they know the "cabal key" they can exchange messages
+- an upper layer (forthcoming docment: handshake protocol) has already ensured that each peer knows the "cabal key" -- a secret sequence of 32 bytes proving they are a member
+
+
+
+
+---
+
+# unsorted notes
 
 ## Channel Sync Model
 `request channel state` and `request channel time range` are sufficient to
@@ -665,6 +668,11 @@ whereas the timestamp-only comparator would give
 
 # data model notes (wip)
 
+## Users
+Users of Cabal are identified by their ED25519 public key, and use shared
+knowledge of their key combined with their private key to prove themselves as
+verifiable authors of data shared with other peers.
+
 ## Channels
 
 ### Channel Membership
@@ -726,6 +734,11 @@ could ensure it was only passed back to `A` one time, thus reducing the
 remaining `limit` by 1 instead of 2.
 
 ## Posts
+All durable data exchanged over the protocol are called Posts, and are always
+cryptographically signed by their author's private key. Any post may be
+referred to by its 32-byte BLAKE2b hash. This protocol primary aim is to
+faciliate the exchange of these posts between peers.
+
 local disk storage. A post always has an author (via a required `public_key`
 field), and always provides a signature (via the required `signature` field) to
 prove they authored it.
@@ -753,4 +766,3 @@ your post must have occurred after all of the posts you are referencing.
 This can be useful for ordering chat messages in particular when a client's
 hardware clock is skewed, and using post timestamps alone would provide
 confusing ordering.
-
