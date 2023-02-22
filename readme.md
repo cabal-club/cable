@@ -92,6 +92,15 @@ This cryptographic functionality can be provided by [libsodium](https://libsodiu
 * `crypto_sign()` - to calculate the signature of a post (in combined mode)
 * `crypto_sign_open()` - to verify the signature of a post (in combined mode)
 
+### 3.1.1 BLAKE2b Parameters
+The following are the general parameters to be used with BLAKE2b. If you are using 1.0.18-stable of libsodium, these are already set by default.
+
+- Digest byte length: 32
+- Key byte length (not used): 0
+- Salt (hexadecimal): `5b6b 41ed 9b34 3fe0`
+- Personalization (hexadecimal): `5126 fb2a 3740 0d2a`
+
+
 ## 4. data model & format (wip)
 
 ### high-level data model
@@ -766,3 +775,7 @@ your post must have occurred after all of the posts you are referencing.
 This can be useful for ordering chat messages in particular when a client's
 hardware clock is skewed, and using post timestamps alone would provide
 confusing ordering.
+
+## ?. References
+BLAKE2: https://www.blake2.net/blake2.pdf
+
