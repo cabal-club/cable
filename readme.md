@@ -19,9 +19,9 @@ network. Instead, peers collaborate with each other to share documents to build
 an eventually-consistent view of the shared data.
 
 ## 1. Introduction
-The scope of the cable wire protocol is the facilitation of members of a Cabal
-group chat to exchange crytographically signed documents with each other, such
-as chat messages, spread across various user-defined topics.
+The purpose of the cable wire protocol is the facilitation of members of a
+Cabal group chat to exchange crytographically signed documents with each other,
+such as chat messages, spread across various user-defined topics.
 
 Cable is designed to be:
 * fairly simple to implement in any language with only a single dependency (libsodium)
@@ -31,9 +31,18 @@ Cable is designed to be:
 * compact over the wire
 * independent of whatever kind of database an implementation may use
 
-This protocol does not include encryption or authentication of the connection.
-It may be provided by other layers (e.g. Tor, I2P) or expanded upon in future
-iterations of this document.
+## 1.1 Scope
+This protocol does NOT include encryption or authentication of the connection.
+It may be provided by other layers in userland(e.g. Tor, I2P) or expanded upon
+in future iterations of this document. In particular, a future handshake
+protocol is planned, which will handle authenticating that connected peers are
+members of the same Cabal as the host machine.
+
+As such, it is assumed that peers speaking this protocol have proven to be
+legitimate members of the cabal. See Security Considerations (below) for an
+analysis of the types of anticipated attacks that even proper cabal members may
+carry out and their mitigations.
+
 
 ## 2. Definitions
 ### 2.1 Client
