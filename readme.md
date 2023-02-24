@@ -52,7 +52,7 @@ A private group chat that a number of users can participate in, comprised of **u
 A conceptual object with its own unique name, a set of member **user**s, and a set of chat **post**s written to it.
 
 ### User
-An ED25519 pair of keys: a **public key**, and a **private key**.
+An ED25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal. *User* and *member* may be used interchangably.
 
 ### Public Key
 An ED25519 key, which constitutes a user's public-facing idenity within a cabal.
@@ -91,7 +91,7 @@ Midnight on January 1st, 1970.
 ### UNIX Time
 A point in time, represented by the number of seconds since the UNIX Epoch. Here, this value is assumed to be non-negative, meaning dates before the UNIX Epoch can not be represented.
 
-## 3. software dependencies
+## 3. Software Dependencies
 
 ### 3.1 Cryptography
 
@@ -165,7 +165,7 @@ The following data types are used:
 - `u8[N]`: a sequence of exactly `N` unsigned bytes
 - `varint`: a variable-length unsigned integer. cable uses protobuf-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). (For an example implementation of varint encoding/decoding, see the [nodejs varint package](https://www.npmjs.com/package/varint).)
 
-### 5.2 message header
+### 5.2 Message Header
 
 All messages begin with a `msg_len` and a `msg_type` varint, and a reserved 4-byte `circuit_id` field:
 
@@ -183,7 +183,9 @@ Clients may experiment with custom message types beyond the ids used by this spe
 
 Clients encountering an unknown `msg_type` should ignore and discard it.
 
-### 5.3 requests
+The `circuit_id` field is not currently specified, and should not be used. It is reserved for future use.
+
+### 5.3 Requests
 
 Every request begins with the following header:
 
@@ -203,7 +205,7 @@ the swarm of peers who may handle it.
 When forwarding a request, do not change the `req_id`, so that routing loops
 can be more easily detected by peers.
 
-#### request by hash (`msg_type=2`)
+#### 5.3.1 Request by Hash (`msg_type=2`)
 
 Request data for a set of hashes.
 
@@ -227,7 +229,7 @@ seeing the requested hashes in the future.
 Responders are free to return the data for any subset of the requested hashes
 (including none).
 
-#### cancel request (`msg_type=3`)
+#### 5.3.2 Cancel Request (`msg_type=3`)
 
 Indicate a desire to stop receiving responses for any request.
 
@@ -248,7 +250,7 @@ This request should be passed along to any peers to which this peer has forwarde
 
 No response to this message is expected.
 
-#### request channel time range (`msg_type=4`)
+#### 5.3.3 Request Channel Time Range (`msg_type=4`)
 
 Request text posts and text post deletions written to a channel between a start and end time.
 
@@ -278,7 +280,7 @@ more posts as they arrive, up to `limit` number of posts.
 
 A `limit` of 0 indicates a desire to receive an unlimited number of hashes.
 
-#### request channel state (`msg_type=5`)
+#### 5.3.4 Request Channel State (`msg_type=5`)
 
 Request posts that describe the current state of a channel and its users, and
 optionally subscribe to future state changes.
@@ -309,7 +311,7 @@ Responses from a peer will keep coming until
 - `updates` live post hashes are returned (if `updates >= 1`), and
 - all known historic hashes are returned (if `historic == 1`)
 
-#### request channel list (`msg_type=6`)
+#### 5.3.5 Request Channel List (`msg_type=6`)
 
 Request a list of known channels from peers.
 
@@ -331,7 +333,7 @@ to future updates; the request is concluded after a single response.
 The `offset` field can be combined with the `limit` field to allow clients to
 paginate through the list of all channel names known by a peer.
 
-### 5.4 responses
+### 5.4 Responses
 
 There are 3 types of responses:
 
@@ -351,7 +353,7 @@ field      | type       | desc
 
 More fields follow for different response types below.
 
-#### hash response (`msg_type=0`)
+#### 5.4.1 Hash Response (`msg_type=0`)
 
 Respond with a list of hashes.
 
@@ -363,7 +365,7 @@ field        | type                | desc
 `hash_count` | `varint`            | number of hashes in the response
 `hashes`     | `u8[hash_count*32]` | blake2b hashes concatenated together
 
-#### data response (`msg_type=1`)
+#### 5.4.2 Data Response (`msg_type=1`)
 
 Respond with a list of results for data lookups by hash.
 
@@ -385,7 +387,7 @@ A recipient reads zero or more (`data_len`,`data`) pairs until `data_len` is 0.
 Clients can hash an entire data payload to check whether it is data that it was
 expecting (i.e. had sent out a `request by hash` for).
 
-#### channel list response (`msg_type=7`)
+#### 5.4.3 Channel List Response (`msg_type=7`)
 
 Respond with a list of names of known channels.
 
@@ -408,7 +410,8 @@ sort order* for channel names.
 
 ## 6. Wire Format: Posts
 
-Every post begins with the following 5-field header:
+### 6.1 Post Header
+Every post begins with the following 6-field header:
 
 field        | type              | desc
 -------------|-------------------|-------------------------------------------------------
@@ -440,7 +443,7 @@ Specify `num_links=0` if there is nothing to link to.
 
 Clients should ignore posts with a `post_type` that they don't understand or support.
 
-### post/text (`post_type=0`)
+### 6.2 `post/text` (`post_type=0`)
 
 Post a message in a channel.
 
@@ -459,7 +462,7 @@ field          | type               | desc
 
 The `text` body of a chat message is expected to be a UTF-8 string.
 
-### post/delete (`post_type=1`)
+### 6.3 `post/delete` (`post_type=1`)
 
 Request that peers encountering this post delete the referenced posts by their
 hashes from their local storage, and not store the referenced posts in the
@@ -481,7 +484,7 @@ local deletion of the referenced posts if the author (`post.public_key`)
 matches the author of the post to be deleted (i.e. only the user who authored a
 post may delete it).
 
-### post/info (`post_type=2`)
+### 6.4 `post/info` (`post_type=2`)
 
 Set public information about yourself.
 
@@ -517,7 +520,7 @@ key       | desc
 To save space, client may discard from disk older versions of these messages
 from a particular user.
 
-### post/topic (`post_type=3`)
+### 6.5 `post/topic` (`post_type=3`)
 
 Set a topic for a channel.
 
@@ -534,7 +537,7 @@ field          | type               | desc
 `topic_len`    | `varint`           | length of the topic field
 `topic`        | `u8[topic_len] `   | topic content
 
-### post/join (`post_type=4`)
+### 6.6 `post/join` (`post_type=4`)
 
 Join a channel.
 
@@ -551,7 +554,7 @@ field          | type               | desc
 
 Peers can obtain a link to anchor their join message by requesting a list of channels.
 
-### post/leave (`post_type=5`)
+### 6.7 `post/leave` (`post_type=5`)
 
 Leave (part) a channel.
 
