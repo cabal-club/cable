@@ -45,16 +45,28 @@ carry out and their mitigations.
 
 
 ## 2. Definitions
-### 2.1 Client
+### Cabal
+A private group chat that a number of users can participate in, comprised of **users** and zero or more **channel**s.
+
+### Channel
+A conceptual object with its own unique name, a set of member **user**s, and a set of chat **post**s written to it.
+
+### User
+An ED25519 pair of keys: a **public key**, and a **private key**.
+
+### Public Key
+An ED25519 key, which constitutes a user's public-facing idenity within a cabal.
+
+### Private Key
+An ED25519 key, used for signing authored **post**s. Kept private and secret to all but the user who owns it.
+
+### Post
+An authored binary payload, signed by the private key of its creator user.
+
+### Client
 An running instance of an implementation of cable.
 
-### 2.2 User
-An ED25519 public key.
-
-### 2.3 Post
-An authored binary payload, signed by the private key of its creator **user**.
-
-### 2.4 Message
+### Message
 An informative binary payload sent by and received from other cable peers. Each
 message is either a **request** or a **response**.
 
@@ -66,12 +78,6 @@ A message originating from a particular **peer**, identified by a unique request
 
 ### Response
 A message, traversing the network to the peer who originally made a request with the same request ID.
-
-### Cabal
-A private group chat that a number of users can participate in, comprised of zero or more **channel**s.
-
-### Channel
-A conceptual object with its own unique name, a set of member users, and a set of chat posts written to it.
 
 ### Hash
 A 32-byte BLAKE2b digest of a particular sequence of bytes.
