@@ -571,10 +571,46 @@ field          | type               | desc
 
 
 ## 7. Security Considerations
-- this layer does NOT provide peer authentication; security assumption is that if they know the "cabal key" they can exchange messages
-- an upper layer (forthcoming docment: handshake protocol) has already ensured that each peer knows the "cabal key" -- a secret sequence of 32 bytes proving they are a member
 
+### 7.1 Out of scope Threats
+1. A document specifying a lower-level handshake protocol for establishing connections between cabal peers is forthcoming. It intends to provide a) *confidentiality* and protection on messages from *Man-in-the-Middle attacks* (via end-to-end encryption), and b) *peer entity authentication*, insofar that the machine connected to has proven themselves to be a member of a particular cabal. As such, attacks from these vectors are not discussed here.
 
+2. Not considered in scope are actors capable of deriving an ED25519's private key from the public key via brute force, which would break data integrity and permit data insertion/deletion/modification of the compromised user's posts.
+
+### 7.2 In-scope Threats
+How ever the handshake protocol ends up working, it remains possible that an unintended attacker may end up forming network connections with members of a private cabal (either through the cabal key being leaked via machine theft or poor operational security by its members). As such, this document considers it an in-scope threat to have an attacker's machine be able to pose as a legitimate member and communicate with others using this wire protocol.
+
+### 7.2.1 Susceptibilities
+#### 7.2.1.1 Inappropriate Use
+1. An attacker could issue a `post/info` to alter their display name to be the same as another user, causing confusion as to which user is authoring certain chat messages.
+2. An attacker could issue `post/topic` posts to edit channel topics to garbage text, offensive content, or malicious content (e.g. phishing). Since most chat programs have channel topics controlled by "moderators" or "admins", this could cause confusion if users do not realize that anyone can set these strings.
+3. The list of channels in the `Channel List Response` message could be falsified to include channels that do not exist (i.e. no users have posted to them) or to omit the names channels that do exist.
+
+#### 7.2.1.2 Denial of Service
+1. Authoring very large posts (gigabytes or larger) and/or a large number of smaller posts, and sharing them with others to download.
+2. Making a large quantity of expensive requests (e.g. a time range request on a channel with a long chat history that covers its entire lifetime, repeatedly).
+3. Responding to legitimate requests with made-up hashes (especially in large quantities), which the client may spend considerable time and resources searching for indefinitely, depending on the implementation.
+4. Falsifying a `Channel List Response` to provide a large number of non-existent channels, which, depending on the client implementation, it may cause excessive resource using trying to display.
+5. Like (4), except not falsified: creating a large number of new channels (by writing a single post to each). Since channels can only be created and not removed, this has the potential to make a cabal somewhat unusable by legitimate users, if there are so many garbage channels they cannot locate real ones.
+6. Providing a `Data Response` with large amounts of bogus data. Ultimately the content hashes from the requested hash and the data will not match, but the machine may expend a great deal of time and computational power determining each data block's legitimacy.
+
+#### 7.2.1.3 Confidentiality
+1. An attacker who appears legitimate (e.g. via stolen machine) could connect to other members of the cabal and make requests for ongoing and historic data, effectively spying on all members' posts, undetected, indefinitely
+
+#### 7.2.1.4 Repudiation
+1. While all posts are cryptographically signed, a user can still claim that their private signing key was stolen, making reliable non-repudiation infeasible.
+
+#### 7.2.1.5 Message Deletion
+1. While a machine can not issue a `post/delete` to erase another user's posts, they could easily choose to omit post hashes from responses to requests made to them by others. This attack is only viable if the machine is a client's only means of accessing certain data (e.g. the client was unable to directly connect to any non-attacker machines). Once that client connects to other, non-malicious machines, they will be able to "fill the gaps" of missing data within the time window & channels in which they are interested.
+
+### 7.2.2 Protections
+#### 7.2.2.1 Replay Attacks
+1. Posts that have already been ingested will be deduplicated (i.e. not re-ingested) by their content hash, so resending hashes or data does no harm in itself.
+
+#### 7.2.2.2 Data Integrity
+1. All posts are crytographically signed, and cannot be altered or forged unless a user's private key has been compromised.
+
+2. Certain posts have implicit authorization (e.g. a `post/info` post can only alter its author's display name, and NOT be used to change another user's name), which is carried out by clients following the specification re: post ingestion logic.
 
 
 ---
