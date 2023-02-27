@@ -573,14 +573,17 @@ field          | type               | desc
 ## 7. Security Considerations
 
 ### 7.1 Out of scope Threats
-1. A document specifying a lower-level handshake protocol for establishing connections between cabal peers is forthcoming. It intends to provide a) *confidentiality* and protection on messages from *Man-in-the-Middle attacks* (via end-to-end encryption), and b) *peer entity authentication*, insofar that the machine connected to has proven themselves to be a member of a particular cabal. As such, attacks from these vectors are not discussed here.
+1. Attacks on the transport layer by non-members of the cabal. This would cover the *confidentiality* of a connection between peers, and prevent *eavesdropping* and *man-in-the-middle attacks*, as well as message reading/deleting/modifying.
 
-2. Not considered in scope are actors capable of deriving an ED25519 private key from the public key via brute force, which would break data integrity and permit data insertion/deletion/modification of the compromised user's posts.
+2. Attacks that attempt to gain illicit entry to a cabal, by posing as a member. This would cover *peer entity authentication*.
 
-3. Also not considered are attacks that stem from how cable data ends up being stored locally. For example, an attacker with access to the user's machine being able to access their stored private key or chat history on disk.
+3. Actors capable of deriving an ED25519 private key from the public key via brute force, which would break data integrity and permit data insertion/deletion/modification of the compromised user's posts.
+
+4. Attacks that stem from how cable data ends up being stored locally. For example, an attacker with access to the user's machine being able to access their stored private key or chat history on disk.
+
+5. Attacks that come from *within* a cabal, by those believed to be legitimate members, are documented here, although it is currently assumed that those who are proper members of a cabal are trusted to not cause problems for other users.
 
 ### 7.2 In-scope Threats
-How ever the handshake protocol ends up working, it remains possible that an unintended attacker may end up forming network connections with members of a private cabal (either through the cabal key being leaked via machine theft or poor operational security by its members). As such, this document considers it an in-scope threat to have an attacker's machine be able to pose as a legitimate member and communicate with others using this wire protocol.
 
 ### 7.2.1 Susceptibilities
 #### 7.2.1.1 Inappropriate Use
@@ -606,6 +609,9 @@ How ever the handshake protocol ends up working, it remains possible that an uni
 
 #### 7.2.1.6 Message Deletion
 1. While a machine can not issue a `post/delete` to erase another user's posts, they could easily choose to omit post hashes from responses to requests made to them by others. This attack is only viable if the machine is a client's only means of accessing certain data (e.g. the client was unable to directly connect to any non-attacker machines). Once that client connects to other, non-malicious machines, they will be able to "fill the gaps" of missing data within the time window & channels in which they are interested.
+
+#### 7.2.1.7 Attacker Expulsion
+1. An attacker causing problems by means of spoofing, denial of service, passive listening, or inappropriate use cannot, as per the current protocol design, be expelled from the cabal group chat. Legitimate users have no means of recourse beyond starting a new cabal and not inviting the attacker.
 
 ### 7.2.2 Protections
 #### 7.2.2.1 Replay Attacks
