@@ -55,7 +55,7 @@ A conceptual object with its own unique name, a set of member **user**s, and a s
 An ED25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal. *User* and *member* may be used interchangably.
 
 ### Public Key
-An ED25519 key, which constitutes a user's public-facing idenity within a cabal.
+An ED25519 key, which constitutes a user's public-facing identity within a cabal.
 
 ### Private Key
 An ED25519 key, used for signing authored **post**s. Kept private and secret to all but the user who owns it.
@@ -582,11 +582,13 @@ How ever the handshake protocol ends up working, it remains possible that an uni
 
 ### 7.2.1 Susceptibilities
 #### 7.2.1.1 Inappropriate Use
-1. An attacker could issue a `post/info` to alter their display name to be the same as another user, causing confusion as to which user is authoring certain chat messages.
-2. An attacker could issue `post/topic` posts to edit channel topics to garbage text, offensive content, or malicious content (e.g. phishing). Since most chat programs have channel topics controlled by "moderators" or "admins", this could cause confusion if users do not realize that anyone can set these strings.
-3. The list of channels in the `Channel List Response` message could be falsified to include channels that do not exist (i.e. no users have posted to them) or to omit the names channels that do exist.
+1. An attacker could issue `post/topic` posts to edit channel topics to garbage text, offensive content, or malicious content (e.g. phishing). Since most chat programs have channel topics controlled by "moderators" or "admins", this could cause confusion if users do not realize that anyone can set these strings.
+2. The list of channels in the `Channel List Response` message could be falsified to include channels that do not exist (i.e. no users have posted to them) or to omit the names channels that do exist.
 
-#### 7.2.1.2 Denial of Service
+#### 7.2.1.2 Spoofing
+1. An attacker could issue a `post/info` to alter their display name to be the same as another user, causing confusion as to which user is authoring certain chat messages.
+
+#### 7.2.1.3 Denial of Service
 1. Authoring very large posts (gigabytes or larger) and/or a large number of smaller posts, and sharing them with others to download.
 2. Making a large quantity of expensive requests (e.g. a time range request on a channel with a long chat history that covers its entire lifetime, repeatedly).
 3. Responding to legitimate requests with made-up hashes (especially in large quantities), which the client may spend considerable time and resources searching for indefinitely, depending on the implementation.
@@ -594,13 +596,13 @@ How ever the handshake protocol ends up working, it remains possible that an uni
 5. Like (4), except not falsified: creating a large number of new channels (by writing a single post to each). Since channels can only be created and not removed, this has the potential to make a cabal somewhat unusable by legitimate users, if there are so many garbage channels they cannot locate real ones.
 6. Providing a `Data Response` with large amounts of bogus data. Ultimately the content hashes from the requested hash and the data will not match, but the machine may expend a great deal of time and computational power determining each data block's legitimacy.
 
-#### 7.2.1.3 Confidentiality
+#### 7.2.1.4 Confidentiality
 1. An attacker who appears legitimate (e.g. via stolen machine) could connect to other members of the cabal and make requests for ongoing and historic data, effectively spying on all members' posts, undetected, indefinitely
 
-#### 7.2.1.4 Repudiation
+#### 7.2.1.5 Repudiation
 1. While all posts are cryptographically signed, a user can still claim that their private signing key was stolen, making reliable non-repudiation infeasible.
 
-#### 7.2.1.5 Message Deletion
+#### 7.2.1.6 Message Deletion
 1. While a machine can not issue a `post/delete` to erase another user's posts, they could easily choose to omit post hashes from responses to requests made to them by others. This attack is only viable if the machine is a client's only means of accessing certain data (e.g. the client was unable to directly connect to any non-attacker machines). Once that client connects to other, non-malicious machines, they will be able to "fill the gaps" of missing data within the time window & channels in which they are interested.
 
 ### 7.2.2 Protections
@@ -612,6 +614,11 @@ How ever the handshake protocol ends up working, it remains possible that an uni
 
 2. Certain posts have implicit authorization (e.g. a `post/info` post can only alter its author's display name, and NOT be used to change another user's name), which is carried out by clients following the specification re: post ingestion logic.
 
+#### 7.2.2.3 Privilege Escalation
+Cabal has no privilege levels beyond that of a) member and b) non-member. Non-members have zero privileges (not even able to participate at the wire protocol level), and all members hold the same privileges.
+
+### 7.3 Forthcoming Work
+Forthcoming are designs for a *subjective moderation system* on top of Cable, which a version of is currently deployed in Cabal and has been in regular use for multiple years. This will ad additional privilege levels. Between this and the forthcoming handshake protocol design, it is expected that many of the above susceptibilities will be addressed or mitigated.
 
 ---
 
