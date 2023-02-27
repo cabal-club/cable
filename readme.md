@@ -625,6 +625,9 @@ field          | type               | desc
 #### 7.2.2.3 Privilege Escalation
 Cabal has no privilege levels beyond that of a) member and b) non-member. Non-members have zero privileges (not even able to participate at the wire protocol level), and all members hold the same privileges.
 
+### 7.3 Future Work
+Future work is planned around a) having transport security (to prevent non-members of cabals from reading, modifying, or otherwise interacting with data sent between members) via a mechanism with end-to-end encryption, b) having a handshake protocol, to control membership to the cabal, and prevent non-members from gaining illicit access, and c) having a moderation system internal to a cabal, so that users can mitigate and expel attacks from those who have gained legitimate membership.
+
 ---
 
 # unsorted notes
