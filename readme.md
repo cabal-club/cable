@@ -577,6 +577,8 @@ field          | type               | desc
 
 2. Not considered in scope are actors capable of deriving an ED25519 private key from the public key via brute force, which would break data integrity and permit data insertion/deletion/modification of the compromised user's posts.
 
+3. Also not considered are attacks that stem from how cable data ends up being stored locally. For example, an attacker with access to the user's machine being able to access their stored private key or chat history on disk.
+
 ### 7.2 In-scope Threats
 How ever the handshake protocol ends up working, it remains possible that an unintended attacker may end up forming network connections with members of a private cabal (either through the cabal key being leaked via machine theft or poor operational security by its members). As such, this document considers it an in-scope threat to have an attacker's machine be able to pose as a legitimate member and communicate with others using this wire protocol.
 
@@ -616,9 +618,6 @@ How ever the handshake protocol ends up working, it remains possible that an uni
 
 #### 7.2.2.3 Privilege Escalation
 Cabal has no privilege levels beyond that of a) member and b) non-member. Non-members have zero privileges (not even able to participate at the wire protocol level), and all members hold the same privileges.
-
-### 7.3 Forthcoming Work
-Forthcoming are designs for a *subjective moderation system* on top of Cable, which a version of is currently deployed in Cabal and has been in regular use for multiple years. This will ad additional privilege levels. Between this and the forthcoming handshake protocol design, it is expected that many of the above susceptibilities will be addressed or mitigated.
 
 ---
 
