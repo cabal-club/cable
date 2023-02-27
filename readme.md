@@ -52,7 +52,7 @@ A private group chat that a number of users can participate in, comprised of **u
 A conceptual object with its own unique name, a set of member **user**s, and a set of chat **post**s written to it.
 
 ### User
-An ED25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal. *User* and *member* may be used interchangably.
+An ED25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal. *User* and *member* may be used interchangeably.
 
 ### Public Key
 An ED25519 key, which constitutes a user's public-facing identity within a cabal.
@@ -163,7 +163,7 @@ If `foo=17` and `bar=[3,6,8,64]`, the following binary payload would be expected
 The following data types are used:
 - `u8`: a single unsigned byte
 - `u8[N]`: a sequence of exactly `N` unsigned bytes
-- `varint`: a variable-length unsigned integer. cable uses protobuf-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). (For an example implementation of varint encoding/decoding, see the [nodejs varint package](https://www.npmjs.com/package/varint).)
+- `varint`: a variable-length unsigned integer. cable uses Protocol Buffer-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). (For an example implementation of varint encoding/decoding, see the [NodeJS varint package](https://www.npmjs.com/package/varint).)
 
 ### 5.2 Message Header
 
@@ -199,7 +199,7 @@ field      | type       | desc
 More fields follow for different request types below.
 
 The request ID, `req_id`, is to be a sequence of 4 bytes, generated randomly by
-the requestor, used to uniquely identify the request during its lifetime across
+the requester, used to uniquely identify the request during its lifetime across
 the swarm of peers who may handle it.
 
 When forwarding a request, do not change the `req_id`, so that routing loops
@@ -575,7 +575,7 @@ field          | type               | desc
 ### 7.1 Out of scope Threats
 1. A document specifying a lower-level handshake protocol for establishing connections between cabal peers is forthcoming. It intends to provide a) *confidentiality* and protection on messages from *Man-in-the-Middle attacks* (via end-to-end encryption), and b) *peer entity authentication*, insofar that the machine connected to has proven themselves to be a member of a particular cabal. As such, attacks from these vectors are not discussed here.
 
-2. Not considered in scope are actors capable of deriving an ED25519's private key from the public key via brute force, which would break data integrity and permit data insertion/deletion/modification of the compromised user's posts.
+2. Not considered in scope are actors capable of deriving an ED25519 private key from the public key via brute force, which would break data integrity and permit data insertion/deletion/modification of the compromised user's posts.
 
 ### 7.2 In-scope Threats
 How ever the handshake protocol ends up working, it remains possible that an unintended attacker may end up forming network connections with members of a private cabal (either through the cabal key being leaked via machine theft or poor operational security by its members). As such, this document considers it an in-scope threat to have an attacker's machine be able to pose as a legitimate member and communicate with others using this wire protocol.
@@ -790,7 +790,7 @@ find and retrieve data they are interested in more easily.
 If a request has a `limit` field specifying an upper bound on how many hashes
 it expects to get in response, and also sets a `ttl > 0`, a peer handling this
 request should try to ensure that that `limit` is honoured. This can be done by
-counting how many hashes a client sends back to the requestor, **including**
+counting how many hashes a client sends back to the requester, **including**
 hashes received through other peers that the client has forwarded the request
 to.
 
@@ -807,7 +807,7 @@ remaining `limit` by 1 instead of 2.
 All durable data exchanged over the protocol are called Posts, and are always
 cryptographically signed by their author's private key. Any post may be
 referred to by its 32-byte BLAKE2b hash. This protocol primary aim is to
-faciliate the exchange of these posts between peers.
+facilitate the exchange of these posts between peers.
 
 local disk storage. A post always has an author (via a required `public_key`
 field), and always provides a signature (via the required `signature` field) to
