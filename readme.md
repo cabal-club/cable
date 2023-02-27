@@ -216,7 +216,7 @@ field        | type                | desc
 `req_id`     | `u8[4]`             | unique id of this request (random)
 `ttl`        | `varint`            | number of hops remaining
 `hash_count` | `varint`            | number of hashes to request
-`hashes`     | `u8[32*hash_count]` | blake2b hashes concatenated together
+`hashes`     | `u8[32*hash_count]` | BLAKE2b hashes concatenated together
 
 Results are provided by a data response (`msg_type=1`).
 
@@ -262,8 +262,8 @@ field          | type               | desc
 `ttl`          | `varint`           | number of hops remaining
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
-`time_start`   | `varint`           | seconds since unix epoch
-`time_end`     | `varint`           | seconds since unix epoch
+`time_start`   | `varint`           | seconds since UNIX Epoch
+`time_end`     | `varint`           | seconds since UNIX Epoch
 `limit`        | `varint`           | maximum number of hashes to return
 
 This request returns 0 or more `hash response` responses.
@@ -363,7 +363,7 @@ field        | type                | desc
 `msg_type`   | `varint (=0)`       |
 `req_id`     | `u8[4]`             | id this is in response to
 `hash_count` | `varint`            | number of hashes in the response
-`hashes`     | `u8[hash_count*32]` | blake2b hashes concatenated together
+`hashes`     | `u8[hash_count*32]` | BLAKE2b hashes concatenated together
 
 #### 5.4.2 Data Response (`msg_type=1`)
 
@@ -415,12 +415,12 @@ Every post begins with the following 6-field header:
 
 field        | type              | desc
 -------------|-------------------|-------------------------------------------------------
-`public_key` | `u8[32]`          | ed25519 key that authored this post
-`signature`  | `u8[64]`          | ed25519 signature of the fields that follow
-`num_links`  | `varint`          | how many blake2b hashes this post links back to (0+)
-`links`      | `u8[32*num_links]`| blake2b hashes of the latest messages in this channel/context
+`public_key` | `u8[32]`          | ED25519 key that authored this post
+`signature`  | `u8[64]`          | ED25519 signature of the fields that follow
+`num_links`  | `varint`          | how many BLAKE2b hashes this post links back to (0+)
+`links`      | `u8[32*num_links]`| BLAKE2b hashes of the latest messages in this channel/context
 `post_type`  | `varint`          | see custom post type sections below
-`timestamp`  | `varint`          | seconds since unix epoch
+`timestamp`  | `varint`          | seconds since UNIX Epoch
 
 More fields follow for different post types below.
 
@@ -449,12 +449,12 @@ Post a message in a channel.
 
 field          | type               | desc
 ---------------|--------------------|---------------------------------
-`public_key`   | `u8[32]`           | ed25519 key that authored this post
-`signature`    | `u8[64]`           | ed25519 signature of the fields that follow
-`num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
-`links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
+`public_key`   | `u8[32]`           | ED25519 key that authored this post
+`signature`    | `u8[64]`           | ED25519 signature of the fields that follow
+`num_links`    | `varint`           | how many BLAKE2b hashes this post links back to (0+)
+`links`        | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
-`timestamp`    | `varint`           | seconds since unix epoch
+`timestamp`    | `varint`           | seconds since UNIX Epoch
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 `text_len`     | `varint`           | length of the text field
@@ -470,14 +470,14 @@ future.
 
 field           | type                   | desc
 ----------------|------------------------|-------------------------
-`public_key`    | `u8[32]`               | ed25519 key that authored this post
-`signature`     | `u8[64]`               | ed25519 signature of the fields that follow
-`num_links`     | `varint`               | how many blake2b hashes this post links back to (0+)
-`links`         | `u8[32*num_links]`     | blake2b hashes of the latest messages in this channel/context
+`public_key`    | `u8[32]`               | ED25519 key that authored this post
+`signature`     | `u8[64]`               | ED25519 signature of the fields that follow
+`num_links`     | `varint`               | how many BLAKE2b hashes this post links back to (0+)
+`links`         | `u8[32*num_links]`     | BLAKE2b hashes of the latest messages in this channel/context
 `post_type`     | `varint`               | see custom post type sections below
-`timestamp`     | `varint`               | seconds since unix epoch
+`timestamp`     | `varint`               | seconds since UNIX Epoch
 `num_deletions` | `varint`               | how many hashes of posts there are to be deleted
-`hash`          | `u8[32*num_deletions]` | blake2b hashes of posts to be deleted
+`hash`          | `u8[32*num_deletions]` | BLAKE2b hashes of posts to be deleted
 
 The expected behaviour of a client interpreting this post is to only perform
 local deletion of the referenced posts if the author (`post.public_key`)
@@ -490,12 +490,12 @@ Set public information about yourself.
 
 field        | type               | desc
 -------------|--------------------|-------------------------
-`public_key` | `u8[32]`           | ed25519 key that authored this post
-`signature`  | `u8[64]`           | ed25519 signature of the fields that follow
-`num_links`  | `varint`           | how many blake2b hashes this post links back to (0+)
-`links`      | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
+`public_key` | `u8[32]`           | ED25519 key that authored this post
+`signature`  | `u8[64]`           | ED25519 signature of the fields that follow
+`num_links`  | `varint`           | how many BLAKE2b hashes this post links back to (0+)
+`links`      | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
 `post_type`  | `varint`           | see custom post type sections below
-`timestamp`  | `varint`           | seconds since unix epoch
+`timestamp`  | `varint`           | seconds since UNIX Epoch
 `key1_len`   | `varint`           | length of the first key to set
 `key1`       | `u8[key_len]`      | name of the first key to set (UTF-8)
 `value1_len` | `varint`           | length of the first value to set, belonging to `key1`
@@ -526,12 +526,12 @@ Set a topic for a channel.
 
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
-`public_key`   | `u8[32]`           | ed25519 key that authored this post
-`signature`    | `u8[64]`           | ed25519 signature of the fields that follow
-`num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
-`links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
+`public_key`   | `u8[32]`           | ED25519 key that authored this post
+`signature`    | `u8[64]`           | ED25519 signature of the fields that follow
+`num_links`    | `varint`           | how many BLAKE2b hashes this post links back to (0+)
+`links`        | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
-`timestamp`    | `varint`           | seconds since unix epoch
+`timestamp`    | `varint`           | seconds since UNIX Epoch
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 `topic_len`    | `varint`           | length of the topic field
@@ -543,12 +543,12 @@ Join a channel.
 
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
-`public_key`   | `u8[32]`           | ed25519 key that authored this post
-`signature`    | `u8[64]`           | ed25519 signature of the fields that follow
-`num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
-`links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
+`public_key`   | `u8[32]`           | ED25519 key that authored this post
+`signature`    | `u8[64]`           | ED25519 signature of the fields that follow
+`num_links`    | `varint`           | how many BLAKE2b hashes this post links back to (0+)
+`links`        | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
-`timestamp`    | `varint`           | seconds since unix epoch
+`timestamp`    | `varint`           | seconds since UNIX Epoch
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 
@@ -560,12 +560,12 @@ Leave (part) a channel.
 
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
-`public_key`   | `u8[32]`           | ed25519 key that authored this post
-`signature`    | `u8[64]`           | ed25519 signature of the fields that follow
-`num_links`    | `varint`           | how many blake2b hashes this post links back to (0+)
-`links`        | `u8[32*num_links]` | blake2b hashes of the latest messages in this channel/context
+`public_key`   | `u8[32]`           | ED25519 key that authored this post
+`signature`    | `u8[64]`           | ED25519 signature of the fields that follow
+`num_links`    | `varint`           | how many BLAKE2b hashes this post links back to (0+)
+`links`        | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
-`timestamp`    | `varint`           | seconds since unix epoch
+`timestamp`    | `varint`           | seconds since UNIX Epoch
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 
