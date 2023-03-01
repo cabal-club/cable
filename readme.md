@@ -581,17 +581,19 @@ field          | type               | desc
 
 4. Attacks that stem from how cable data ends up being stored locally. For example, an attacker with access to the user's machine being able to access their stored private key or chat history on disk.
 
-5. Attacks that come from *within* a cabal, by those believed to be legitimate members, are documented here, although it is currently assumed that those who are proper members of a cabal are trusted to not cause problems for other users.
-
 ### 7.2 In-scope Threats
+
+Documented here are attacks that can come from *within* a cabal -- by those who are technically legitimate members and can peer freely with other members. It is currently assumed (until something like a version of Cabal's subjective moderation system is designed & implemented) that those who are proper members of a cabal are trusted to not cause problems for other users, but even a future moderation design would benefit from a clearly laid-out of the attack surface.
 
 ### 7.2.1 Susceptibilities
 #### 7.2.1.1 Inappropriate Use
 1. An attacker could issue `post/topic` posts to edit channel topics to garbage text, offensive content, or malicious content (e.g. phishing). Since most chat programs have channel topics controlled by "moderators" or "admins", this could cause confusion if users do not realize that anyone can set these strings.
 2. The list of channels in the `Channel List Response` message could be falsified to include channels that do not exist (i.e. no users have posted to them) or to omit the names channels that do exist.
+    1. A possible future mitigation to this could be inclusion of an explicit `post/channel` post type, to denote channel creation, which `Channel List Response` responders would need to cite the hashes of. This doesn't seem very important though, since an attacker could trivially produce 1000s of legitimate noise-creating channels anyways.
 
 #### 7.2.1.2 Spoofing
 1. An attacker could issue a `post/info` to alter their display name to be the same as another user, causing confusion as to which user is authoring certain chat messages.
+    1. Client-side mitigation options exist, such as colourizing names by the public key of the user, or displaying a short hash digest of their key next to their name for important operations.
 
 #### 7.2.1.3 Denial of Service
 1. Authoring very large posts (gigabytes or larger) and/or a large number of smaller posts, and sharing them with others to download.
@@ -602,7 +604,7 @@ field          | type               | desc
 6. Providing a `Data Response` with large amounts of bogus data. Ultimately the content hashes from the requested hash and the data will not match, but the machine may expend a great deal of time and computational power determining each data block's legitimacy.
 
 #### 7.2.1.4 Confidentiality
-1. An attacker who appears legitimate (e.g. via stolen machine) could connect to other members of the cabal and make requests for ongoing and historic data, effectively spying on all members' posts, undetected, indefinitely
+1. An attacker who appears legitimate (e.g. via stolen machine) could connect to other members of the cabal and make requests for ongoing and historic data, effectively spying on all members' posts, undetected, indefinitely.
 
 #### 7.2.1.5 Repudiation
 1. While all posts are cryptographically signed, a user can still claim that their private signing key was stolen, making reliable non-repudiation infeasible.
@@ -626,7 +628,7 @@ field          | type               | desc
 Cabal has no privilege levels beyond that of a) member and b) non-member. Non-members have zero privileges (not even able to participate at the wire protocol level), and all members hold the same privileges.
 
 ### 7.3 Future Work
-Future work is planned around a) having transport security (to prevent non-members of cabals from reading, modifying, or otherwise interacting with data sent between members) via a mechanism with end-to-end encryption, b) having a handshake protocol, to control membership to the cabal, and prevent non-members from gaining illicit access, and c) having a moderation system internal to a cabal, so that users can mitigate and expel attacks from those who have gained legitimate membership.
+Future work is planned around a) having transport security (to prevent non-members of cabals from reading, modifying, or otherwise interacting with data sent between members) via a mechanism with end-to-end encryption, b) having a handshake protocol, to control membership to the cabal, and prevent non-members from gaining illicit access, and c) having a system for moderation and write-access controls internal to a cabal, so that users can mitigate and expel attacks from those who have gained legitimate membership.
 
 ---
 
