@@ -589,7 +589,7 @@ Documented here are attacks that can come from *within* a cabal -- by those who 
 #### 7.2.1.1 Inappropriate Use
 1. An attacker could issue `post/topic` posts to edit channel topics to garbage text, offensive content, or malicious content (e.g. phishing). Since most chat programs have channel topics controlled by "moderators" or "admins", this could cause confusion if users do not realize that anyone can set these strings.
 2. The list of channels in the `Channel List Response` message could be falsified to include channels that do not exist (i.e. no users have posted to them) or to omit the names channels that do exist.
-    1. A possible future mitigation to this could be inclusion of an explicit `post/channel` post type, to denote channel creation, which `Channel List Response` responders would need to cite the hashes of. This doesn't seem very important though, since an attacker could trivially produce 1000s of legitimate noise-creating channels anyways.
+    1. A possible future mitigation to this might be inclusion of an explicit `post/channel` post type, to denote channel creation, which `Channel List Response` responders would need to cite the hashes of. This doesn't seem very important though, since an attacker could trivially produce 1000s of legitimate noise-creating channels anyways.
 
 #### 7.2.1.2 Spoofing
 1. An attacker could issue a `post/info` to alter their display name to be the same as another user, causing confusion as to which user is authoring certain chat messages.
@@ -598,18 +598,18 @@ Documented here are attacks that can come from *within* a cabal -- by those who 
 #### 7.2.1.3 Denial of Service
 1. Authoring very large posts (gigabytes or larger) and/or a large number of smaller posts, and sharing them with others to download.
 2. Making a large quantity of expensive requests (e.g. a time range request on a channel with a long chat history that covers its entire lifetime, repeatedly).
-3. Responding to legitimate requests with made-up hashes (especially in large quantities), which the client may spend considerable time and resources searching for indefinitely, depending on the implementation.
-4. Falsifying a `Channel List Response` to provide a large number of non-existent channels, which, depending on the client implementation, it may cause excessive resource using trying to display.
-5. Like (4), except not falsified: creating a large number of new channels (by writing a single post to each). Since channels can only be created and not removed, this has the potential to make a cabal somewhat unusable by legitimate users, if there are so many garbage channels they cannot locate real ones.
-6. Providing a `Data Response` with large amounts of bogus data. Ultimately the content hashes from the requested hash and the data will not match, but the machine may expend a great deal of time and computational power determining each data block's legitimacy.
+    1. Clients could implement per-connection rate limiting on requests, to prevent a degradation of service from network participants.
+3. Creating a excessively large number of new channels (by writing at least one `post/text` post to each). Since channels can only be created and not removed, this has the potential to make a cabal somewhat unusable by legitimate users, if there are so many garbage channels they cannot locate real ones.
+    1. New channel creation could be rate-limited, although even at a limit of 1 channel/day, it still would not take long to produce high levels of noise.
+4. Providing a `Data Response` with large amounts of bogus data. Ultimately the content hashes from the requested hash and the data will not match, but the machine may expend a great deal of time and computational power determining each data block's legitimacy.
 
 #### 7.2.1.4 Confidentiality
-1. An attacker who appears legitimate (e.g. via stolen machine) could connect to other members of the cabal and make requests for ongoing and historic data, effectively spying on all members' posts, undetected, indefinitely.
+1. An attacker who appears legitimate (e.g. via a stolen machine belonging to a legitimate member) could connect to other members of the cabal and make ongoing and historic requests for cabal data, effectively spying on all members' posts, undetected, indefinitely.
 
 #### 7.2.1.5 Repudiation
 1. While all posts are cryptographically signed, a user can still claim that their private signing key was stolen, making reliable non-repudiation infeasible.
 
-#### 7.2.1.6 Message Deletion
+#### 7.2.1.6 Message Omission
 1. While a machine can not issue a `post/delete` to erase another user's posts, they could easily choose to omit post hashes from responses to requests made to them by others. This attack is only viable if the machine is a client's only means of accessing certain data (e.g. the client was unable to directly connect to any non-attacker machines). Once that client connects to other, non-malicious machines, they will be able to "fill the gaps" of missing data within the time window & channels in which they are interested.
 
 #### 7.2.1.7 Attacker Expulsion
@@ -628,7 +628,11 @@ Documented here are attacks that can come from *within* a cabal -- by those who 
 Cabal has no privilege levels beyond that of a) member and b) non-member. Non-members have zero privileges (not even able to participate at the wire protocol level), and all members hold the same privileges.
 
 ### 7.3 Future Work
-Future work is planned around a) having transport security (to prevent non-members of cabals from reading, modifying, or otherwise interacting with data sent between members) via a mechanism with end-to-end encryption, b) having a handshake protocol, to control membership to the cabal, and prevent non-members from gaining illicit access, and c) having a system for moderation and write-access controls internal to a cabal, so that users can mitigate and expel attacks from those who have gained legitimate membership.
+Future work is planned around the outer layers of cable security:
+
+1. **Against non-member active & passive attackers**: having transport security (to prevent non-members of cabals from reading, modifying, or otherwise interacting with data sent between members) via a mechanism with end-to-end encryption
+2. **Against unauthorized access**: having a handshake protocol, to prevent non-members from gaining illicit access
+3. **Against inappropriate use by members**: having a system for moderation and write-access controls internal to a cabal, so that users can mitigate and expel attacks from those who have already gained legitimate membership.
 
 ---
 
