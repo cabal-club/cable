@@ -116,7 +116,15 @@ The following are the general parameters to be used with BLAKE2b. If you are usi
 - Personalization (hexadecimal): `5126 fb2a 3740 0d2a`
 
 
-## 4. data model & format (wip)
+## 4. Data Model
+
+### Unicode
+References in this document to "Unicode" refer to the Unicode 15.0.0 standard,
+and "UTF-8" to the UTF-8 encoding scheme outlined in [place]().
+
+### Valid Channel Names
+- Use any Unicode characters except the `C` [General Category](https://www.unicode.org/reports/tr44/#GC_Values_Table)
+- Are less than or equal to 64 bytes in length
 
 ### high-level data model
 - users
@@ -460,7 +468,7 @@ field          | type               | desc
 `text_len`     | `varint`           | length of the text field
 `text`         | `u8[text_len] `    | message content (UTF-8)
 
-The `text` body of a chat message is expected to be a UTF-8 string.
+The `text` body of a chat message is expected to be a valid UTF-8 string. Its length is not to exceed 4 kibibytes (4096 bytes). If the `text` field exceeds this, the post should be considered invalid.
 
 ### 6.3 `post/delete` (`post_type=1`)
 
@@ -511,11 +519,17 @@ pairs by setting a final `keyN_len` of zero.
 
 Keys are expected to be UTF-8 strings. The valid bytes for a value depends on the key. See the table below.
 
+The `keyN` fields are expected to be valid UTF-8 strings. Each key string's length is not to exceed 128 bytes.
+
+The `valueN` fields are expected to not exceed 4096 bytes (4 kibibytes) each.
+
 Recommended keys for clients to support:
 
 key       | value format | desc
 ----------|--------------|---------------------------------------
 `name`    | UTF-8        | handle this user wishes to use as a pseudonym
+
+The `name` field is expected to be a valid UTF-8 string, and not contain codepoints from the `C` [General Category][GC]. Its length is not to exceed 32 bytes. If the field exceeds this, the post should be considered invalid.
 
 To save space, a client may wish to discard from disk older versions of these messages from a particular user.
 
@@ -535,6 +549,8 @@ field          | type               | desc
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 `topic_len`    | `varint`           | length of the topic field
 `topic`        | `u8[topic_len] `   | topic content
+
+The `topic` field is expected to be a valid UTF-8 string, and not contain codepoints from the `C` [General Category][GC]. Its length is not to exceed 512 bytes. If the field exceeds this, the post should be considered invalid.
 
 ### 6.6 `post/join` (`post_type=4`)
 
@@ -854,4 +870,7 @@ confusing ordering.
 - [BLAKE2](https://www.blake2.net/blake2.pdf)
 - [Unicode 15.0.0](https://www.unicode.org/versions/Unicode15.0.0/)
 - [UAX #44: Unicode Character Database (General_Categories Values)](https://www.unicode.org/reports/tr44/#GC_Values_Table)
+
+
+[GC]: https://www.unicode.org/reports/tr44/#GC_Values_Table
 
