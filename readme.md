@@ -33,7 +33,7 @@ Cable is designed to be:
 
 ## 1.1 Scope
 This protocol does NOT include encryption or authentication of the connection.
-It may be provided by other layers in userland(e.g. Tor, I2P) or expanded upon
+It may be provided by other layers in userland (e.g. Tor, I2P) or expanded upon
 in future iterations of this document. In particular, a future handshake
 protocol is planned, which will handle authenticating that connected peers are
 members of the same Cabal as the host machine.
@@ -41,7 +41,7 @@ members of the same Cabal as the host machine.
 As such, it is assumed that peers speaking this protocol have proven to be
 legitimate members of the cabal. See Security Considerations (below) for an
 analysis of the types of anticipated attacks that even proper cabal members may
-carry out and their mitigations.
+carry out.
 
 
 ## 2. Definitions
@@ -509,16 +509,15 @@ field        | type               | desc
 Several key:value pairs can be set at once. A post indicates it is done setting
 pairs by setting a final `keyN_len` of zero.
 
-Keys are expected to be UTF-8 strings.
+Keys are expected to be UTF-8 strings. The valid bytes for a value depends on the key. See the table below.
 
 Recommended keys for clients to support:
 
-key       | desc
-----------|------------------------------------------------
-`name`    | handle this user wishes to use as a pseudonym
+key       | value format | desc
+----------|--------------|---------------------------------------
+`name`    | UTF-8        | handle this user wishes to use as a pseudonym
 
-To save space, client may discard from disk older versions of these messages
-from a particular user.
+To save space, a client may wish to discard from disk older versions of these messages from a particular user.
 
 ### 6.5 `post/topic` (`post_type=3`)
 
@@ -852,5 +851,7 @@ hardware clock is skewed, and using post timestamps alone would provide
 confusing ordering.
 
 ## ?. References
-BLAKE2: https://www.blake2.net/blake2.pdf
+- [BLAKE2](https://www.blake2.net/blake2.pdf)
+- [Unicode 15.0.0](https://www.unicode.org/versions/Unicode15.0.0/)
+- [UAX #44: Unicode Character Database (General_Categories Values)](https://www.unicode.org/reports/tr44/#GC_Values_Table)
 
