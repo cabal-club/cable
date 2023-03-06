@@ -111,40 +111,55 @@ cryptographically signed by their author's private key. Any post may be
 referred to by its 32-byte BLAKE2b hash. This protocol primary aim is to
 facilitate the exchange of these posts between peers.
 
-A post always has an author (via a required `public_key` field), and always
+A post always has an author (via the required `public_key` field), and always
 provides a signature (via the required `signature` field) to prove they
 authored it.
 
 When you "make a post", you are only writing to some local storage indexed by
-the hash of the content. Posts only get sent to other peers in response to
-queries for content matching certain criteria.
-#### 4.1.2 Hash
-All **post**s in Cable are referenced by the resulting output of putting a post
-through a hash function. Specifically, 32-byte BLAKE2b (optionally using
-libsodium's `crypto_generichash()` function).
+the hash of the content. Posts are only sent to other peers in response to
+queries from them, for content matching certain criteria (e.g. chat messages
+within some time range).
 
-To produce a correct hash, run `crypto_generichash()` on the entire post,
-including the post header.
+#### 4.1.2 Addressing
+Any **post** in cable can be addressed / referenced by its hash. What this
+means specifically, is the resulting output of putting a post's verbatim
+content through the BLAKE2b function.
+
+To produce a correct hash, run libsodium's `crypto_generichash()` (or your
+implementation's equivalent) on the entire post, including its post header.
+
 #### 4.1.3 Links
-Part of the header every post is the `links` field. Every post is able to link
-to 0 or more other posts by means of referencing those posts by their hash (the
-output of running them through a specific hash function).
+Every post has a field named `links`. This enables any post to *link* to 0 or
+more other posts by means of referencing those posts by their hash.
 
 Referencing a post by its hash provides a *causal proof*: it demonstrates that
-your post must have occurred after all of the posts you are referencing.
-
-This can be useful for ordering chat messages in particular when a client's
-hardware clock is skewed, and using post timestamps alone would provide
+your post *must* have occurred after all of the other posts referenced. This
+can be useful for ordering chat messages, since a client's hardware clock is
+skewed, or timestamp spoofed, and using post timestamps alone could provide
 confusing ordering.
-#### 4.1.4 Ordering
-##### 4.1.4.1 "latest"
-- when comparing two posts, either largest timestamp OR higher causal value (latter having higher priority)
-##### 4.1.4.2 chat msg sort
-Chat messages are sorted based on two inputs: a post's `timestamp` value, and
-*causal ordering*.
 
-For example, using a timestamp alone, an ascending sort comparison function
-might look like this:
+Implementations are recommended to set and utilize links.
+
+##### 4.1.3.1 Choosing links to set
+TODO:
+Q: How does an impl choose which posts to ref in `links`?
+
+#### 4.1.4 Ordering
+Currently, only chat messages (`post/text`) need to be sorted, the general
+algorithm for ordering any pair of posts is to pick either the largest
+timestamp OR higher causal value, with the latter having higher priority.
+
+A post's "causal value" relative to another post is decided by whether there is
+a known chain of `links` that leads from one post to the other. If Post B links
+to Post A by mentioning Post A's hash, Post B has a higher causal value than
+Post A (relative to each other).
+
+Elsewhere in this document, "latest" is taken to mean the post with the higher
+sort value (larger timestamp or larger causal value).
+
+##### 4.1.4.1 Rationale
+Using a timestamp alone, an ascending sort comparison function might look like
+this Javascript function:
 
 ```js
 function cmp (a, b) {
@@ -230,51 +245,68 @@ whereas the timestamp-only comparator would give
 ]
 ```
 
+Here, the timestamp-only comparator provides a result that is clearly (to a
+human) out of order, while the comparator that takes causal links into account
+produces an ordering that would more closely capture the real temporal ordering.
+
 ### 4.2 Users
-Users of Cabal are identified by their ED25519 public key, and use shared
-knowledge of their key combined with their private key to prove themselves as
-verifiable authors of data shared with other peers.
-#### 4.2.1 State?
-#### 4.2.2 Sync?
+Users of Cabal are identified by their ED25519 public key, and use this and
+their private key to prove themselves as verifiable authors of data shared with
+other peers, by crytographically signing any post they author.
+
+#### 4.2.1 State
+A user is fully described at a given point in time by their public key, and the
+latest known `post/info` post made by that user, by whatever the latest
+key/value pairs are defined therein. As of present, the only supported key is
+`name`, which defines a user's display name. Older `post/info`s made by a user
+are considered obsolete and can be safely ignored or discarded.
 
 ### 4.3 Channels
 A channel is a named collection of chat messages (`post/text`) and user joins
-and leaves (`post/{join,leave}`).
+and leaves (`post/{join,leave}` posts).
 
-The act of issuing a post that writes a chat message to a channel or joins that
-channel implies that that named channel now exists.
+The act of a user issuing a post that writes a chat message to a channel or
+joins that channel implies that that named channel has been created, and now
+exists.
+
 #### 4.3.1 Names
-- Valid channel names are UTF-8 encoded strings.
-- Valid channel names are between 1 and 64 codepoints.
+- A valid channel name is a UTF-8 encoded strings.
+- A valid channel name is between 1 and 64 codepoints.
+
 #### 4.3.2 Membership
 A user is considered a member of a channel at a particular point in time if,
-from the client's perspective, that user has issued a `post/join` to that
+from a client's perspective, that user has issued a `post/join` to that
 channel and has not issued a matching `post/leave` since.
+
 #### 4.3.3 State
-The state of the channel at any given moment from the perspective of a client
-is fully described by all of the following:
+A channel at any given moment, from the perspective of a client, is fully
+described by the following:
+
+- The latest `post/info` post of each user who is *or was* a member of the channel.
 - The latest of each user's `post/join` or `post/leave` post to the channel.
-- The latest `post/info` post of each user who is *or was* a member of the
-  channel.
-- The latest `post/topic` post to channel, made by any user, regardless of
-  current or past membership.
+- The latest `post/topic` post made to the channel, made by any user, regardless of current or past membership.
+- All known `post/text` posts made to channel.
 
-Here "latest" means the relevant post with greatest causal ordering, and, if
-that's not possible, the greatest timestamp. See "Chat Message Sorting" for
-more details on links and causal ordering.
-#### 4.3.4 Sync?
-`request channel state` and `request channel time range` are sufficient to
-track a channel that a user is interested in. The former tracks state (who is
-in the channel, its topic, information about users in the channel), and the
-latter tracks chat message history.
+"To the channel" refers to the `channel` field set on a given post.
 
-A suggested way to use `request channel time range` to track a channel is to
-maintain a "rolling window". For example, a user that wishes to stay up-to-date
-with the last week's worth of chat history would, on client start-up, issue a
-`request channel time range` request with `time_start=now()-25200` (25200
-seconds in a week) for a given channel of interest. `hash response`s with
-already-known hashes can be safely ignored, while new ones can induce `data
-request`s for their content.
+"Latest" means the relevant post with greatest causal ordering, and, if that's
+not possible, the greatest timestamp. See "Chat Message Sorting" below for more
+details on links and causal ordering.
+
+#### 4.3.4 Synchronization
+The `Request Channel State` and `Request Channel Time Range` requests are
+sufficient for a client to track the state of a channel that a user is
+interested in. The former request allowing tracking general state (who is in
+the channel, its topic, information about users in the channel), and the latter
+tracks its chat message history.
+
+The recommended way to use `Request Channel Time Range` to track a channel is
+to maintain a "rolling window". For example, a user that wishes to stay
+up-to-date with the last week's worth of chat history would, on client
+start-up, issue a `Request Channel Time Range` request with
+`time_start=now()-25200` (25200 seconds in a week) for a given channel of
+interest. `Hash Response`s with already-known hashes can be safely ignored,
+while new ones can induce `Data Request`s for their content.
 
 The purpose of keeping a rolling time window, instead of just asking for
 `time_start=last_bootup_time`, is to capture messages that were missed because
@@ -290,8 +322,12 @@ sent back by them as they scan their local database, and, if that peers
 forwards your request to its peers as well, they too may trickle back many
 responses over time.
 
+TODO
 (upcoming: info about request lifetimes)
+
 #### 4.4.1 Time To Live
+TODO: review
+
 The `ttl` field, set on requests, controls *how many more times* a request may
 be forwarded to other peers. A client wishing a request not be forward beyond
 its initial destination peer would set `ttl = 0` to signal this.
@@ -304,7 +340,10 @@ that made the request. Each peer performing this action should decrement the
 The TTL mechanism exists to allow clients with limited connectivity to peers
 (e.g. behind a strong NAT) to use the peers they can reach as a relay to
 find and retrieve data they are interested in more easily.
+
 #### 4.4.2 Limit
+TODO: review
+
 If a request has a `limit` field specifying an upper bound on how many hashes
 it expects to get in response, and also sets a `ttl > 0`, a peer handling this
 request should try to ensure that that `limit` is honoured. This can be done by
