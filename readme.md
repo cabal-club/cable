@@ -103,25 +103,223 @@ The following are the general parameters to be used with BLAKE2b. If you are usi
 - Salt (hexadecimal): `5b6b 41ed 9b34 3fe0`
 - Personalization (hexadecimal): `5126 fb2a 3740 0d2a`
 
-
 ## 4. Data Model
 
-### Valid Channel Names
+### 4.1 Posts
+All durable data exchanged over the protocol are called Posts, and are always
+cryptographically signed by their author's private key. Any post may be
+referred to by its 32-byte BLAKE2b hash. This protocol primary aim is to
+facilitate the exchange of these posts between peers.
+
+A post always has an author (via a required `public_key` field), and always
+provides a signature (via the required `signature` field) to prove they
+authored it.
+
+When you "make a post", you are only writing to some local storage indexed by
+the hash of the content. Posts only get sent to other peers in response to
+queries for content matching certain criteria.
+#### 4.1.2 Hash
+All **post**s in Cable are referenced by the resulting output of putting a post
+through a hash function. Specifically, 32-byte BLAKE2b (optionally using
+libsodium's `crypto_generichash()` function).
+
+To produce a correct hash, run `crypto_generichash()` on the entire post,
+including the post header.
+#### 4.1.3 Links
+Part of the header every post is the `links` field. Every post is able to link
+to 0 or more other posts by means of referencing those posts by their hash (the
+output of running them through a specific hash function).
+
+Referencing a post by its hash provides a *causal proof*: it demonstrates that
+your post must have occurred after all of the posts you are referencing.
+
+This can be useful for ordering chat messages in particular when a client's
+hardware clock is skewed, and using post timestamps alone would provide
+confusing ordering.
+#### 4.1.4 Ordering
+##### 4.1.4.1 "latest"
+- when comparing two posts, either largest timestamp OR higher causal value (latter having higher priority)
+##### 4.1.4.2 chat msg sort
+Chat messages are sorted based on two inputs: a post's `timestamp` value, and
+*causal ordering*.
+
+For example, using a timestamp alone, an ascending sort comparison function
+might look like this:
+
+```js
+function cmp (a, b) {
+  return b.timestamp - a.timestamp
+}
+```
+
+However, if a user posted a message after another user, but their clock was
+skewed backwards by an hour, their newer post would appear in the past instead
+of being sorted ahead.
+
+By allowing posts to *link* to other posts by their hash, a comparator function
+can be written that takes causal links into account, and uses the timestamp
+only as a fallback in case no link chain can be found:
+
+```js
+// Assumes an internal representation of chat messages of the form
+// {
+//   timestamp: Number,
+//   text: String,
+//   links: Array<String>
+// }
+function cmp (a, b) {
+  if (containedInLinkChain(a, hash(b))) return -1
+  if (containedInLinkChain(b, hash(a))) return +1
+  return b.timestamp - a.timestamp
+}
+
+// Recursively follows the causal link chain to determine if the hash 'h' is
+// linked to from 'msg'.
+function containedInLinkChain (msg, h) {
+  if (!msg) return false
+  if (msg.links.indexOf(h) !== -1) return true
+  for (let link of msg.links) {
+    if (containedInLinkChain(globalStoreOfAllKnownPosts[link], h)) return true
+  }
+  return false
+}
+```
+
+Given then this set of chat messages,
+```js
+const m1 = {
+  timestamp: 17,
+  text: 'hi',
+  links: []
+}
+const m2 = {
+  timestamp: 170,
+  text: 'hi from not-the-future; it is actually clock skew',
+  links: []
+}
+const m3 = {
+  timestamp: 18,
+  text: 'hi from the real future (i can prove it)',
+  links: ['85b8d0f0a48e34064b50a17df4f8eec3644bb4f1ec69aeed05fe245df7d1392b'] // m1's hash
+}
+const m4 = {
+  timestamp: 10,
+  text: 'hi from the seeming past, but actually future',
+  links: ['5297f8422fccdbd2a29b3f6b02a23a0f0d196e0d437e0303273d9aa505add4ed'] // m3's hash
+}
+```
+
+The new sort comparator using links would give
+```js
+[
+  'hi',
+  'hi from not-the-future; it is actually clock skew',
+  'hi from the real future (i can prove it)',
+  'hi from the seeming past, but actually future',
+]
+```
+
+whereas the timestamp-only comparator would give
+
+```js
+[
+  'hi from the seeming past, but actually future',
+  'hi',
+  'hi from the real future (i can prove it)',
+  'hi from not-the-future; it is actually clock skew',
+]
+```
+
+### 4.2 Users
+Users of Cabal are identified by their ED25519 public key, and use shared
+knowledge of their key combined with their private key to prove themselves as
+verifiable authors of data shared with other peers.
+#### 4.2.1 State?
+#### 4.2.2 Sync?
+
+### 4.3 Channels
+A channel is a named collection of chat messages (`post/text`) and user joins
+and leaves (`post/{join,leave}`).
+
+The act of issuing a post that writes a chat message to a channel or joins that
+channel implies that that named channel now exists.
+#### 4.3.1 Names
 - Valid channel names are UTF-8 encoded strings.
 - Valid channel names are between 1 and 64 codepoints.
+#### 4.3.2 Membership
+A user is considered a member of a channel at a particular point in time if,
+from the client's perspective, that user has issued a `post/join` to that
+channel and has not issued a matching `post/leave` since.
+#### 4.3.3 State
+The state of the channel at any given moment from the perspective of a client
+is fully described by all of the following:
+- The latest of each user's `post/join` or `post/leave` post to the channel.
+- The latest `post/info` post of each user who is *or was* a member of the
+  channel.
+- The latest `post/topic` post to channel, made by any user, regardless of
+  current or past membership.
 
-### high-level data model
-- users
-  - which values win & how
-- channels (fields/properties, verbs upon them, how chat msgs in channels are sorted)
-  - which values win & how
+Here "latest" means the relevant post with greatest causal ordering, and, if
+that's not possible, the greatest timestamp. See "Chat Message Sorting" for
+more details on links and causal ordering.
+#### 4.3.4 Sync?
+`request channel state` and `request channel time range` are sufficient to
+track a channel that a user is interested in. The former tracks state (who is
+in the channel, its topic, information about users in the channel), and the
+latter tracks chat message history.
 
-### mid-level model: posts, sync, ingestion, materialized views
-- posts, their fields, their handling, ingestion
+A suggested way to use `request channel time range` to track a channel is to
+maintain a "rolling window". For example, a user that wishes to stay up-to-date
+with the last week's worth of chat history would, on client start-up, issue a
+`request channel time range` request with `time_start=now()-25200` (25200
+seconds in a week) for a given channel of interest. `hash response`s with
+already-known hashes can be safely ignored, while new ones can induce `data
+request`s for their content.
 
-### low-level model: requests & responses, sync
-- request/response model and lifetimes
-- sync (of channels, of chat msgs)
+The purpose of keeping a rolling time window, instead of just asking for
+`time_start=last_bootup_time`, is to capture messages that were missed because
+either you or other peers were, at the time, offline or part of another
+network. This allows a client to make posts while offline, and still have them
+appear to others when they do come back online (within the client's rolling
+window's duration).
+
+### 4.4 Request/Response Lifetime
+Currently, all request types can generate potentially *many* responses. A
+request sent to a peer may result in several blocks of hashes or data being
+sent back by them as they scan their local database, and, if that peers
+forwards your request to its peers as well, they too may trickle back many
+responses over time.
+
+(upcoming: info about request lifetimes)
+#### 4.4.1 Time To Live
+The `ttl` field, set on requests, controls *how many more times* a request may
+be forwarded to other peers. A client wishing a request not be forward beyond
+its initial destination peer would set `ttl = 0` to signal this.
+
+When an incoming request has a `ttl > 0`, a peer can choose to forward a
+request along to other peers, and then forward the responses back to the peer
+that made the request. Each peer performing this action should decrement the
+`ttl` by one. A request with `ttl == 0` should not be forwarded.
+
+The TTL mechanism exists to allow clients with limited connectivity to peers
+(e.g. behind a strong NAT) to use the peers they can reach as a relay to
+find and retrieve data they are interested in more easily.
+#### 4.4.2 Limit
+If a request has a `limit` field specifying an upper bound on how many hashes
+it expects to get in response, and also sets a `ttl > 0`, a peer handling this
+request should try to ensure that that `limit` is honoured. This can be done by
+counting how many hashes a client sends back to the requester, **including**
+hashes received through other peers that the client has forwarded the request
+to.
+
+For example, assume `A` sends a request to `B` with `limit=50` and `ttl=1`, and
+`B` forwards the request to `C` and `D`. `B` may send back 15 hashes to `A` at
+first, which means there are now a maximum of `50-15=35` hashes left for `C`
+and `D` combined for `B` to potentially send back. `B` can choose to track
+hashes and perform deduplication, so that if `C` and `D` were to both send back
+a hash `f88954b3e6adc067af61cca2aea7e3baecfea4238cb1594e705ecd3c92a67cb1`, `B`
+could ensure it was only passed back to `A` one time, thus reducing the
+remaining `limit` by 1 instead of 2.
 
 ## 5. Wire Format: Messages
 
@@ -627,228 +825,10 @@ Future work is planned around the outer layers of cable security:
 2. **Against unauthorized access**: having a handshake protocol, to prevent non-members from gaining illicit access
 3. **Against inappropriate use by members**: having a system for moderation and write-access controls internal to a cabal, so that users can mitigate and expel attacks from those who have already gained legitimate membership.
 
----
-
-# unsorted notes
-
-## Channel Sync Model
-`request channel state` and `request channel time range` are sufficient to
-track a channel that a user is interested in. The former tracks state (who is
-in the channel, its topic, information about users in the channel), and the
-latter tracks chat message history.
-
-A suggested way to use `request channel time range` to track a channel is to
-maintain a "rolling window". For example, a user that wishes to stay up-to-date
-with the last week's worth of chat history would, on client start-up, issue a
-`request channel time range` request with `time_start=now()-25200` (25200
-seconds in a week) for a given channel of interest. `hash response`s with
-already-known hashes can be safely ignored, while new ones can induce `data
-request`s for their content.
-
-The purpose of keeping a rolling time window, instead of just asking for
-`time_start=last_bootup_time`, is to capture messages that were missed because
-either you or other peers were, at the time, offline or part of another
-network. This allows a client to make posts while offline, and still have them
-appear to others when they do come back online (within the client's rolling
-window's duration).
-
-## Chat Message Sorting
-Chat messages are sorted based on two inputs: a post's `timestamp` value, and
-*causal ordering*.
-
-For example, using a timestamp alone, an ascending sort comparison function
-might look like this:
-
-```js
-function cmp (a, b) {
-  return b.timestamp - a.timestamp
-}
-```
-
-However, if a user posted a message after another user, but their clock was
-skewed backwards by an hour, their newer post would appear in the past instead
-of being sorted ahead.
-
-By allowing posts to *link* to other posts by their hash, a comparator function
-can be written that takes causal links into account, and uses the timestamp
-only as a fallback in case no link chain can be found:
-
-```js
-// Assumes an internal representation of chat messages of the form
-// {
-//   timestamp: Number,
-//   text: String,
-//   links: Array<String>
-// }
-function cmp (a, b) {
-  if (containedInLinkChain(a, hash(b))) return -1
-  if (containedInLinkChain(b, hash(a))) return +1
-  return b.timestamp - a.timestamp
-}
-
-// Recursively follows the causal link chain to determine if the hash 'h' is
-// linked to from 'msg'.
-function containedInLinkChain (msg, h) {
-  if (!msg) return false
-  if (msg.links.indexOf(h) !== -1) return true
-  for (let link of msg.links) {
-    if (containedInLinkChain(globalStoreOfAllKnownPosts[link], h)) return true
-  }
-  return false
-}
-```
-
-Given then this set of chat messages,
-```js
-const m1 = {
-  timestamp: 17,
-  text: 'hi',
-  links: []
-}
-const m2 = {
-  timestamp: 170,
-  text: 'hi from not-the-future; it is actually clock skew',
-  links: []
-}
-const m3 = {
-  timestamp: 18,
-  text: 'hi from the real future (i can prove it)',
-  links: ['85b8d0f0a48e34064b50a17df4f8eec3644bb4f1ec69aeed05fe245df7d1392b'] // m1's hash
-}
-const m4 = {
-  timestamp: 10,
-  text: 'hi from the seeming past, but actually future',
-  links: ['5297f8422fccdbd2a29b3f6b02a23a0f0d196e0d437e0303273d9aa505add4ed'] // m3's hash
-}
-```
-
-The new sort comparator using links would give
-```js
-[
-  'hi',
-  'hi from not-the-future; it is actually clock skew',
-  'hi from the real future (i can prove it)',
-  'hi from the seeming past, but actually future',
-]
-```
-
-whereas the timestamp-only comparator would give
-
-```js
-[
-  'hi from the seeming past, but actually future',
-  'hi',
-  'hi from the real future (i can prove it)',
-  'hi from not-the-future; it is actually clock skew',
-]
-```
-
-# data model notes (wip)
-
-## Users
-Users of Cabal are identified by their ED25519 public key, and use shared
-knowledge of their key combined with their private key to prove themselves as
-verifiable authors of data shared with other peers.
-
-## Channels
-
-### Channel Membership
-A user is considered a member of a channel at a particular point in time if,
-from the client's perspective, that user has issued a `post/join` to that
-channel and has not issued a matching `post/leave` since.
-
-### Channel State
-The state of the channel at any given moment from the perspective of a client
-is fully described by all of the following:
-- The latest of each user's `post/join` or `post/leave` post to the channel.
-- The latest `post/info` post of each user who is *or was* a member of the
-  channel.
-- The latest `post/topic` post to channel, made by any user, regardless of
-  current or past membership.
-
-Here "latest" means the relevant post with greatest causal ordering, and, if
-that's not possible, the greatest timestamp. See "Chat Message Sorting" for
-more details on links and causal ordering.
-
-## Request/Response Model
-Currently, all request types can generate potentially *many* responses. A
-request sent to a peer may result in several blocks of hashes or data being
-sent back by them as they scan their local database, and, if that peers
-forwards your request to its peers as well, they too may trickle back many
-responses over time.
-
-(upcoming: info about request lifetimes)
-
-### Time to Live (`ttl`)
-This field, set on requests, controls *how many more times* a request may be
-forwarded to other peers. A client wishing a request not be forward beyond its
-initial destination peer would set `ttl = 0` to signal this.
-
-When an incoming request has a `ttl > 0`, a peer can choose to forward a
-request along to other peers, and then forward the responses back to the peer
-that made the request. Each peer performing this action should decrement the
-`ttl` by one. A request with `ttl == 0` should not be forwarded.
-
-The TTL mechanism exists to allow clients with limited connectivity to peers
-(e.g. behind a strong NAT) to use the peers they can reach as a relay to
-find and retrieve data they are interested in more easily.
-
-### Limits (`limit`)
-If a request has a `limit` field specifying an upper bound on how many hashes
-it expects to get in response, and also sets a `ttl > 0`, a peer handling this
-request should try to ensure that that `limit` is honoured. This can be done by
-counting how many hashes a client sends back to the requester, **including**
-hashes received through other peers that the client has forwarded the request
-to.
-
-For example, assume `A` sends a request to `B` with `limit=50` and `ttl=1`, and
-`B` forwards the request to `C` and `D`. `B` may send back 15 hashes to `A` at
-first, which means there are now a maximum of `50-15=35` hashes left for `C`
-and `D` combined for `B` to potentially send back. `B` can choose to track
-hashes and perform deduplication, so that if `C` and `D` were to both send back
-a hash `f88954b3e6adc067af61cca2aea7e3baecfea4238cb1594e705ecd3c92a67cb1`, `B`
-could ensure it was only passed back to `A` one time, thus reducing the
-remaining `limit` by 1 instead of 2.
-
-## Posts
-All durable data exchanged over the protocol are called Posts, and are always
-cryptographically signed by their author's private key. Any post may be
-referred to by its 32-byte BLAKE2b hash. This protocol primary aim is to
-facilitate the exchange of these posts between peers.
-
-local disk storage. A post always has an author (via a required `public_key`
-field), and always provides a signature (via the required `signature` field) to
-prove they authored it.
-
-When you "make a post", you are only writing to some local storage indexed by the hash of the
-content. Posts only get sent to other peers in response to queries for content matching certain
-criteria.
-
-### Hash
-All **post**s in Cable is referenced by the resulting output of putting a post
-through a hash function. Specifically, 32-byte BLAKE2b (optionally using
-libsodium's `crypto_generichash()` function).
-
-To produce a correct hash, run `crypto_generichash()` on the entire post,
-including the post header.
-
-### Links
-Part of the header every post is the `links` field. Every post is able to link
-to 0 or more other posts by means of referencing those posts by their hash (the
-output of running them through a specific hash function).
-
-Referencing a post by its hash provides a *causal proof*: it demonstrates that
-your post must have occurred after all of the posts you are referencing.
-
-This can be useful for ordering chat messages in particular when a client's
-hardware clock is skewed, and using post timestamps alone would provide
-confusing ordering.
-
-## ?. References
+## 8. References
 - [BLAKE2](https://www.blake2.net/blake2.pdf)
 - [Unicode 15.0.0](https://www.unicode.org/versions/Unicode15.0.0/)
 - [UAX #44: Unicode Character Database (General_Categories Values)][GC]
-
 
 [GC]: https://www.unicode.org/reports/tr44/#GC_Values_Table
 
