@@ -531,7 +531,7 @@ key       | value format | desc
 ----------|--------------|---------------------------------------
 `name`    | UTF-8        | handle this user wishes to use as a pseudonym
 
-The `name` field is expected to be a valid UTF-8 string, and not contain codepoints from the `Cc` [General Category][GC]. Its length is not to exceed 32 bytes. If the field exceeds this, the post should be considered invalid.
+A valid `name` field is a valid UTF-8 string, between 1 and 32 codepoints.
 
 To save space, a client may wish to discard from disk older versions of these messages from a particular user.
 
@@ -552,7 +552,7 @@ field          | type               | desc
 `topic_len`    | `varint`           | length of the topic field
 `topic`        | `u8[topic_len] `   | topic content
 
-The `topic` field is expected to be a valid UTF-8 string, and not contain codepoints from the `Cc` [General Category][GC]. Its length is not to exceed 512 bytes. If the field exceeds this, the post should be considered invalid.
+A valid `topic` field is a valid UTF-8 string, between 0 and 512 codepoints.
 
 ### 6.6 `post/join` (`post_type=4`)
 
@@ -871,7 +871,7 @@ confusing ordering.
 ## ?. References
 - [BLAKE2](https://www.blake2.net/blake2.pdf)
 - [Unicode 15.0.0](https://www.unicode.org/versions/Unicode15.0.0/)
-- [UAX #44: Unicode Character Database (General_Categories Values)](https://www.unicode.org/reports/tr44/#GC_Values_Table)
+- [UAX #44: Unicode Character Database (General_Categories Values)][GC]
 
 
 [GC]: https://www.unicode.org/reports/tr44/#GC_Values_Table
