@@ -113,14 +113,8 @@ The following are the general parameters to be used with BLAKE2b. If you are usi
 ### high-level data model
 - users
   - which values win & how
-  - name string restrictions
-  - key string restrictions
-  - value string restrictions
 - channels (fields/properties, verbs upon them, how chat msgs in channels are sorted)
   - which values win & how
-  - name string restrictions
-  - topic string restrictions
-  - chat msg string restrictions
 
 ### mid-level model: posts, sync, ingestion, materialized views
 - posts, their fields, their handling, ingestion
@@ -503,7 +497,7 @@ pairs by setting a final `keyN_len` of zero.
 
 Keys are expected to be UTF-8 strings. The valid bytes for a value depends on the key. See the table below.
 
-The `keyN` fields are expected to be valid UTF-8 strings. Each key string's length is not to exceed 128 bytes.
+The `keyN` fields are expected to be valid UTF-8 strings. Each key string's length is be between 1 and 128 codepoints.
 
 The `valueN` fields are expected to not exceed 4096 bytes (4 kibibytes) each.
 
