@@ -91,6 +91,12 @@ Midnight on January 1st, 1970.
 ### UNIX Time
 A point in time, represented by the number of seconds since the UNIX Epoch. Here, this value is assumed to be non-negative, meaning dates before the UNIX Epoch can not be represented.
 
+### Unicode
+The [Unicode 15.0.0 standard](https://www.unicode.org/versions/Unicode15.0.0/).
+
+### UTF-8
+The "UTF-8" encoding scheme outlined in [Chapter 2 Section 5](https://www.unicode.org/versions/Unicode15.0.0/ch02.pdf#G11165) of the Unicode 15.0.0 specification.
+
 ## 3. Software Dependencies
 
 ### 3.1 Cryptography
@@ -118,13 +124,9 @@ The following are the general parameters to be used with BLAKE2b. If you are usi
 
 ## 4. Data Model
 
-### Unicode
-References in this document to "Unicode" refer to the Unicode 15.0.0 standard,
-and "UTF-8" to the UTF-8 encoding scheme outlined in [place]().
-
 ### Valid Channel Names
-- Use any Unicode characters except the `Cc` [General Category](https://www.unicode.org/reports/tr44/#GC_Values_Table)
-- Are less than or equal to 64 bytes in length
+- Valid channel names are UTF-8 encoded strings.
+- Valid channel names are between 1 and 64 codepoints.
 
 ### high-level data model
 - users
