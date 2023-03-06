@@ -45,57 +45,39 @@ carry out.
 
 
 ## 2. Definitions
-### Cabal
-A private group chat that a number of users can participate in, comprised of **users** and zero or more **channel**s.
+**Cabal**: A private group chat that a number of users can participate in, comprised of **users** and zero or more **channel**s.
 
-### Channel
-A conceptual object with its own unique name, a set of member **user**s, and a set of chat **post**s written to it.
+**Channel**: A conceptual object with its own unique name, a set of member **user**s, and a set of chat **post**s written to it.
 
-### User
-An ED25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal. *User* and *member* may be used interchangeably.
+**User**: An ED25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal. *User* and *member* may be used interchangeably.
 
-### Public Key
-An ED25519 key, which constitutes a user's public-facing identity within a cabal.
+**Public Key**: An ED25519 key, which constitutes a user's public-facing identity within a cabal.
 
-### Private Key
-An ED25519 key, used for signing authored **post**s. Kept private and secret to all but the user who owns it.
+**Private Key**: An ED25519 key, used for signing authored **post**s. Kept private and secret to all but the user who owns it.
 
-### Post
-An authored binary payload, signed by the private key of its creator user.
+**Post**: An authored binary payload, signed by the private key of its creator user.
 
-### Client
-An running instance of an implementation of cable.
+**Client**: A running instance of an implementation of cable.
 
-### Message
-An informative binary payload sent by and received from other cable peers. Each
-message is either a **request** or a **response**.
+**Message**: An informative binary payload sent by and received from other cable peers. Each message is either a **request** or a **response**.
 
-### Peer
-A machine that a client is connected to over some network protocol who is also speaking the cable protocol.
+**Peer**: A machine that a client is connected to over some network protocol who is also speaking the cable protocol.
 
-### Request
-A message originating from a particular **peer**, identified by a unique request ID.
+**Request**: A message originating from a particular **peer**, identified by a unique request ID.
 
-### Response
-A message, traversing the network to the peer who originally made a request with the same request ID.
+**Response**: A message, traversing the network to the peer who originally made a request with the same request ID.
 
-### Hash
-A 32-byte BLAKE2b digest of a particular sequence of bytes.
+**Hash**: A 32-byte BLAKE2b digest of a particular sequence of bytes.
 
-### Link
-A **hash**, which acts as a reference to the post which hashes to said hash.
+**Link**: A **hash**, which acts as a reference to the post which hashes to said hash.
 
-### UNIX Epoch
-Midnight on January 1st, 1970.
+**UNIX Epoch**: Midnight on January 1st, 1970.
 
-### UNIX Time
-A point in time, represented by the number of seconds since the UNIX Epoch. Here, this value is assumed to be non-negative, meaning dates before the UNIX Epoch can not be represented.
+**UNIX Time**: A point in time, represented by the number of seconds since the UNIX Epoch. Here, this value is assumed to be non-negative, meaning dates before the UNIX Epoch can not be represented.
 
-### Unicode
-The [Unicode 15.0.0 standard](https://www.unicode.org/versions/Unicode15.0.0/).
+**Unicode**: The [Unicode 15.0.0 standard](https://www.unicode.org/versions/Unicode15.0.0/).
 
-### UTF-8
-The "UTF-8" encoding scheme outlined in [Chapter 2 Section 5](https://www.unicode.org/versions/Unicode15.0.0/ch02.pdf#G11165) of the Unicode 15.0.0 specification.
+**UTF-8**: The "UTF-8" encoding scheme outlined in [Chapter 2 Section 5](https://www.unicode.org/versions/Unicode15.0.0/ch02.pdf#G11165) of the Unicode 15.0.0 specification.
 
 ## 3. Software Dependencies
 
