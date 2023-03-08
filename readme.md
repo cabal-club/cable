@@ -376,7 +376,7 @@ A request may be considered "concluded" and be safely deallocated (e.g. its
 Request ID forgotten) once a given peer role (above) has satisfied all
 conditions for all inbound and outbound peers.
 
-#### 4.4.1 Time To Live
+#### 4.4.2 Time To Live
 The `ttl` field, set on all requests' header, controls how many more times a
 request may be forwarded to other peers. A client wishing a request not be
 forward beyond its initial destination peer would set `ttl = 0` to signal this.
@@ -391,7 +391,7 @@ The TTL mechanism exists to allow clients with limited connectivity to peers
 they can reach as a relay to find and retrieve data they are interested in more
 easily.
 
-#### 4.4.2 Limit Counting
+#### 4.4.3 Limit Counting
 Some requests have a `limit` field specifying an upper bound on how many hashes
 a client expects to receive in response. A peer responding to such a request
 can honour this limit by counting how many hashes they send back to the
