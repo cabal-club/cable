@@ -71,6 +71,8 @@ carry out.
 
 **Link**: A **hash**, which acts as a reference to the post which hashes to said hash.
 
+**Chat message**: A post of type `post/text`, which is made within a particular channel.
+
 **UNIX Epoch**: Midnight on January 1st, 1970.
 
 **UNIX Time**: A point in time, represented by the number of seconds since the UNIX Epoch. Here, this value is assumed to be non-negative, meaning dates before the UNIX Epoch can not be represented.
@@ -96,7 +98,7 @@ This cryptographic functionality can be provided by [libsodium](https://libsodiu
 * `crypto_sign_open()` - to verify the signature of a post (in combined mode)
 
 ### 3.1.1 BLAKE2b Parameters
-The following are the general parameters to be used with BLAKE2b. If you are using 1.0.18-stable of libsodium, these are already set by default.
+The following are the general parameters to be used with BLAKE2b. If one is using 1.0.18-stable of libsodium, these are already set by default.
 
 - Digest byte length: 32
 - Key byte length (not used): 0
@@ -106,60 +108,73 @@ The following are the general parameters to be used with BLAKE2b. If you are usi
 ## 4. Data Model
 
 ### 4.1 Posts
-All durable data exchanged over the protocol are called Posts, and are always
-cryptographically signed by their author's private key. Any post may be
-referred to by its 32-byte BLAKE2b hash. This protocol primary aim is to
-facilitate the exchange of these posts between peers.
+All durable data exchanged over the protocol are called **posts**, and are
+always cryptographically signed by their author's private key. Any post may be
+referred to by its 32-byte BLAKE2b hash.
 
 A post always has an author (via the required `public_key` field), and always
 provides a signature (via the required `signature` field) to prove they
-authored it.
+in fact authored it.
 
-When you "make a post", you are only writing to some local storage indexed by
-the hash of the content. Posts are only sent to other peers in response to
-queries from them, for content matching certain criteria (e.g. chat messages
-within some time range).
+When a user "makes a post", they are only writing to some local storage indexed
+by the hash of the content. Posts are only sent to other peers in response to
+queries about them (e.g. chat messages within some time range).
 
 #### 4.1.2 Addressing
-Any **post** in cable can be addressed / referenced by its hash. What this
-means specifically, is the resulting output of putting a post's verbatim
-content through the BLAKE2b function.
+Any post in cable can be addressed or referenced by its hash. What this means
+specifically, is the resulting output of putting a post's verbatim binary
+content, including the post header, through the BLAKE2b function.
 
-To produce a correct hash, run libsodium's `crypto_generichash()` (or your
-implementation's equivalent) on the entire post, including its post header.
+Implementations would benefit from a storage design that allows for quick
+look-up of a post's contents by its hash.
 
 #### 4.1.3 Links
 Every post has a field named `links`. This enables any post to *link* to 0 or
 more other posts by means of referencing those posts by their hash.
 
 Referencing a post by its hash provides a *causal proof*: it demonstrates that
-your post *must* have occurred after all of the other posts referenced. This
-can be useful for ordering chat messages, since a client's hardware clock is
-skewed, or timestamp spoofed, and using post timestamps alone could provide
-confusing ordering.
+a post *must* have occurred after all of the other posts referenced. This
+can be useful for ordering chat messages, since a timestamp alone can cause
+ordering problems if a client's hardware clock is skewed, or timestamp is
+spoofed.
 
-Implementations are recommended to set and utilize links.
+Implementations are recommended to set and utilize links on `post/text` posts
+(chat messages).
 
-##### 4.1.3.1 Choosing links to set
-TODO:
-Q: How does an impl choose which posts to ref in `links`?
+##### 4.1.3.1 Setting links for `post/text` posts
+This is done by utilizing a mechanism called "tracking heads". In this context,
+a **head** is a post that no other locally known post links to. Here, **channel
+heads** refers to all such posts that are heads within a given channel.
+
+To do this quickly, an implementation may choose to maintain a reverse look-up
+table for posts, so that, given a post's hash, the hashes of all posts linking
+to it may be found. If no hashes are returned, the post is a head.
+
+Over time, this creates an eventually consistent data structure where all chat
+messages in a channel become roughly causally ordered. ("Roughly" because of
+the possible participation of client implementations that do not set links.)
 
 #### 4.1.4 Ordering
-Currently, only chat messages (`post/text`) need to be sorted, the general
-algorithm for ordering any pair of posts is to pick either the largest
-timestamp OR higher causal value, with the latter having higher priority.
+Only chat messages need to be sorted, and sorting only needs to happen at the
+level of a client implementation -- not something a wire protocol
+implementation needs to worry about. Still, it is included here as a learning
+aid until a separate guide for implementors is written.
 
-A post's "causal value" relative to another post is decided by whether there is
-a known chain of `links` that leads from one post to the other. If Post B links
-to Post A by mentioning Post A's hash, Post B has a higher causal value than
-Post A (relative to each other).
+The algorithm for ordering any pair of posts is to pick either the largest
+timestamp OR higher **causal value**, with the latter having higher priority.
 
-Elsewhere in this document, "latest" is taken to mean the post with the higher
-sort value (larger timestamp or larger causal value).
+A post's causal value relative to another post is decided by whether there is a
+known chain of links that leads from one post to the other. If Post B links to
+Post A by mentioning Post A's hash, Post B has a higher causal value than Post
+A (relative to each other). This would be true even if Post B linked to Post A
+by means of intermediary Posts C and D.
+
+The term **latest** is taken to refer to the post with the greatest sort value
+using this ordering algorithm.
 
 ##### 4.1.4.1 Rationale
 Using a timestamp alone, an ascending sort comparison function might look like
-this Javascript function:
+the following Javascript function:
 
 ```js
 function cmp (a, b) {
@@ -171,9 +186,9 @@ However, if a user posted a message after another user, but their clock was
 skewed backwards by an hour, their newer post would appear in the past instead
 of being sorted ahead.
 
-By allowing posts to *link* to other posts by their hash, a comparator function
+By allowing posts to link to other posts by their hash, a comparator function
 can be written that takes causal links into account, and uses the timestamp
-only as a fallback in case no link chain can be found:
+only as a fallback in case no link chain can be found at a given point in time:
 
 ```js
 // Assumes an internal representation of chat messages of the form
@@ -249,6 +264,14 @@ Here, the timestamp-only comparator provides a result that is clearly (to a
 human) out of order, while the comparator that takes causal links into account
 produces an ordering that would more closely capture the real temporal ordering.
 
+Note that the overall ordering of chat messages could change over time, as new
+information is collected. For example, a post might be downloaded that proves a
+chain of links leading from Post A to Post F, resulting in the causal chain
+being used to sort rather than A and F's respective timestamps. Clients would
+have to choose how to handle this based on, perhaps, what would be least
+disorientating or most informative to users (e.g. moving around chat messages
+in the display, or keeping the ordering stable).
+
 ### 4.2 Users
 Users of Cabal are identified by their ED25519 public key, and use this and
 their private key to prove themselves as verifiable authors of data shared with
@@ -256,14 +279,15 @@ other peers, by crytographically signing any post they author.
 
 #### 4.2.1 State
 A user is fully described at a given point in time by their public key, and the
-latest known `post/info` post made by that user, by whatever the latest
-key/value pairs are defined therein. As of present, the only supported key is
-`name`, which defines a user's display name. Older `post/info`s made by a user
-are considered obsolete and can be safely ignored or discarded.
+key/value pairs of the latest known `post/info` post made by that user.
+
+As of present, the only supported key is `name`, which defines a user's display
+name. Older `post/info`s made by a user are considered obsolete and can be
+safely ignored or discarded.
 
 ### 4.3 Channels
 A channel is a named collection of chat messages (`post/text`) and user joins
-and leaves (`post/{join,leave}` posts).
+and leaves (posts of type `post/{join,leave}`).
 
 The act of a user issuing a post that writes a chat message to a channel or
 joins that channel implies that that named channel has been created, and now
@@ -275,23 +299,22 @@ exists.
 
 #### 4.3.2 Membership
 A user is considered a member of a channel at a particular point in time if,
-from a client's perspective, that user has issued a `post/join` to that
-channel and has not issued a matching `post/leave` since.
+from a client's perspective, that user has issued a `post/join`, `post/text`,
+or `post/topic` to that channel and has not issued a `post/leave` since.
+
+A user whose latest interaction with a channel is a `post/leave` is considered
+an **ex-member**.
 
 #### 4.3.3 State
 A channel at any given moment, from the perspective of a client, is fully
 described by the following:
 
-- The latest `post/info` post of each user who is *or was* a member of the channel.
-- The latest of each user's `post/join` or `post/leave` post to the channel.
-- The latest `post/topic` post made to the channel, made by any user, regardless of current or past membership.
+- The latest `post/info` post of each member and ex-member.
+- The latest of each member and ex-member's `post/join` or `post/leave` post to the channel.
+- The latest `post/topic` post made to the channel, made by any member or ex-member.
 - All known `post/text` posts made to channel.
 
 "To the channel" refers to the `channel` field set on a given post.
-
-"Latest" means the relevant post with greatest causal ordering, and, if that's
-not possible, the greatest timestamp. See "Chat Message Sorting" below for more
-details on links and causal ordering.
 
 #### 4.3.4 Synchronization
 The `Request Channel State` and `Request Channel Time Range` requests are
@@ -305,51 +328,75 @@ to maintain a "rolling window". For example, a user that wishes to stay
 up-to-date with the last week's worth of chat history would, on client
 start-up, issue a `Request Channel Time Range` request with
 `time_start=now()-25200` (25200 seconds in a week) for a given channel of
-interest. `Hash Response`s with already-known hashes can be safely ignored,
-while new ones can induce `Data Request`s for their content.
+interest. Known hashes provided by `Hash Response`s can be safely ignored,
+while new ones can be made to induce `Data Request`s for their content.
 
-The purpose of keeping a rolling time window, instead of just asking for
+The purpose of keeping a rolling time window instead of just asking for
 `time_start=last_bootup_time`, is to capture messages that were missed because
-either you or other peers were, at the time, offline or part of another
+either a client or other peers were, at the time, offline or part of another
 network. This allows a client to make posts while offline, and still have them
 appear to others when they do come back online (within the client's rolling
 window's duration).
 
-### 4.4 Request/Response Lifetime
-Currently, all request types can generate potentially *many* responses. A
-request sent to a peer may result in several blocks of hashes or data being
-sent back by them as they scan their local database, and, if that peers
-forwards your request to its peers as well, they too may trickle back many
-responses over time.
+### 4.4 Requests & Responses
+All request types can generate multiple responses. A request sent to a peer may
+result in several blocks of hashes or data being sent back by them as they scan
+their local database, and, if that peers forwards your request to its peers as
+well, they too may trickle back several responses over time.
 
-TODO
-(upcoming: info about request lifetimes)
+#### 4.4.1 Lifetime of a Request
+In the lifetime of a given request, there are three exclusive roles an involved
+client machine can have:
+
+1. The **original requester**, who allocated the new request, and has a set of
+   *outbound peers* they have sent the request to.
+
+2. An **intermediary peer**. This is any client who received the request from
+   one or more peers and has also forwarded it to others. An intermediary peer
+   has both a set of *inbound peers* for a request as well as *outbound peers*.
+
+3. A **terminal peer**. This is a client who received the request from one or
+   more peers and has NOT forwarded it to any others. A terminal peer has only
+   a set of *inbound peers*.
+
+A peer handling a request who has *outbound peers* (original requester,
+intermediary peer) must satisfy any of the following, for each outbound peer:
+    1. Receives a "no more data" `Hash Response` (`hash_count=0`) from the peer.
+    2. Sends the peer a `Cancel Request`. This could be induced by an explicit
+       client action or e.g. a local timeout a client set on the request.
+    3. The connection to the peer is lost.
+
+A peer handling a request who has *inbound peers* (intermediary peer, terminal
+peer) must satisfy any of the following, for each inbound peer:
+    1. Sends a "no more data" response back to the peer.
+    2. Receives a `Cancel Request`.
+    3. The connection to the peer is lost.
+
+A request may be considered "concluded" and be safely deallocated (e.g. its
+Request ID forgotten) once a given peer role (above) has satisfied all
+conditions for all inbound and outbound peers.
 
 #### 4.4.1 Time To Live
-TODO: review
-
-The `ttl` field, set on requests, controls *how many more times* a request may
-be forwarded to other peers. A client wishing a request not be forward beyond
-its initial destination peer would set `ttl = 0` to signal this.
+The `ttl` field, set on all requests' header, controls how many more times a
+request may be forwarded to other peers. A client wishing a request not be
+forward beyond its initial destination peer would set `ttl = 0` to signal this.
 
 When an incoming request has a `ttl > 0`, a peer can choose to forward a
-request along to other peers, and then forward the responses back to the peer
-that made the request. Each peer performing this action should decrement the
-`ttl` by one. A request with `ttl == 0` should not be forwarded.
+request along to other peers, and then forward their responses back to the peer
+who made the original request. Each peer performing this action should
+decrement the `ttl` by one. A request with `ttl == 0` should not be forwarded.
 
 The TTL mechanism exists to allow clients with limited connectivity to peers
-(e.g. behind a strong NAT) to use the peers they can reach as a relay to
-find and retrieve data they are interested in more easily.
+(e.g. behind a strong NAT or a restricted mobile connection) to use the peers
+they can reach as a relay to find and retrieve data they are interested in more
+easily.
 
-#### 4.4.2 Limit
-TODO: review
-
-If a request has a `limit` field specifying an upper bound on how many hashes
-it expects to get in response, and also sets a `ttl > 0`, a peer handling this
-request should try to ensure that that `limit` is honoured. This can be done by
-counting how many hashes a client sends back to the requester, **including**
-hashes received through other peers that the client has forwarded the request
-to.
+#### 4.4.2 Limit Counting
+Some requests have a `limit` field specifying an upper bound on how many hashes
+a client expects to receive in response. A peer responding to such a request
+can honour this limit by counting how many hashes they send back to the
+requester, **including** hashes received through other peers that the client
+has forwarded the request to.
 
 For example, assume `A` sends a request to `B` with `limit=50` and `ttl=1`, and
 `B` forwards the request to `C` and `D`. `B` may send back 15 hashes to `A` at
@@ -459,8 +506,8 @@ Responders are free to return the data for any subset of the requested hashes
 
 Indicate a desire to stop receiving responses for any request.
 
-Some requests stay open and wait for data to arrive. You can close these
-long-running subscriptions using a cancel request.
+Some requests stay open and wait for data to arrive. Long-running subscriptions
+can be closed using a cancel request.
 
 Receiving this request indicates that any further responses sent back using the
 given `req_id` may be discarded.
@@ -475,6 +522,11 @@ field        | type                | desc
 This request should be passed along to any peers to which this peer has forwarded the original request.
 
 No response to this message is expected.
+
+A peer receiving a `Cancel Request` should forward it along the same route, to
+the same peers, as the original request matching the given `req_id`, so that
+all peers involved in the request are notified. This request's `ttl` should be
+ignored in service of this.
 
 #### 5.2.2.3 Request Channel Time Range (`msg_type=4`)
 
@@ -523,8 +575,10 @@ field          | type               | desc
 `updates`      | `varint`           | maximum number of live / future hashes to return
 
 This request expects 0 or more `hash response`s in response, that pertain to
-posts that describe the current state of the channel. See "Channel State" under
-"Definitions" for details on what posts comprise a channel's current state.
+posts that describe the current state of the channel.
+
+The posts included are all those comprised by the channel state (see "4.3.3
+State"), excluding chat messages.
 
 If `historic` is set to `1`, this request expects the hashes of *all* historic
 posts that make up the channel state to be returned, followed by up to
@@ -579,6 +633,8 @@ field      | type       | desc
 
 More fields follow for different response types below.
 
+Responses containing an unknown `req_id` should be ignored.
+
 #### 5.2.3.1 Hash Response (`msg_type=0`)
 
 Respond with a list of hashes.
@@ -587,9 +643,12 @@ field        | type                | desc
 -------------|---------------------|-------------------------------------
 `msg_len`    | `varint`            | number of bytes in this message
 `msg_type`   | `varint (=0)`       |
-`req_id`     | `u8[4]`             | id this is in response to
+`req_id`     | `u8[4]`             | request ID this is in response to
 `hash_count` | `varint`            | number of hashes in the response
 `hashes`     | `u8[hash_count*32]` | BLAKE2b hashes concatenated together
+
+A `Hash Response` message with `hash_count=0` indicates that a peer does not
+intend to return any further data for the given request ID (`req_id`).
 
 #### 5.2.3.2 Data Response (`msg_type=1`)
 
@@ -662,8 +721,8 @@ be in the correct order.
 
 The hash of an incoming post is produced by hashing the entire post, including *all* fields.
 
-The `post_type` is a varint, so if the post types below are inadequate, you can create your own
-using unused numbers (`>64`).
+The `post_type` is a varint, so if the post types below are inadequate, one can
+create additional types using unused numbers (`>64`).
 
 Specify `num_links=0` if there is nothing to link to.
 
@@ -712,7 +771,7 @@ post may delete it).
 
 ### 5.3.4 `post/info` (`post_type=2`)
 
-Set public information about yourself.
+Set public information about one's self.
 
 field        | type               | desc
 -------------|--------------------|-------------------------
