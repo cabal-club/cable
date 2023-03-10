@@ -8,8 +8,8 @@ Contributors: Alexander Cobleigh, Noelle Leigh, Henry (cryptix)
 
 ## Abstract
 
-This document describes the cable wire protocol, used to facilitate
-peer-to-peer group chatrooms.
+This document describes a network protocol called "cable", to be used to
+facilitate peer-to-peer group chatrooms.
 
 ## Table of Contents
 * [0. Background](#0-background)
