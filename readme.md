@@ -1,6 +1,6 @@
 # cable
 
-Version: 1.0 (draft)
+Version: 2023.03-draft1
 
 Author: Kira Oakley
 
@@ -23,7 +23,7 @@ The purpose of the cable wire protocol is the facilitation of members of a
 Cabal group chat to exchange crytographically signed documents with each other,
 such as chat messages, spread across various user-defined topics.
 
-Cable is designed to be:
+cable is designed to be:
 * fairly simple to implement in any language with only a single dependency (libsodium)
 * able to bridge across different network transports
 * useful, even if written as a partial implementation
@@ -49,19 +49,19 @@ carry out.
 
 **Channel**: A conceptual object with its own unique name, a set of member **user**s, and a set of chat **post**s written to it.
 
-**User**: An ED25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal. *User* and *member* may be used interchangeably.
+**User**: An Ed25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal. *User* and *member* may be used interchangeably.
 
-**Public Key**: An ED25519 key, which constitutes a user's public-facing identity within a cabal.
+**Public Key**: An Ed25519 key, which constitutes a user's public-facing identity within a cabal.
 
-**Private Key**: An ED25519 key, used for signing authored **post**s. Kept private and secret to all but the user who owns it.
+**Private Key**: An Ed25519 key, used for signing authored **post**s. Kept private and secret to all but the user who owns it.
 
 **Post**: An authored binary payload, signed by the private key of its creator user.
 
-**Client**: A running instance of an implementation of cable.
+**Client**: A running instance computer program that implements cable (this specification).
 
 **Message**: An informative binary payload sent by and received from other cable peers. Each message is either a **request** or a **response**.
 
-**Peer**: A machine that a client is connected to over some network protocol who is also speaking the cable protocol.
+**Peer**: A machine that a client is connected to over some transport protocol, on top of which the cable protocol is being spoken.
 
 **Request**: A message originating from a particular **peer**, identified by a unique request ID.
 
@@ -88,12 +88,12 @@ carry out.
 Implementing cable requires access to implementations of the following:
 
 - [BLAKE2b](https://www.rfc-editor.org/rfc/rfc7693.txt) - Hash function described by RFC 7693. To be set to output 32-byte digests.
-- [ED25519](https://ed25519.cr.yp.to/) - A public-key signature system. Used to generate, sign posts, and verify post signatures.
+- [Ed25519](https://ed25519.cr.yp.to/) - A public-key signature system. Used to generate, sign posts, and verify post signatures.
 
 This cryptographic functionality can be provided by [libsodium](https://libsodium.org) 1.0.18-stable, if bindings exist for one's implementation language of choice. In particular, these functions may be utilized, with their default settings:
 
 * `crypto_generichash()` - to hash messages with BLAKE2b
-* `crypto_sign_keypair()` - to generate public and secret ED25519 keys
+* `crypto_sign_keypair()` - to generate public and secret Ed25519 keys
 * `crypto_sign()` - to calculate the signature of a post (in combined mode)
 * `crypto_sign_open()` - to verify the signature of a post (in combined mode)
 
@@ -273,7 +273,7 @@ disorientating or most informative to users (e.g. moving around chat messages
 in the display, or keeping the ordering stable).
 
 ### 4.2 Users
-Users of Cabal are identified by their ED25519 public key, and use this and
+Users of Cabal are identified by their Ed25519 public key, and use this and
 their private key to prove themselves as verifiable authors of data shared with
 other peers, by crytographically signing any post they author.
 
@@ -422,12 +422,12 @@ This example describes a binary payload that is 5 bytes long, where the one byte
 If `foo=17` and `bar=[3,6,8,64]`, the following binary payload would be expected:
 
 ```
-0x11 0x03 0x06 0x08 0x40
-
- ^     ^^^^^^^^^^^^^^^
- |            |------------- bar = [3, 6, 8, 64]
+ foo   bar
+ 0x11  0x03 0x06 0x08 0x40
+ ^^^^  ^^^^^^^^^^^^^^^^^^^
+ |     ╰-------------------- bar = [3, 6, 8, 64]
  |
- |-------------------------- foo = 17
+ ╰-------------------------- foo = 17
 ```
 
 The following data types are used:
@@ -456,7 +456,7 @@ Clients may experiment with custom message types beyond the ids used by this spe
 
 Clients encountering an unknown `msg_type` should ignore and discard it.
 
-The `circuit_id` field is not currently specified, and should not be used. It is reserved for future use.
+The `circuit_id` field is not currently specified, and should be set to all zeros. It is reserved for future use.
 
 ### 5.2.2 Requests
 
@@ -466,6 +466,7 @@ field      | type       | desc
 -----------|------------|-----------------------------------
 `msg_len`  | `varint`   | number of bytes in this message
 `msg_type` | `varint`   |
+`circuit_id`  | `u8[4]`  | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`   | `u8[4]`    | unique id of this request (random)
 `ttl`      | `varint`   | number of hops remaining
 
@@ -486,6 +487,7 @@ field        | type                | desc
 -------------|---------------------|-------------------------------------
 `msg_len`    | `varint`            | number of bytes in this message
 `msg_type`   | `varint`            |
+`circuit_id` | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`     | `u8[4]`             | unique id of this request (random)
 `ttl`        | `varint`            | number of hops remaining
 `hash_count` | `varint`            | number of hashes to request
@@ -516,6 +518,7 @@ field        | type                | desc
 -------------|---------------------|-----------------------------------
 `msg_len`    | `varint`            | number of bytes in this message
 `msg_type`   | `varint`            |
+`circuit_id` | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`     | `u8[4]`             | stop receiving results for this request id
 `ttl`        | `varint`            | ignored
 
@@ -536,6 +539,7 @@ field          | type               | desc
 ---------------|--------------------|----------------------------
 `msg_len`      | `varint`           | number of bytes in this message
 `msg_type`     | `varint`           |
+`circuit_id`   | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`       | `u8[4]`            | unique id of this request (random)
 `ttl`          | `varint`           | number of hops remaining
 `channel_len`  | `varint`           | length of the channel's name, in bytes
@@ -553,8 +557,14 @@ channel by members between `time_start` and `time_end`. `time_start` is the
 post with the *oldest* timestamp one is interested in, `time_end` is the
 newest.
 
-If `time_end` is 0, request all messages since `time_start` and respond with
-more posts as they arrive, up to `limit` number of posts.
+If `time_end` is 0, request all chat messages since `time_start` and respond
+with more posts as they arrive, up to `limit` number of posts.
+
+A responding client is RECOMMENDED to respond with all known chat messages
+within the requested time range, though they may desire not to in certain
+circumstances, particularly if a channel has a very long history and the
+responding client lacks sufficient resources at the time to return thousands or
+hundreds of thousands of chat message hashes.
 
 A `limit` of 0 indicates a desire to receive an unlimited number of hashes.
 
@@ -567,11 +577,12 @@ field          | type               | desc
 ---------------|--------------------|-----------------------------------
 `msg_len`      | `varint`           | number of bytes in this message
 `msg_type`     | `varint`           |
+`circuit_id`   | `u8[4]`            | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`       | `u8[4]`            | unique id of this request (random)
 `ttl`          | `varint`           | number of hops remaining
 `channel_len`  | `varint`           | length of the channel's name, in bytes (UTF-8)
 `channel`      | `u8[channel_len] ` | channel name as a string of text
-`historic`     | `varint`           | set to `1` to receive peer's view of current channel state; `0` to not
+`historic`     | `varint`           | set to `1` to recv current state, or `0` to not
 `updates`      | `varint`           | maximum number of live / future hashes to return
 
 This request expects 0 or more `hash response`s in response, that pertain to
@@ -580,11 +591,14 @@ posts that describe the current state of the channel.
 The posts included are all those comprised by the channel state (see "4.3.3
 State"), excluding chat messages.
 
-If `historic` is set to `1`, this request expects the hashes of *all* historic
-posts that make up the channel state to be returned, followed by up to
-`updates` number of live post hashes that further alter this channel's state.
+If `historic` is set to `1`, the requester expects to first receive the hashes
+of *all* posts that make up the current channel state from the perspective of
+the responding client.
 
-Set `updates` to 0 to not receive any live / future state changes.
+If `updates` is non-zero, it MUST be greater than zero. The requester expects
+to receive up to `updates` posts hashes, as they occur in the future, that
+further alter this channel's state. Set `updates` to 0 to not receive any live
+/ future state changes.
 
 Responses from a peer will keep coming until
 - this request is cancelled, or
@@ -599,6 +613,7 @@ field          | type               | desc
 ---------------|--------------------|-----------------------------------
 `msg_len`      | `varint`           | number of bytes in this message
 `msg_type`     | `varint`           |
+`circuit_id`   | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`       | `u8[4]`            | unique id of this request (random)
 `ttl`          | `varint`           | number of hops remaining
 `offset`       | `varint`           | number of channel names to skip (`0` to skip none)
@@ -629,6 +644,7 @@ field      | type       | desc
 -----------|------------|-----------------------------------
 `msg_len`  | `varint`   | number of bytes in this message
 `msg_type` | `varint`   |
+`circuit_id`   | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`   | `u8[4]`    | unique id of the request this is in response to
 
 More fields follow for different response types below.
@@ -643,6 +659,7 @@ field        | type                | desc
 -------------|---------------------|-------------------------------------
 `msg_len`    | `varint`            | number of bytes in this message
 `msg_type`   | `varint (=0)`       |
+`circuit_id` | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`     | `u8[4]`             | request ID this is in response to
 `hash_count` | `varint`            | number of hashes in the response
 `hashes`     | `u8[hash_count*32]` | BLAKE2b hashes concatenated together
@@ -658,6 +675,7 @@ field        | type                | desc
 -------------|---------------------|--------------------------
 `msg_len`    | `varint`            | number of bytes in this message
 `msg_type`   | `varint` (=1)       |
+`circuit_id` | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`     | `u8[4]`             | id that this is in response to
 `data0_len`  | `varint`            | length of first data payload
 `data0`      | `u8[data_len]`      | first data payload
@@ -669,8 +687,8 @@ field        | type                | desc
 
 A recipient reads zero or more (`data_len`,`data`) pairs until `data_len` is 0.
 
-Clients can hash an entire data payload to check whether it is data that it was
-expecting (i.e. had sent out a `request by hash` for).
+Clients SHOULD hash an entire data payload to check whether it is data that it
+was expecting (i.e. had sent out a `request by hash` for).
 
 #### 5.2.3.3 Channel List Response (`msg_type=7`)
 
@@ -680,6 +698,7 @@ field          | type                | desc
 ---------------|---------------------|-------------------------------------
 `msg_len`      | `varint`            | number of bytes in this message
 `msg_type`     | `varint (=0)`       |
+`circuit_id`   | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`       | `u8[4]`             | id this is in response to
 `channel0_len` | `varint`            | length in bytes of the first channel name
 `channel0`     | `u8[channel_len]`   | the first channel name (UTF-8)
@@ -700,8 +719,8 @@ Every post begins with the following 6-field header:
 
 field        | type              | desc
 -------------|-------------------|-------------------------------------------------------
-`public_key` | `u8[32]`          | ED25519 key that authored this post
-`signature`  | `u8[64]`          | ED25519 signature of the fields that follow
+`public_key` | `u8[32]`          | Ed25519 key that authored this post
+`signature`  | `u8[64]`          | Ed25519 signature of the fields that follow
 `num_links`  | `varint`          | how many BLAKE2b hashes this post links back to (0+)
 `links`      | `u8[32*num_links]`| BLAKE2b hashes of the latest messages in this channel/context
 `post_type`  | `varint`          | see custom post type sections below
@@ -722,7 +741,7 @@ be in the correct order.
 The hash of an incoming post is produced by hashing the entire post, including *all* fields.
 
 The `post_type` is a varint, so if the post types below are inadequate, one can
-create additional types using unused numbers (`>64`).
+create additional types using unused numbers (`>255`).
 
 Specify `num_links=0` if there is nothing to link to.
 
@@ -734,8 +753,8 @@ Post a message in a channel.
 
 field          | type               | desc
 ---------------|--------------------|---------------------------------
-`public_key`   | `u8[32]`           | ED25519 key that authored this post
-`signature`    | `u8[64]`           | ED25519 signature of the fields that follow
+`public_key`   | `u8[32]`           | Ed25519 key that authored this post
+`signature`    | `u8[64]`           | Ed25519 signature of the fields that follow
 `num_links`    | `varint`           | how many BLAKE2b hashes this post links back to (0+)
 `links`        | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
@@ -755,8 +774,8 @@ future.
 
 field           | type                   | desc
 ----------------|------------------------|-------------------------
-`public_key`    | `u8[32]`               | ED25519 key that authored this post
-`signature`     | `u8[64]`               | ED25519 signature of the fields that follow
+`public_key`    | `u8[32]`               | Ed25519 key that authored this post
+`signature`     | `u8[64]`               | Ed25519 signature of the fields that follow
 `num_links`     | `varint`               | how many BLAKE2b hashes this post links back to (0+)
 `links`         | `u8[32*num_links]`     | BLAKE2b hashes of the latest messages in this channel/context
 `post_type`     | `varint`               | see custom post type sections below
@@ -775,8 +794,8 @@ Set public information about one's self.
 
 field        | type               | desc
 -------------|--------------------|-------------------------
-`public_key` | `u8[32]`           | ED25519 key that authored this post
-`signature`  | `u8[64]`           | ED25519 signature of the fields that follow
+`public_key` | `u8[32]`           | Ed25519 key that authored this post
+`signature`  | `u8[64]`           | Ed25519 signature of the fields that follow
 `num_links`  | `varint`           | how many BLAKE2b hashes this post links back to (0+)
 `links`      | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
 `post_type`  | `varint`           | see custom post type sections below
@@ -816,8 +835,8 @@ Set a topic for a channel.
 
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
-`public_key`   | `u8[32]`           | ED25519 key that authored this post
-`signature`    | `u8[64]`           | ED25519 signature of the fields that follow
+`public_key`   | `u8[32]`           | Ed25519 key that authored this post
+`signature`    | `u8[64]`           | Ed25519 signature of the fields that follow
 `num_links`    | `varint`           | how many BLAKE2b hashes this post links back to (0+)
 `links`        | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
@@ -835,8 +854,8 @@ Join a channel.
 
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
-`public_key`   | `u8[32]`           | ED25519 key that authored this post
-`signature`    | `u8[64]`           | ED25519 signature of the fields that follow
+`public_key`   | `u8[32]`           | Ed25519 key that authored this post
+`signature`    | `u8[64]`           | Ed25519 signature of the fields that follow
 `num_links`    | `varint`           | how many BLAKE2b hashes this post links back to (0+)
 `links`        | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
@@ -852,8 +871,8 @@ Leave (part) a channel.
 
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
-`public_key`   | `u8[32]`           | ED25519 key that authored this post
-`signature`    | `u8[64]`           | ED25519 signature of the fields that follow
+`public_key`   | `u8[32]`           | Ed25519 key that authored this post
+`signature`    | `u8[64]`           | Ed25519 signature of the fields that follow
 `num_links`    | `varint`           | how many BLAKE2b hashes this post links back to (0+)
 `links`        | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
 `post_type`    | `varint`           | see custom post type sections below
@@ -869,7 +888,7 @@ field          | type               | desc
 
 2. Attacks that attempt to gain illicit entry to a cabal, by posing as a member. This would cover *peer entity authentication*.
 
-3. Actors capable of deriving an ED25519 private key from the public key via brute force, which would break data integrity and permit data insertion/deletion/modification of the compromised user's posts.
+3. Actors capable of deriving an Ed25519 private key from the public key via brute force, which would break data integrity and permit data insertion/deletion/modification of the compromised user's posts.
 
 4. Attacks that stem from how cable data ends up being stored locally. For example, an attacker with access to the user's machine being able to access their stored private key or chat history on disk.
 
