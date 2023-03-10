@@ -8,12 +8,13 @@ Contributors: Alexander Cobleigh, Noelle Leigh, Henry (cryptix)
 
 ## Abstract
 
-This document describes the cable wire protocol. That is, the specific bytes
-sent "over the wire" between peers wishing to speak the protocol to each other.
+This document describes the cable wire protocol, used to facilitate
+peer-to-peer group chatrooms.
 
 ## Table of Contents
 * [0. Background](#0-background)
 * [1. Introduction](#1-introduction)
+  + [1.1 Terminology](#11-terminology)
 * [2. Scope](#2-scope)
 * [3. Definitions](#3-definitions)
 * [4. Software Dependencies](#4-software-dependencies)
@@ -21,11 +22,12 @@ sent "over the wire" between peers wishing to speak the protocol to each other.
   + [4.1.1 BLAKE2b Parameters](#411-blake2b-parameters)
 * [5. Data Model](#5-data-model)
   + [5.1 Posts](#51-posts)
-    - [5.1.2 Addressing](#512-addressing)
-    - [5.1.3 Links](#513-links)
-      * [5.1.3.1 Setting links](#5131-setting-links)
-    - [5.1.4 Ordering](#514-ordering)
-      * [5.1.4.1 Rationale](#5141-rationale)
+    - [5.1.2 Signing](#512-signing)
+    - [5.1.3 Addressing](#513-addressing)
+    - [5.1.4 Links](#514-links)
+      * [5.1.4.1 Setting links](#5141-setting-links)
+    - [5.1.5 Ordering](#515-ordering)
+      * [5.1.5.1 Rationale](#5151-rationale)
   + [5.2 Users](#52-users)
     - [5.2.1 State](#521-state)
   + [5.3 Channels](#53-channels)
@@ -40,7 +42,7 @@ sent "over the wire" between peers wishing to speak the protocol to each other.
 * [6. Wire Formats](#6-wire-formats)
   + [6.1 Field tables](#61-field-tables)
   + [6.2 Messages](#62-messages)
-    - [6.2.1 Header](#621-header)
+    - [6.2.1 Message Header](#621-message-header)
     - [6.2.2 Requests](#622-requests)
       * [6.2.2.1 Request Post](#6221-request-post)
       * [6.2.2.2 Cancel Request](#6222-cancel-request)
@@ -75,17 +77,24 @@ sent "over the wire" between peers wishing to speak the protocol to each other.
     - [7.2.2.2 Data Integrity](#7222-data-integrity)
     - [7.2.2.3 Privilege Escalation](#7223-privilege-escalation)
   + [7.3 Future Work](#73-future-work)
-* [8. References](#8-references)
+* [8. Normative References](#8-normative-references)
+* [9. Informative References](#9-informative-references)
 
 ## 0. Background
-Cabal is a distributed peer-to-peer computer program for private group chat. It
-operates in a fashion differently from the typical server-client model, where
-no machine is either an official nor de-facto authority over others in the
-network. Instead, peers collaborate with each other to share documents to build
-an eventually-consistent view of the shared data.
+[Cabal][Cabal] is an existing distributed peer-to-peer computer program for
+private group chat. It operates in a fashion differently from the typical
+server-client model, where no machine is either an official nor de-facto
+authority over others in the network. Instead, peers collaborate with each
+other to share documents to build an eventually-consistent view of the shared
+data.
+
+Cabal's original protocol was based off of [hypercore][hypercore], which was
+found to have limitations and trade-offs that didn't suit Cabal's needs well.
+This was the impetus for the formulation of this new protocol, designed with
+peer-to-peer group chat specifically in mind.
 
 ## 1. Introduction
-The purpose of the cable wire protocol is the facilitation of members of a
+The purpose of the cable wire protocol is to facilitate the members of a
 Cabal group chat to exchange crytographically signed documents with each other,
 such as chat messages, spread across various user-defined topics.
 
@@ -97,8 +106,16 @@ cable is designed to be:
 * compact over the wire
 * independent of whatever kind of database an implementation may use
 
+### 1.1 Terminology
+```
+      The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+      NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+      "OPTIONAL" in this document are to be interpreted as described in
+      RFC 2119.
+```
+
 ## 2. Scope
-This protocol does NOT include encryption or authentication of the connection.
+This protocol does not include encryption or authentication of the connection.
 It may be provided by other layers in userland (e.g. Tor, I2P) or expanded upon
 in future iterations of this document. In particular, a future handshake
 protocol is planned, which will handle authenticating that connected peers are
@@ -108,7 +125,6 @@ As such, it is assumed that peers speaking this protocol have proven to be
 legitimate members of the cabal. See Security Considerations (below) for an
 analysis of the types of anticipated attacks that even proper cabal members may
 carry out.
-
 
 ## 3. Definitions
 **Cabal**: A private group chat that a number of users can participate in, comprised of **users** and zero or more **channel**s.
@@ -132,6 +148,10 @@ carry out.
 **Request**: A message originating from a particular **peer**, identified by a unique request ID.
 
 **Response**: A message, traversing the network to the peer who originally made a request with the same request ID.
+
+**Requester**: A client authoring a request message, to be sent to other peers.
+
+**Responder**: A peer authoring a response message, in reference to a request sent to them.
 
 **Hash**: A 32-byte BLAKE2b digest of a particular sequence of bytes.
 
@@ -174,53 +194,64 @@ The following are the general parameters to be used with BLAKE2b. If one is usin
 ## 5. Data Model
 
 ### 5.1 Posts
-All durable data exchanged over the protocol are called **posts**, and are
-always cryptographically signed by their author's private key. Any post may be
-referred to by its 32-byte BLAKE2b hash.
+All durable data exchanged over the protocol are called **posts**.
+
+Any post can be referred to by its BLAKE2b hash.
 
 A post always has an author (via the required `public_key` field), and always
-provides a signature (via the required `signature` field) to prove they
-in fact authored it.
+provides a crytographic signature (via the required `signature` field) to prove
+they in fact authored it.
 
-When a user "makes a post", they are only writing to some local storage indexed
-by the hash of the content. Posts are only sent to other peers in response to
-queries about them (e.g. chat messages within some time range).
+When a user "makes a post", they are only writing to some local storage,
+perhaps indexed by the hash of the content for easy querying. Posts are only
+sent to other peers in response to queries about them (e.g. chat messages
+within some time range).
 
-#### 5.1.2 Addressing
-Any post in cable can be addressed or referenced by its hash. What this means
-specifically, is the resulting output of putting a post's verbatim binary
+#### 5.1.2 Signing
+A signature for a post is produced by signing the entire post, starting
+immediately after the `signature` field of the post header (defined below).
+
+If using libsodium, one can use `crypto_sign()` in combined mode to generate
+the signature field for the fields that come after `signature`, as
+`crypto_sign()` will prepend the signature into the output, so the fields will
+be in the correct order.
+
+#### 5.1.3 Addressing
+As stated above, any post in cable can be addressed or referenced by its hash.
+
+Specifically, a hash for a post is produced by putting a post's verbatim binary
 content, including the post header, through the BLAKE2b function.
 
-Implementations would benefit from a storage design that allows for quick
-look-up of a post's contents by its hash.
+Implementations may benefit from a storage design that allows for quick look-up
+of a post's contents by its hash.
 
-#### 5.1.3 Links
-Every post has a field named `links`. This enables any post to *link* to 0 or
-more other posts by means of referencing those posts by their hash.
+#### 5.1.4 Links
+Every post has a field named `links` in its header. This enables any post to
+*link* to 0 or more other posts by means of referencing those posts by their
+hash.
 
-Referencing a post by its hash provides a *causal proof*: it demonstrates that
-a post *must* have occurred after all of the other posts referenced. This
+Referencing a post by its hash provides a **causal proof**: it demonstrates
+that a post must have occurred after all of the other posts referenced. This
 can be useful for ordering chat messages, since a timestamp alone can cause
 ordering problems if a client's hardware clock is skewed, or timestamp is
 spoofed.
 
-Implementations are recommended to set and utilize links on `post/text` posts
-(chat messages).
+Implementations are RECOMMENDED to set and utilize links on chat messages
+specifically (`post/text`).
 
-##### 5.1.3.1 Setting links
-This is done by utilizing a mechanism called "tracking heads". In this context,
-a **head** is a post that no other locally known post links to. Here, **channel
-heads** refers to all such posts that are heads within a given channel.
+##### 5.1.4.1 Setting links
+This is done by tracking each channel's current **heads**. In this context, a
+**head** is a post that no other known post links to.
 
-To do this quickly, an implementation may choose to maintain a reverse look-up
-table for posts, so that, given a post's hash, the hashes of all posts linking
-to it may be found. If no hashes are returned, the post is a head.
+To do this quickly, an implementation may maintain a reverse look-up table for
+posts, so that, given a post's hash, the hashes of all posts linking to it may
+be found. If no hashes are returned, the post is a head.
 
 Over time, this creates an eventually consistent data structure where all chat
 messages in a channel become roughly causally ordered. ("Roughly" because of
 the possible participation of client implementations that do not set links.)
 
-#### 5.1.4 Ordering
+#### 5.1.5 Ordering
 Only chat messages need to be sorted, and sorting only needs to happen at the
 level of a client implementation -- not something a wire protocol
 implementation needs to worry about. Still, it is included here as a learning
@@ -238,7 +269,7 @@ by means of intermediary Posts C and D.
 The term **latest** is taken to refer to the post with the greatest sort value
 using this ordering algorithm.
 
-##### 5.1.4.1 Rationale
+##### 5.1.5.1 Rationale
 Using a timestamp alone, an ascending sort comparison function might look like
 the following Javascript function:
 
@@ -341,27 +372,30 @@ in the display, or keeping the ordering stable).
 ### 5.2 Users
 Users of Cabal are identified by their Ed25519 public key, and use this and
 their private key to prove themselves as verifiable authors of data shared with
-other peers, by crytographically signing any post they author.
+other peers, by including their public key and a crytographic signature on any
+post they author.
 
 #### 5.2.1 State
-A user is fully described at a given point in time by their public key, and the
-key/value pairs of the latest known `post/info` post made by that user.
+A user is fully described at a given point in time by
+1. their public key, and
+2. the key/value pairs of the latest known `post/info` post made by that user.
 
 As of present, the only supported key is `name`, which defines a user's display
 name. Older `post/info`s made by a user are considered obsolete and can be
 safely ignored or discarded.
 
 ### 5.3 Channels
-A channel is a named collection of chat messages (`post/text`) and user joins
-and leaves (posts of type `post/{join,leave}`).
+A channel is a named collection of
+1. chat messages (`post/text`), and
+2. user joins and leaves (posts of type `post/{join,leave}`).
 
 The act of a user issuing a post that writes a chat message to a channel or
 joins that channel implies that that named channel has been created, and now
 exists.
 
 #### 5.3.1 Names
-- A valid channel name is a UTF-8 encoded strings.
-- A valid channel name is between 1 and 64 codepoints.
+- A valid channel name MUST be a UTF-8 encoded string.
+- A valid channel name MUST between 1 and 64 codepoints.
 
 #### 5.3.2 Membership
 A user is considered a member of a channel at a particular point in time if,
@@ -374,13 +408,12 @@ an **ex-member**.
 #### 5.3.3 State
 A channel at any given moment, from the perspective of a client, is fully
 described by the following:
+1. The latest `post/info` post of each member and ex-member.
+2. The latest of each member and ex-member's `post/join` or `post/leave` post to the channel.
+3. The latest `post/topic` post made to the channel, made by any member or ex-member.
+4. All known `post/text` posts made to channel.
 
-- The latest `post/info` post of each member and ex-member.
-- The latest of each member and ex-member's `post/join` or `post/leave` post to the channel.
-- The latest `post/topic` post made to the channel, made by any member or ex-member.
-- All known `post/text` posts made to channel.
-
-"To the channel" refers to the `channel` field set on a given post.
+Above, "to the channel" refers to the `channel` field set on a given post.
 
 #### 5.3.4 Synchronization
 The `Request Channel State` and `Request Channel Time Range` requests are
@@ -444,12 +477,12 @@ conditions for all inbound and outbound peers.
 
 #### 5.4.2 Time To Live
 The `ttl` field, set on all requests' header, controls how many more times a
-request may be forwarded to other peers. A client wishing a request not be
-forward beyond its initial destination peer would set `ttl = 0` to signal this.
+request MAY be forwarded to other peers. A client wishing a request not be
+forwarded beyond its initial destination peer would set `ttl = 0` to signal this.
 
-When an incoming request has a `ttl > 0`, a peer can choose to forward a
-request along to other peers, and then forward their responses back to the peer
-who made the original request. Each peer performing this action should
+When an incoming request has a `ttl > 0`, a peer MAY choose to forward a
+request along to other peers, and then SHOULD forward their responses back to
+the peer who made the original request. Each peer performing this action SHOULD
 decrement the `ttl` by one. A request with `ttl == 0` should not be forwarded.
 
 The TTL mechanism exists to allow clients with limited connectivity to peers
@@ -457,10 +490,13 @@ The TTL mechanism exists to allow clients with limited connectivity to peers
 they can reach as a relay to find and retrieve data they are interested in more
 easily.
 
+To prevent request loops in the network, an incoming request with a known
+`req_id` (Request ID) SHOULD be discarded.
+
 #### 5.4.3 Limit Counting
 Some requests have a `limit` field specifying an upper bound on how many hashes
 a client expects to receive in response. A peer responding to such a request
-can honour this limit by counting how many hashes they send back to the
+SHOULD honour this limit by counting how many hashes they send back to the
 requester, **including** hashes received through other peers that the client
 has forwarded the request to.
 
@@ -476,7 +512,8 @@ remaining `limit` by 1 instead of 2.
 ## 6. Wire Formats
 
 ### 6.1 Field tables
-This section makes heavy use of tables to convey the expected ordering of bytes for various message types, such as the following:
+This section makes heavy use of tables to convey the expected ordering of bytes
+for various message types, such as the following:
 
 field      | type     | desc
 -----------|----------|-------------------------------------------------------------
@@ -504,9 +541,9 @@ The following data types are used:
 
 ### 6.2 Messages
 
-#### 6.2.1 Header
+#### 6.2.1 Message Header
 
-All messages begin with a `msg_len` and a `msg_type` varint, and a reserved 4-byte `circuit_id` field:
+All messages MUST begin with the following header fields:
 
 field         | type     | desc
 --------------|----------|-------------------------------------------------------------
@@ -516,116 +553,102 @@ field         | type     | desc
 
 Message-specific fields follow after the `circuit_id`.
 
-Each request and response type has a unique `msg_type` (see below).
+Each request and response type has have a unique `msg_type` (see below).
 
-Clients may experiment with custom message types beyond the ids used by this specification (where `msg_type >= 64`).
+Clients MAY experiment with custom message types beyond the ids used by this
+specification (where `msg_type >= 256`).
 
-Clients encountering an unknown `msg_type` should ignore and discard it.
+Clients encountering an unknown `msg_type` SHOULD ignore and discard it.
 
-The `circuit_id` field is not currently specified, and should be set to all zeros. It is reserved for future use.
+The `circuit_id` field is not currently specified, and SHOULD be set to all
+zeros. It is reserved for future use.
 
 #### 6.2.2 Requests
 
-Every request begins with the following header:
+Every request MUST begin with the above message header, followed by the
+following request header fields:
 
 field      | type       | desc
 -----------|------------|-----------------------------------
-`msg_len`  | `varint`   | number of bytes in this message
-`msg_type` | `varint`   |
-`circuit_id`  | `u8[4]`  | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`   | `u8[4]`    | unique id of this request (random)
 `ttl`      | `varint`   | number of hops remaining
 
 More fields follow for different request types below.
 
-The request ID, `req_id`, is to be a sequence of 4 bytes, generated randomly by
-the requester, used to uniquely identify the request during its lifetime across
-the swarm of peers who may handle it.
+The request ID, `req_id`, is a sequence of 4 bytes, generated randomly by the
+requester, used to uniquely identify the request during its lifetime across the
+set of peers who may handle it.
 
-When forwarding a request, do not change the `req_id`, so that routing loops
-can be more easily detected by peers.
+When forwarding a request to further peers, the `req_id` SHOULD NOT be changed,
+so that routing loops can be more easily detected by peers in the network.
 
 ##### 6.2.2.1 Request Post
 
-Request data for a set of hashes.
+Request a set of posts, given their hashes.
 
 field        | type                | desc
 -------------|---------------------|-------------------------------------
-`msg_len`    | `varint`            | number of bytes in this message
-`msg_type`   | `varint`            |
-`circuit_id` | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
-`req_id`     | `u8[4]`             | unique id of this request (random)
-`ttl`        | `varint`            | number of hops remaining
 `hash_count` | `varint`            | number of hashes to request
 `hashes`     | `u8[32*hash_count]` | BLAKE2b hashes concatenated together
 
-`msg_type` MUST be set to `2`.
+Its `msg_type` MUST be set to `2`.
 
 Results are provided by one or more `Post Response`s.
 
-The expected behaviour is to return immediately with what data is locally
-available, rather than holding on to the request in anticipation of perhaps
-seeing the requested hashes in the future.
+The responder SHOULD immediately return what data is locally available, rather
+than holding on to the request in anticipation of perhaps seeing the requested
+hashes in the future.
 
-Responders are free to return the data for any subset of the requested hashes
+Responders MAY return the data for any subset of the requested hashes
 (including none).
 
 ##### 6.2.2.2 Cancel Request
 
-Indicate a desire to stop receiving responses for any request.
+Indicates a desire to conclude a given `req_id` and stop receiving responses
+for that request.
 
-Some requests stay open and wait for data to arrive. Long-running subscriptions
-can be closed using a cancel request.
+Some requests are long-lived, and stay open waiting for data to arrive.
+Such requests can be terminated using this request.
 
 Receiving this request indicates that any further responses sent back using the
-given `req_id` may be discarded.
+given `req_id` are likely to be discarded.
 
-field        | type                | desc
--------------|---------------------|-----------------------------------
-`msg_len`    | `varint`            | number of bytes in this message
-`msg_type`   | `varint`            |
-`circuit_id` | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
-`req_id`     | `u8[4]`             | stop receiving results for this request id
-`ttl`        | `varint`            | ignored
+This message type has no fields beyond the message and request headers.
 
-`msg_type` MUST be set to `3`.
+Its `msg_type` MUST be set to `3`.
 
-This request should be passed along to any peers to which this peer has forwarded the original request.
+Its `req_id` SHOULD be set to the ID of the previous request to be cancelled.
 
 No response to this message is expected.
 
-A peer receiving a `Cancel Request` should forward it along the same route, to
+A peer receiving a `Cancel Request` SHOULD forward it along the same route, to
 the same peers, as the original request matching the given `req_id`, so that
-all peers involved in the request are notified. This request's `ttl` should be
-ignored in service of this.
+all peers involved in the request are notified. This request's `ttl` SHOULD be
+ignored in service of this end.
 
 ##### 6.2.2.3 Request Channel Time Range
 
-Request text posts and text post deletions written to a channel between a start and end time.
+Request chat messages and chat message deletions written to a channel between a
+start and end time.
 
 field          | type               | desc
 ---------------|--------------------|----------------------------
-`msg_len`      | `varint`           | number of bytes in this message
-`msg_type`     | `varint`           |
-`circuit_id`   | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
-`req_id`       | `u8[4]`            | unique id of this request (random)
-`ttl`          | `varint`           | number of hops remaining
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 `time_start`   | `varint`           | seconds since UNIX Epoch
 `time_end`     | `varint`           | seconds since UNIX Epoch
 `limit`        | `varint`           | maximum number of hashes to return
 
-`msg_type` MUST be set to `4`.
+Its `msg_type` MUST be set to `4`.
 
 This request returns 0 or more `Hash Response`s.
 
-Channel names are expected to be UTF-8 strings.
+Restrictions on channel names are defined above.
 
-Expected are the hashes of all `post/text` and `post/delete` posts made to a
-channel by members between `time_start` and `time_end`. `time_start` is the
-post with the *oldest* timestamp one is interested in, `time_end` is the
-newest.
+A responder SHOULD include the hashes of all known `post/text` and
+`post/delete` posts made to a channel between `time_start` and `time_end`.
+`time_start` is the post with the oldest timestamp one is interested in,
+`time_end` is the newest.
 
 If `time_end` is 0, request all chat messages since `time_start` and respond
 with more posts as they arrive, up to `limit` number of posts.
@@ -645,37 +668,31 @@ optionally subscribe to future state changes.
 
 field          | type               | desc
 ---------------|--------------------|-----------------------------------
-`msg_len`      | `varint`           | number of bytes in this message
-`msg_type`     | `varint`           |
-`circuit_id`   | `u8[4]`            | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
-`req_id`       | `u8[4]`            | unique id of this request (random)
-`ttl`          | `varint`           | number of hops remaining
 `channel_len`  | `varint`           | length of the channel's name, in bytes (UTF-8)
 `channel`      | `u8[channel_len] ` | channel name as a string of text
 `historic`     | `varint`           | set to `1` to recv current state, or `0` to not
 `updates`      | `varint`           | maximum number of live / future hashes to return
 
-`msg_type` MUST be set to `5`.
+Its `msg_type` MUST be set to `5`.
 
 This request expects 0 or more `Hash Response`s in response, that pertain to
 posts that describe the current state of the channel.
 
-The posts included are all those comprised by the channel state (see "4.3.3
-State"), excluding chat messages.
+The posts included are all those comprised by the channel state (defined
+above), excluding chat messages.
 
 If `historic` is set to `1`, the requester expects to first receive the hashes
 of *all* posts that make up the current channel state from the perspective of
 the responding client.
 
-If `updates` is non-zero, it MUST be greater than zero. The requester expects
-to receive up to `updates` posts hashes, as they occur in the future, that
-further alter this channel's state. Set `updates` to 0 to not receive any live
-/ future state changes.
+`updates` MUST be `>= 0`. The requester expects to receive up to `updates`
+posts hashes, as they occur in the future, that further alter this channel's
+state. Set `updates` to 0 to not receive any live / future state changes.
 
 Responses from a peer will keep coming until
-- this request is cancelled, or
-- `updates` live post hashes are returned (if `updates >= 1`), and
-- all known historic hashes are returned (if `historic == 1`)
+1. This request is concluded (see above for conditions), or both of
+2. `updates` live post hashes are returned (if `updates >= 1`), and
+3. all known historic hashes are returned (if `historic == 1`)
 
 ##### 6.2.2.5 Request Channel List
 
@@ -683,47 +700,33 @@ Request a list of known channels from peers.
 
 field          | type               | desc
 ---------------|--------------------|-----------------------------------
-`msg_len`      | `varint`           | number of bytes in this message
-`msg_type`     | `varint`           |
-`circuit_id`   | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
-`req_id`       | `u8[4]`            | unique id of this request (random)
-`ttl`          | `varint`           | number of hops remaining
 `offset`       | `varint`           | number of channel names to skip (`0` to skip none)
 `limit`        | `varint`           | maximum number of channel names to return
 
-`msg_type` MUST be set to `6`.
+Its `msg_type` MUST be set to `6`.
 
 This request returns zero or more `Channel List Response`s.
 
 A `limit` of 0 indicates a desire to receive the full set of known channels
-from a peer. Unlike some other requests, `limit=0` does not mean to subscribe
-to future updates; the request is concluded after a single response.
+from a peer at the time of requesting.
 
 The `offset` field can be combined with the `limit` field to allow clients to
 paginate through the list of all channel names known by a peer.
 
 #### 6.2.3 Responses
 
-There are 3 types of responses:
-
-* Hash Response - a list of hashes (most queries return this)
-* Post Response - a list of posts (in response to a hash query)
-* Channel List Response - a list of the names of known channels
-
 Multiple responses may be generated for a single request and results trickle in from peers.
 
-Every response begins with the following header:
+Every response MUST begin with the above message header, followed by the
+following response header fields:
 
 field      | type       | desc
 -----------|------------|-----------------------------------
-`msg_len`  | `varint`   | number of bytes in this message
-`msg_type` | `varint`   |
-`circuit_id`   | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`   | `u8[4]`    | unique id of the request this is in response to
 
 More fields follow for different response types below.
 
-Responses containing an unknown `req_id` should be ignored.
+Responses containing an unknown `req_id` SHOULD be ignored.
 
 ##### 6.2.3.1 Hash Response
 
@@ -731,14 +734,10 @@ Respond with a list of hashes.
 
 field        | type                | desc
 -------------|---------------------|-------------------------------------
-`msg_len`    | `varint`            | number of bytes in this message
-`msg_type`   | `varint (=0)`       |
-`circuit_id` | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
-`req_id`     | `u8[4]`             | request ID this is in response to
 `hash_count` | `varint`            | number of hashes in the response
 `hashes`     | `u8[hash_count*32]` | BLAKE2b hashes concatenated together
 
-`msg_type` MUST be set to `0`.
+Its `msg_type` MUST be set to `0`.
 
 A `Hash Response` message with `hash_count=0` indicates that a peer does not
 intend to return any further data for the given request ID (`req_id`).
@@ -749,10 +748,6 @@ Respond with a list of post contents in response to a `Request Post`.
 
 field        | type                | desc
 -------------|---------------------|--------------------------
-`msg_len`    | `varint`            | number of bytes in this message
-`msg_type`   | `varint` (=1)       |
-`circuit_id` | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
-`req_id`     | `u8[4]`             | id that this is in response to
 `post0_len`  | `varint`            | length of first post
 `post0_data` | `u8[post0_len]`     | first post
 `post1_len`  | `varint`            | length of second post
@@ -761,7 +756,7 @@ field        | type                | desc
 `postN_len`  | `varint`            | length of Nth post
 `postN_data` | `u8[postN_len]`     | Nth post
 
-`msg_type` MUST be set to `1`.
+Its `msg_type` MUST be set to `1`.
 
 A recipient reads zero or more (`post_len`,`post_data`) pairs until a
 `post_len` set to 0 is encountered.
@@ -783,28 +778,24 @@ Respond with a list of names of known channels.
 
 field          | type                | desc
 ---------------|---------------------|-------------------------------------
-`msg_len`      | `varint`            | number of bytes in this message
-`msg_type`     | `varint (=0)`       |
-`circuit_id`   | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
-`req_id`       | `u8[4]`             | id this is in response to
 `channel0_len` | `varint`            | length in bytes of the first channel name
 `channel0`     | `u8[channel_len]`   | the first channel name (UTF-8)
 `...`          |                     |
 `channelN_len` | `varint`            | length in bytes of the Nth channel name
 `channelN`     | `u8[channel_len]`   | the Nth channel name (UTF-8)
 
-`msg_type` MUST be set to `7`.
+Its `msg_type` MUST be set to `7`.
 
 A recipient reads the zero or more (`channel_len`,`channel`) pairs until
 `channel_len` is 0.
 
-In order for pagination to work properly, clients are expected to use a *stable
-sort order* for channel names.
+In order for pagination to work properly, clients are RECOMMENDED to use a
+stable sort method for the names of channels.
 
 ### 6.3 Posts
 
 #### 6.3.1 Header
-Every post begins with the following 6-field header:
+Every post MUST begin with the following 6-field header:
 
 field        | type              | desc
 -------------|-------------------|-------------------------------------------------------
@@ -817,45 +808,38 @@ field        | type              | desc
 
 More fields follow for different post types below.
 
-The post type sections below document the fields that follow these initial 5 fields depending on the
-`post_type`. Most post types will link to the most recent posts in a channel from any user (from
-their perspective) but self-actions such as setting a nickname link to the most recent
-self-action. Refer to each `post/*` type for what to expect.
-
-If using libsodium, one can use `crypto_sign()` in combined mode to generate
-the signature field for the fields that come after `signature`, as
-`crypto_sign()` will prepend the signature into the output, so the fields will
-be in the correct order.
-
-The hash of an incoming post is produced by hashing the entire post, including *all* fields.
+The post type sections below document the fields that follow these initial
+fields depending on the `post_type`. Refer to each `post/*` type for what to
+expect.
 
 The `post_type` is a varint, so if the post types below are inadequate, one can
-create additional types using unused numbers (`>255`).
+create additional types using unused numbers (`>= 256`). A client SHOULD NOT
+define its own custom post types below 256, since these may be used in the
+future to expand the core protocol.
 
 Specify `num_links=0` if there is nothing to link to.
 
-Clients should ignore posts with a `post_type` that they don't understand or support.
+Clients SHOULD ignore posts with a `post_type` that they don't understand or
+support.
+
+All fields specified in the subsequent subsections MUST be present for a post
+of a given `post_type`.
 
 #### 6.3.2 `post/text`
 
-Post a message in a channel.
+Post a chat message to a channel.
 
 field          | type               | desc
 ---------------|--------------------|---------------------------------
-`public_key`   | `u8[32]`           | Ed25519 key that authored this post
-`signature`    | `u8[64]`           | Ed25519 signature of the fields that follow
-`num_links`    | `varint`           | how many BLAKE2b hashes this post links back to (0+)
-`links`        | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
-`post_type`    | `varint`           | see custom post type sections below
-`timestamp`    | `varint`           | seconds since UNIX Epoch
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 `text_len`     | `varint`           | length of the text field
 `text`         | `u8[text_len] `    | message content (UTF-8)
 
-`post_type` MUST be set to `0`.
+Its `post_type` MUST be set to `0`.
 
-The `text` body of a chat message is expected to be a valid UTF-8 string. Its length is not to exceed 4 kibibytes (4096 bytes). If the `text` field exceeds this, the post should be considered invalid.
+The `text` body of a chat message MUST be a valid UTF-8 string. Its length MUST
+NOT to exceed 4 kibibytes (4096 bytes).
 
 #### 6.3.3 `post/delete`
 
@@ -865,21 +849,14 @@ future.
 
 field           | type                   | desc
 ----------------|------------------------|-------------------------
-`public_key`    | `u8[32]`               | Ed25519 key that authored this post
-`signature`     | `u8[64]`               | Ed25519 signature of the fields that follow
-`num_links`     | `varint`               | how many BLAKE2b hashes this post links back to (0+)
-`links`         | `u8[32*num_links]`     | BLAKE2b hashes of the latest messages in this channel/context
-`post_type`     | `varint`               | see custom post type sections below
-`timestamp`     | `varint`               | seconds since UNIX Epoch
 `num_deletions` | `varint`               | how many hashes of posts there are to be deleted
 `hash`          | `u8[32*num_deletions]` | BLAKE2b hashes of posts to be deleted
 
-`post_type` MUST be set to `1`.
+Its `post_type` MUST be set to `1`.
 
-The expected behaviour of a client interpreting this post is to only perform
-local deletion of the referenced posts if the author (`post.public_key`)
-matches the author of the post to be deleted (i.e. only the user who authored a
-post may delete it).
+A client interpreting this post MUST only perform a local deletion of the
+referenced posts if the author (`post.public_key`) matches the author of the
+post to be deleted (i.e. only the user who authored a post may delete it).
 
 #### 6.3.4 `post/info`
 
@@ -887,12 +864,6 @@ Set public information about one's self.
 
 field        | type               | desc
 -------------|--------------------|-------------------------
-`public_key` | `u8[32]`           | Ed25519 key that authored this post
-`signature`  | `u8[64]`           | Ed25519 signature of the fields that follow
-`num_links`  | `varint`           | how many BLAKE2b hashes this post links back to (0+)
-`links`      | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
-`post_type`  | `varint`           | see custom post type sections below
-`timestamp`  | `varint`           | seconds since UNIX Epoch
 `key1_len`   | `varint`           | length of the first key to set
 `key1`       | `u8[key_len]`      | name of the first key to set (UTF-8)
 `value1_len` | `varint`           | length of the first value to set, belonging to `key1`
@@ -903,26 +874,29 @@ field        | type               | desc
 `valueN_len` | `varint`           | length of the Nth value to set, belonging to `keyN`
 `valueN`     | `u8[value_len]`    | value of the Nth key:value pair
 
-`post_type` MUST be set to `2`.
+Its `post_type` MUST be set to `2`.
 
-Several key:value pairs can be set at once. A post indicates it is done setting
-pairs by setting a final `keyN_len` of zero.
+Several key/value pairs can be set at once. A post MUST indicate it is done
+setting pairs by setting a final `keyN_len` of zero.
 
-Keys are expected to be UTF-8 strings. The valid bytes for a value depends on the key. See the table below.
+Keys
+1. MUST be UTF-8 strings.
+2. MUST be between 1 and 128 codepoints in length.
 
-The `keyN` fields are expected to be valid UTF-8 strings. Each key string's length is be between 1 and 128 codepoints.
+The valid bytes for a value depends on the key. See the table below.
 
-The `valueN` fields are expected to not exceed 4096 bytes (4 kibibytes) each.
+A value field MUST NOT exceed 4096 bytes (4 kibibytes) in length.
 
-Recommended keys for clients to support:
+The following keys SHOULD be supported:
 
 key       | value format | desc
 ----------|--------------|---------------------------------------
 `name`    | UTF-8        | handle this user wishes to use as a pseudonym
 
-A valid `name` field is a valid UTF-8 string, between 1 and 32 codepoints.
+A valid `name` field MUST be a valid UTF-8 string, between 1 and 32 codepoints.
 
-To save space, a client may wish to discard from disk older versions of these messages from a particular user.
+To save space, a client may wish to discard from disk older versions of these
+messages from a particular user.
 
 #### 6.3.5 `post/topic`
 
@@ -930,57 +904,37 @@ Set a topic for a channel.
 
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
-`public_key`   | `u8[32]`           | Ed25519 key that authored this post
-`signature`    | `u8[64]`           | Ed25519 signature of the fields that follow
-`num_links`    | `varint`           | how many BLAKE2b hashes this post links back to (0+)
-`links`        | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
-`post_type`    | `varint`           | see custom post type sections below
-`timestamp`    | `varint`           | seconds since UNIX Epoch
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 `topic_len`    | `varint`           | length of the topic field
 `topic`        | `u8[topic_len] `   | topic content
 
-`post_type` MUST be set to `3`.
+Its `post_type` MUST be set to `3`.
 
-A valid `topic` field is a valid UTF-8 string, between 0 and 512 codepoints.
+A `topic` field MUST be a valid UTF-8 string, between 0 and 512 codepoints. A
+topic of length zero SHOULD be considered as no topic being set.
 
 #### 6.3.6 `post/join`
 
-Join a channel.
+Publically announce membership in a channel.
 
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
-`public_key`   | `u8[32]`           | Ed25519 key that authored this post
-`signature`    | `u8[64]`           | Ed25519 signature of the fields that follow
-`num_links`    | `varint`           | how many BLAKE2b hashes this post links back to (0+)
-`links`        | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
-`post_type`    | `varint`           | see custom post type sections below
-`timestamp`    | `varint`           | seconds since UNIX Epoch
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 
-`post_type` MUST be set to `4`.
-
-Peers can obtain a link to anchor their join message by requesting a list of channels.
+Its `post_type` MUST be set to `4`.
 
 #### 6.3.7 `post/leave`
 
-Leave (part) a channel.
+Publically announce termination of membership in a channel.
 
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
-`public_key`   | `u8[32]`           | Ed25519 key that authored this post
-`signature`    | `u8[64]`           | Ed25519 signature of the fields that follow
-`num_links`    | `varint`           | how many BLAKE2b hashes this post links back to (0+)
-`links`        | `u8[32*num_links]` | BLAKE2b hashes of the latest messages in this channel/context
-`post_type`    | `varint`           | see custom post type sections below
-`timestamp`    | `varint`           | seconds since UNIX Epoch
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name as a string of text (UTF-8)
 
-`post_type` MUST be set to `5`.
-
+Its `post_type` MUST be set to `5`.
 
 ## 7. Security Considerations
 
@@ -1046,10 +1000,19 @@ Future work is planned around the outer layers of cable security:
 2. **Against unauthorized access**: having a handshake protocol, to prevent non-members from gaining illicit access
 3. **Against inappropriate use by members**: having a system for moderation and write-access controls internal to a cabal, so that users can mitigate and expel attacks from those who have already gained legitimate membership.
 
-## 8. References
+## 8. Normative References
+- [Cabal][Cabal]
+- [Eventual consistency](https://en.wikipedia.org/wiki/Eventual_consistency)
+- [hypercore][hypercore]
 - [BLAKE2](https://www.blake2.net/blake2.pdf)
+- [Ed25519](https://ed25519.cr.yp.to/)
 - [Unicode 15.0.0](https://www.unicode.org/versions/Unicode15.0.0/)
 - [UAX #44: Unicode Character Database (General_Categories Values)][GC]
+- [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119)
 
-[GC]: https://www.unicode.org/reports/tr44/#GC_Values_Table
+## 9. Informative References
 
+
+
+[hypercore]: https://github.com/holepunchto/hypercore
+[Cabal]: https://cabal.chat
