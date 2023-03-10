@@ -42,14 +42,14 @@ sent "over the wire" between peers wishing to speak the protocol to each other.
   + [6.2 Messages](#62-messages)
     - [6.2.1 Header](#621-header)
     - [6.2.2 Requests](#622-requests)
-      * [6.2.2.1 Request by Hash](#6221-request-by-hash)
+      * [6.2.2.1 Request Post](#6221-request-post)
       * [6.2.2.2 Cancel Request](#6222-cancel-request)
       * [6.2.2.3 Request Channel Time Range](#6223-request-channel-time-range)
       * [6.2.2.4 Request Channel State](#6224-request-channel-state)
       * [6.2.2.5 Request Channel List](#6225-request-channel-list)
     - [6.2.3 Responses](#623-responses)
       * [6.2.3.1 Hash Response](#6231-hash-response)
-      * [6.2.3.2 Data Response](#6232-data-response)
+      * [6.2.3.2 Post Response](#6232-post-response)
       * [6.2.3.3 Channel List Response](#6233-channel-list-response)
   + [6.3 Posts](#63-posts)
     - [6.3.1 Header](#631-header)
@@ -545,7 +545,7 @@ the swarm of peers who may handle it.
 When forwarding a request, do not change the `req_id`, so that routing loops
 can be more easily detected by peers.
 
-##### 6.2.2.1 Request by Hash
+##### 6.2.2.1 Request Post
 
 Request data for a set of hashes.
 
@@ -561,9 +561,7 @@ field        | type                | desc
 
 `msg_type` MUST be set to `2`.
 
-Results are provided by a `Data Response`.
-
-This request expects one or more `data response` responses.
+Results are provided by one or more `Post Response`s.
 
 The expected behaviour is to return immediately with what data is locally
 available, rather than holding on to the request in anticipation of perhaps
@@ -620,7 +618,7 @@ field          | type               | desc
 
 `msg_type` MUST be set to `4`.
 
-This request returns 0 or more `hash response` responses.
+This request returns 0 or more `Hash Response`s.
 
 Channel names are expected to be UTF-8 strings.
 
@@ -659,7 +657,7 @@ field          | type               | desc
 
 `msg_type` MUST be set to `5`.
 
-This request expects 0 or more `hash response`s in response, that pertain to
+This request expects 0 or more `Hash Response`s in response, that pertain to
 posts that describe the current state of the channel.
 
 The posts included are all those comprised by the channel state (see "4.3.3
@@ -695,7 +693,7 @@ field          | type               | desc
 
 `msg_type` MUST be set to `6`.
 
-This request returns zero or more `channel list response`s.
+This request returns zero or more `Channel List Response`s.
 
 A `limit` of 0 indicates a desire to receive the full set of known channels
 from a peer. Unlike some other requests, `limit=0` does not mean to subscribe
@@ -708,9 +706,9 @@ paginate through the list of all channel names known by a peer.
 
 There are 3 types of responses:
 
-* hash response - a list of hashes (most queries return this)
-* data response - a list of data chunks (in response to a hash query)
-* channel list response - a list of the names of known channels
+* Hash Response - a list of hashes (most queries return this)
+* Post Response - a list of posts (in response to a hash query)
+* Channel List Response - a list of the names of known channels
 
 Multiple responses may be generated for a single request and results trickle in from peers.
 
@@ -745,9 +743,9 @@ field        | type                | desc
 A `Hash Response` message with `hash_count=0` indicates that a peer does not
 intend to return any further data for the given request ID (`req_id`).
 
-##### 6.2.3.2 Data Response
+##### 6.2.3.2 Post Response
 
-Respond with a list of results for data lookups by hash.
+Respond with a list of post contents in response to a `Request Post`.
 
 field        | type                | desc
 -------------|---------------------|--------------------------
@@ -755,20 +753,29 @@ field        | type                | desc
 `msg_type`   | `varint` (=1)       |
 `circuit_id` | `u8[4]`             | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`     | `u8[4]`             | id that this is in response to
-`data0_len`  | `varint`            | length of first data payload
-`data0`      | `u8[data_len]`      | first data payload
-`data1_len`  | `varint`            | length of second data payload
-`data1`      | `u8[data_len]`      | second data payload
+`post0_len`  | `varint`            | length of first post
+`post0_data` | `u8[post0_len]`     | first post
+`post1_len`  | `varint`            | length of second post
+`post1_data` | `u8[post1_len]`     | second post
 `...`        |                     |
-`dataN_len`  | `varint`            | length of Nth data payload
-`dataN`      | `u8[data_len]`      | Nth data payload
+`postN_len`  | `varint`            | length of Nth post
+`postN_data` | `u8[postN_len]`     | Nth post
 
 `msg_type` MUST be set to `1`.
 
-A recipient reads zero or more (`data_len`,`data`) pairs until `data_len` is 0.
+A recipient reads zero or more (`post_len`,`post_data`) pairs until a
+`post_len` set to 0 is encountered.
 
-Clients SHOULD hash an entire data payload to check whether it is data that it
-was expecting (i.e. had sent out a `request by hash` for).
+Clients SHOULD hash an entire post to check whether it is post that it was
+expecting (i.e. had sent out a `Request Post` for).
+
+Each post SHOULD contain the complete and valid body of a known post type, as
+specified below.
+
+If a post is parsed and the message's `post_len` indicates there are remaining
+bytes not mapping to any known field, the post SHOULD still be considered valid
+and those bytes retained. This is to permit new fields to be added to posts in
+the future without needing to define new post types.
 
 ##### 6.2.3.3 Channel List Response
 
@@ -1006,7 +1013,7 @@ Documented here are attacks that can come from *within* a cabal -- by those who 
     1. Clients could implement per-connection rate limiting on requests, to prevent a degradation of service from network participants.
 3. Creating a excessively large number of new channels (by writing at least one `post/text` post to each). Since channels can only be created and not removed, this has the potential to make a cabal somewhat unusable by legitimate users, if there are so many garbage channels they cannot locate real ones.
     1. New channel creation could be rate-limited, although even at a limit of 1 channel/day, it still would not take long to produce high levels of noise.
-4. Providing a `Data Response` with large amounts of bogus data. Ultimately the content hashes from the requested hash and the data will not match, but the machine may expend a great deal of time and computational power determining each data block's legitimacy.
+4. Providing a `Post Response` with large amounts of bogus data. Ultimately the content hashes from the requested hash and the data will not match, but the machine may expend a great deal of time and computational power determining each data block's legitimacy.
 
 #### 7.2.1.4 Confidentiality
 1. An attacker who appears legitimate (e.g. via a stolen machine belonging to a legitimate member) could connect to other members of the cabal and make ongoing and historic requests for cabal data, effectively spying on all members' posts, undetected, indefinitely.
