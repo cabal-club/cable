@@ -550,6 +550,7 @@ field         | type     | desc
 `msg_len`     | `varint` | number of bytes in rest of message, i.e. not including the `msg_len` field
 `msg_type`    | `varint` | see fields below
 `circuit_id`  | `u8[4]`  | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
+`req_id`      | `u8[4]`  | unique id of this request (random)
 
 Message-specific fields follow after the `circuit_id`.
 
@@ -563,18 +564,6 @@ Clients encountering an unknown `msg_type` SHOULD ignore and discard it.
 The `circuit_id` field is not currently specified, and SHOULD be set to all
 zeros. It is reserved for future use.
 
-#### 6.2.2 Requests
-
-Every request MUST begin with the above message header, followed by the
-following request header fields:
-
-field      | type       | desc
------------|------------|-----------------------------------
-`req_id`   | `u8[4]`    | unique id of this request (random)
-`ttl`      | `varint`   | number of hops remaining
-
-More fields follow for different request types below.
-
 The request ID, `req_id`, is a sequence of 4 bytes, generated randomly by the
 requester, used to uniquely identify the request during its lifetime across the
 set of peers who may handle it.
@@ -582,7 +571,20 @@ set of peers who may handle it.
 When forwarding a request to further peers, the `req_id` SHOULD NOT be changed,
 so that routing loops can be more easily detected by peers in the network.
 
-##### 6.2.2.1 Request Post
+#### 6.2.2 Requests
+
+##### 6.2.2.1 Header
+
+Every request MUST begin with the above message header, followed by the
+following request header fields:
+
+field      | type       | desc
+-----------|------------|-----------------------------------
+`ttl`      | `varint`   | number of hops remaining (described above)
+
+More fields follow for different request types below.
+
+##### 6.2.2.2 Request Post
 
 Request a set of posts, given their hashes.
 
@@ -602,7 +604,7 @@ hashes in the future.
 Responders MAY return the data for any subset of the requested hashes
 (including none).
 
-##### 6.2.2.2 Cancel Request
+##### 6.2.2.3 Cancel Request
 
 Indicates a desire to conclude a given `req_id` and stop receiving responses
 for that request.
@@ -626,7 +628,7 @@ the same peers, as the original request matching the given `req_id`, so that
 all peers involved in the request are notified. This request's `ttl` SHOULD be
 ignored in service of this end.
 
-##### 6.2.2.3 Request Channel Time Range
+##### 6.2.2.4 Request Channel Time Range
 
 Request chat messages and chat message deletions written to a channel between a
 start and end time.
@@ -661,7 +663,7 @@ hundreds of thousands of chat message hashes.
 
 A `limit` of 0 indicates a desire to receive an unlimited number of hashes.
 
-##### 6.2.2.4 Request Channel State
+##### 6.2.2.5 Request Channel State
 
 Request posts that describe the current state of a channel and its users, and
 optionally subscribe to future state changes.
@@ -694,7 +696,7 @@ Responses from a peer will keep coming until
 2. `updates` live post hashes are returned (if `updates >= 1`), and
 3. all known historic hashes are returned (if `historic == 1`)
 
-##### 6.2.2.5 Request Channel List
+##### 6.2.2.6 Request Channel List
 
 Request a list of known channels from peers.
 
@@ -714,17 +716,9 @@ The `offset` field can be combined with the `limit` field to allow clients to
 paginate through the list of all channel names known by a peer.
 
 #### 6.2.3 Responses
-
 Multiple responses may be generated for a single request and results trickle in from peers.
 
-Every response MUST begin with the above message header, followed by the
-following response header fields:
-
-field      | type       | desc
------------|------------|-----------------------------------
-`req_id`   | `u8[4]`    | unique id of the request this is in response to
-
-More fields follow for different response types below.
+Every response MUST begin with the above message header.
 
 Responses containing an unknown `req_id` SHOULD be ignored.
 
