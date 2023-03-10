@@ -1007,7 +1007,6 @@ Future work is planned around the outer layers of cable security:
 - [BLAKE2](https://www.blake2.net/blake2.pdf)
 - [Ed25519](https://ed25519.cr.yp.to/)
 - [Unicode 15.0.0](https://www.unicode.org/versions/Unicode15.0.0/)
-- [UAX #44: Unicode Character Database (General_Categories Values)][GC]
 - [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119)
 
 ## 9. Informative References
