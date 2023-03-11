@@ -84,7 +84,7 @@ facilitate peer-to-peer group chatrooms.
 ## 0. Background
 [Cabal][Cabal] is an existing distributed peer-to-peer computer program for
 private group chat. It operates in a fashion differently from the typical
-server-client model, where no machine is either an official nor de-facto
+server-client model, where no machine is either an official nor *de facto*
 authority over others in the network. Instead, peers collaborate with each
 other to share documents to build an eventually-consistent view of the shared
 data.
@@ -108,12 +108,11 @@ cable is designed to be:
 * independent of whatever kind of database an implementation may use
 
 ### 1.1 Terminology
-```
-      The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
-      NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
-      "OPTIONAL" in this document are to be interpreted as described in
-      RFC 2119.
-```
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
+"SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be
+interpreted as described in [BCP 14][BCP 14], [RFC 2119][RFC 2119], [RFC
+8174][RFC 8174] when, and only when, they appear in all capitals, as shown
+here.
 
 ## 2. Scope
 This protocol does not include encryption or authentication of the connection.
@@ -160,9 +159,9 @@ carry out.
 
 **Chat message**: A post of type `post/text`, which is made within a particular channel.
 
-**UNIX Epoch**: Midnight on January 1st, 1970.
+**UNIX Epoch**: Midnight UTC on January 1st, 1970.
 
-**UNIX Time**: A point in time, represented by the number of seconds since the UNIX Epoch. Here, this value is assumed to be non-negative, meaning dates before the UNIX Epoch can not be represented.
+**UNIX Time**: A point in time represented by the number of seconds since the UNIX Epoch.
 
 **Unicode**: The [Unicode 15.0.0 standard](https://www.unicode.org/versions/Unicode15.0.0/).
 
@@ -254,7 +253,7 @@ the possible participation of client implementations that do not set links.)
 
 #### 5.1.5 Ordering
 Only chat messages need to be sorted, and sorting only needs to happen at the
-level of a client implementation -- not something a wire protocol
+level of a client implementation — not something a wire protocol
 implementation needs to worry about. Still, it is included here as a learning
 aid until a separate guide for implementors is written.
 
@@ -537,7 +536,7 @@ If `foo=17` and `bar=[3,6,8,64]`, the following binary payload would be expected
 The following data types are used:
 - `u8`: a single unsigned byte
 - `u8[N]`: a sequence of exactly `N` unsigned bytes
-- `varint`: a variable-length unsigned integer. cable uses Protocol Buffer-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). (For an example implementation of varint encoding/decoding, see the [NodeJS varint package](https://www.npmjs.com/package/varint).)
+- `varint`: a variable-length unsigned integer. cable uses Protocol Buffer-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints). (For an example implementation of varint encoding/decoding, see the [Node.js varint package](https://www.npmjs.com/package/varint).)
 
 
 ### 6.2 Messages
@@ -944,7 +943,7 @@ Its `post_type` MUST be set to `5`.
 
 ### 7.2 In-scope Threats
 
-Documented here are attacks that can come from *within* a cabal -- by those who are technically legitimate members and can peer freely with other members. It is currently assumed (until something like a version of Cabal's subjective moderation system is designed & implemented) that those who are proper members of a cabal are trusted to not cause problems for other users, but even a future moderation design would benefit from a clearly laid-out of the attack surface.
+Documented here are attacks that can come from *within* a cabal — by those who are technically legitimate members and can peer freely with other members. It is currently assumed (until something like a version of Cabal's subjective moderation system is designed & implemented) that those who are proper members of a cabal are trusted to not cause problems for other users, but even a future moderation design would benefit from a clearly laid-out of the attack surface.
 
 ### 7.2.1 Susceptibilities
 #### 7.2.1.1 Inappropriate Use
@@ -996,17 +995,19 @@ Future work is planned around the outer layers of cable security:
 3. **Against inappropriate use by members**: having a system for moderation and write-access controls internal to a cabal, so that users can mitigate and expel attacks from those who have already gained legitimate membership.
 
 ## 8. Normative References
-- [Cabal][Cabal]
 - [Eventual consistency](https://en.wikipedia.org/wiki/Eventual_consistency)
-- [hypercore][hypercore]
 - [BLAKE2](https://www.blake2.net/blake2.pdf)
 - [Ed25519](https://ed25519.cr.yp.to/)
 - [Unicode 15.0.0](https://www.unicode.org/versions/Unicode15.0.0/)
 - [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119)
+- [RFC 8174](https://www.rfc-editor.org/rfc/rfc2119)
 
 ## 9. Informative References
-
-
+- [Cabal][Cabal]
+- [hypercore][hypercore]
 
 [hypercore]: https://github.com/holepunchto/hypercore
 [Cabal]: https://cabal.chat
+[RFC 2119]: https://www.rfc-editor.org/rfc/rfc2119
+[RFC 8174]: https://www.rfc-editor.org/rfc/rfc8174
+[BCP 14]: https://www.rfc-editor.org/bcp/bcp14
