@@ -115,16 +115,18 @@ interpreted as described in [BCP 14][BCP 14], [RFC 2119][RFC 2119], [RFC
 here.
 
 ## 2. Scope
-This protocol does not include encryption or authentication of the connection.
-It may be provided by other layers in userland (e.g. Tor, I2P) or expanded upon
-in future iterations of this document. In particular, a future handshake
-protocol is planned, which will handle authenticating that connected peers are
-members of the same Cabal as the host machine.
+This protocol focuses on the on the wire bytes that get sent between peers that
+faciliate the exchange of chat messages and user and channel information.
 
-As such, it is assumed that peers speaking this protocol have proven to be
-legitimate members of the cabal. See Security Considerations (below) for an
-analysis of the types of anticipated attacks that even proper cabal members may
-carry out.
+This protocol does not include encryption or authentication of the connection,
+nor a mechanism for the discovery of network peers. These may be provided by
+other layers in userland (e.g. Tor, I2P) or specified in future iterations of
+this document. In particular, a future handshake protocol is planned, which
+will handle authenticating peers to the Cabal.
+
+As such, it is assumed that peers speaking this protocol are already authorized
+to access the Cabal. Security Considerations (below) includes an analysis of
+the types of anticipated attacks that legitimate cabal members may carry out.
 
 ## 3. Definitions
 **Cabal**: A private group chat that a number of users can participate in, comprised of **users** and zero or more **channel**s.
