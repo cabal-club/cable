@@ -763,11 +763,6 @@ expecting (i.e. had sent out a `Request Post` for).
 Each post SHOULD contain the complete and valid body of a known post type, as
 specified below.
 
-If a post is parsed and the message's `post_len` indicates there are remaining
-bytes not mapping to any known field, the post SHOULD still be considered valid
-and those bytes retained. This is to permit new fields to be added to posts in
-the future without needing to define new post types.
-
 ##### 6.2.3.3 Channel List Response
 
 Respond with a list of names of known channels.
