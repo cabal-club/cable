@@ -8,8 +8,8 @@ Contributors: Alexander Cobleigh, Noelle Leigh, Henry (cryptix)
 
 ## Abstract
 
-This document describes a network protocol called "cable", to be used to
-facilitate peer-to-peer group chatrooms.
+This document describes the network protocol "cable", used to facilitate
+peer-to-peer group chatrooms.
 
 ## Table of Contents
 * [0. Background](#0-background)
@@ -82,12 +82,12 @@ facilitate peer-to-peer group chatrooms.
 * [9. Informative References](#9-informative-references)
 
 ## 0. Background
-[Cabal][Cabal] is an existing distributed peer-to-peer computer program for
-private group chat. It operates in a fashion differently from the typical
-server-client model, where no machine is either an official nor *de facto*
-authority over others in the network. Instead, peers collaborate with each
-other to share documents to build an eventually-consistent view of the shared
-data.
+[Cabal][Cabal] is the pre-cursor iteration of this new protocol: an existing
+distributed peer-to-peer computer program for private group chats. It operates
+in a fashion differently from the typical server-client model, where no machine
+is either an official nor *de facto* authority over others in the network.
+Instead, peers collaborate with each other to share documents to build an
+eventually-consistent view of the shared data.
 
 Cabal's original protocol was based off of [hypercore][hypercore], which was
 found to have limitations and trade-offs that didn't suit Cabal's needs well.
@@ -103,7 +103,7 @@ cable is designed to be:
 * fairly simple to implement in any language with only a single dependency (libsodium)
 * able to bridge across different network transports
 * useful, even if written as a partial implementation
-* efficient in its use of network resources, by syncing relevant subsets of the full dataset
+* efficient in its use of network resources, by syncing only the relevant subsets of the full dataset
 * compact over the wire
 * independent of whatever kind of database an implementation may use
 
@@ -115,14 +115,14 @@ interpreted as described in [BCP 14][BCP 14], [RFC 2119][RFC 2119], [RFC
 here.
 
 ## 2. Scope
-This protocol focuses on the on the wire bytes that get sent between peers that
-faciliate the exchange of chat messages and user and channel information.
+This protocol focuses on the over-the-wire bytes that get sent between peers
+that faciliate the exchange of chat messages and user and channel information.
 
 This protocol does not include encryption or authentication of the connection,
 nor a mechanism for the discovery of network peers. These may be provided by
-other layers in userland (e.g. Tor, I2P) or specified in future iterations of
-this document. In particular, a future handshake protocol is planned, which
-will handle authenticating peers to the Cabal.
+other layers in userland (e.g. [Tor][Tor], [I2P][I2P]) or specified in future
+iterations of this document. In particular, a future handshake protocol is
+planned, which will handle authenticating peers to the Cabal.
 
 As such, it is assumed that peers speaking this protocol are already authorized
 to access the Cabal. Security Considerations (below) includes an analysis of
@@ -133,7 +133,7 @@ the types of anticipated attacks that legitimate cabal members may carry out.
 
 **Channel**: A conceptual object with its own unique name, a set of member **user**s, and a set of chat **post**s written to it.
 
-**User**: An Ed25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal. *User* and *member* may be used interchangeably.
+**User**: An Ed25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal. Sometimes also written as "member of a cabal".
 
 **Public Key**: An Ed25519 key, which constitutes a user's public-facing identity within a cabal.
 
@@ -935,9 +935,9 @@ Its `post_type` MUST be set to `5`.
 ## 7. Security Considerations
 
 ### 7.1 Out of scope Threats
-1. Attacks on the transport layer by non-members of the cabal. This would cover the *confidentiality* of a connection between peers, and prevent *eavesdropping* and *man-in-the-middle attacks*, as well as message reading/deleting/modifying.
+1. Attacks on the transport layer by non-members of the cabal. This covers the *confidentiality* of a connection between peers, and prevent *eavesdropping* and *man-in-the-middle attacks*, as well as message reading/deleting/modifying.
 
-2. Attacks that attempt to gain illicit entry to a cabal, by posing as a member. This would cover *peer entity authentication*.
+2. Attacks that attempt to gain illicit entry to a cabal, by posing as a member (*peer entity authentication*).
 
 3. Actors capable of deriving an Ed25519 private key from the public key via brute force, which would break data integrity and permit data insertion/deletion/modification of the compromised user's posts.
 
@@ -945,17 +945,17 @@ Its `post_type` MUST be set to `5`.
 
 ### 7.2 In-scope Threats
 
-Documented here are attacks that can come from *within* a cabal — by those who are technically legitimate members and can peer freely with other members. It is currently assumed (until something like a version of Cabal's subjective moderation system is designed & implemented) that those who are proper members of a cabal are trusted to not cause problems for other users, but even a future moderation design would benefit from a clearly laid-out of the attack surface.
+Documented here are attacks that can come from *within* a cabal — by those who are technically legitimate members and can peer freely with other members. It is currently assumed (until something like a version of Cabal's subjective moderation system is designed & implemented) that those who are proper members of a cabal are trusted to not cause problems for other users, but even a future moderation design would benefit from a clear outline of the attack surface.
 
 ### 7.2.1 Susceptibilities
 #### 7.2.1.1 Inappropriate Use
 1. An attacker could issue `post/topic` posts to edit channel topics to garbage text, offensive content, or malicious content (e.g. phishing). Since most chat programs have channel topics controlled by "moderators" or "admins", this could cause confusion if users do not realize that anyone can set these strings.
 2. The list of channels in the `Channel List Response` message could be falsified to include channels that do not exist (i.e. no users have posted to them) or to omit the names channels that do exist.
-    1. A possible future mitigation to this might be inclusion of an explicit `post/channel` post type, to denote channel creation, which `Channel List Response` responders would need to cite the hashes of. This doesn't seem very important though, since an attacker could trivially produce 1000s of legitimate noise-creating channels anyways.
+    1. A possible future mitigation to this might be inclusion of an explicit `post/channel` post type, to denote channel creation, which `Channel List Response` responders would need to cite the hashes of. However, an attacker could trivially produce 1000s or more legitimate channels anyways to this same end.
 
 #### 7.2.1.2 Spoofing
 1. An attacker could issue a `post/info` to alter their display name to be the same as another user, causing confusion as to which user is authoring certain chat messages.
-    1. Client-side mitigation options exist, such as colourizing names by the public key of the user, or displaying a short hash digest of their key next to their name for important operations.
+    1. Client-side mitigation options exist, such as colourizing names by the public key of the user, or displaying a short hash digest of their key next to their name when there are multiple users sharing a name.
 
 #### 7.2.1.3 Denial of Service
 1. Authoring very large posts (gigabytes or larger) and/or a large number of smaller posts, and sharing them with others to download.
@@ -1007,9 +1007,14 @@ Future work is planned around the outer layers of cable security:
 ## 9. Informative References
 - [Cabal][Cabal]
 - [hypercore][hypercore]
+- [Tor][Tor]
+- [I2P][I2P]
+- [libsodium](https://libsodium.org)
 
 [hypercore]: https://github.com/holepunchto/hypercore
 [Cabal]: https://cabal.chat
 [RFC 2119]: https://www.rfc-editor.org/rfc/rfc2119
 [RFC 8174]: https://www.rfc-editor.org/rfc/rfc8174
 [BCP 14]: https://www.rfc-editor.org/bcp/bcp14
+[Tor]: https://www.torproject.org
+[I2P]: https://geti2p.net/en/
