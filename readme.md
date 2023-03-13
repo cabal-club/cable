@@ -998,18 +998,18 @@ Future work is planned around the outer layers of cable security:
 
 ## 8. Normative References
 - [Eventual consistency](https://en.wikipedia.org/wiki/Eventual_consistency)
-- [BLAKE2](https://www.blake2.net/blake2.pdf)
+- [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119): Key words for use in RFCs to Indicate Requirement Levels
+- [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174): Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words
+- [BLAKE2b](https://www.blake2.net/blake2.pdf)
 - [Ed25519](https://ed25519.cr.yp.to/)
 - [Unicode 15.0.0](https://www.unicode.org/versions/Unicode15.0.0/)
-- [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119)
-- [RFC 8174](https://www.rfc-editor.org/rfc/rfc2119)
 
 ## 9. Informative References
 - [Cabal][Cabal]
 - [hypercore][hypercore]
+- [libsodium](https://libsodium.org)
 - [Tor][Tor]
 - [I2P][I2P]
-- [libsodium](https://libsodium.org)
 
 [hypercore]: https://github.com/holepunchto/hypercore
 [Cabal]: https://cabal.chat
