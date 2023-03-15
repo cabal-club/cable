@@ -84,7 +84,7 @@ peer-to-peer group chatrooms.
 ## 0. Background
 [Cabal][Cabal] is the pre-cursor iteration of this new protocol: an existing
 distributed peer-to-peer computer program for private group chats. It operates
-in a fashion differently from the typical server-client model, where no machine
+in a fashion different from the typical server-client model, where no machine
 is either an official nor *de facto* authority over others in the network.
 Instead, peers collaborate with each other to share documents to build an
 eventually-consistent view of the shared data.
@@ -100,6 +100,7 @@ Cabal group chat to exchange crytographically signed documents with each other,
 such as chat messages, spread across various user-defined topics.
 
 cable is designed to be:
+
 * fairly simple to implement in any language with only a single dependency (libsodium)
 * able to bridge across different network transports
 * useful, even if written as a partial implementation
@@ -116,7 +117,7 @@ here.
 
 ## 2. Scope
 This protocol focuses on the over-the-wire bytes that get sent between peers
-that faciliate the exchange of chat messages and user and channel information.
+and enable the exchange of chat messages alongside user and channel information.
 
 This protocol does not include encryption or authentication of the connection,
 nor a mechanism for the discovery of network peers. These may be provided by
@@ -124,8 +125,8 @@ other layers in userland (e.g. [Tor][Tor], [I2P][I2P]) or specified in future
 iterations of this document. In particular, a future handshake protocol is
 planned, which will handle authenticating peers to the Cabal.
 
-As such, it is assumed that peers speaking this protocol are already authorized
-to access the Cabal. Security Considerations (below) includes an analysis of
+As such, it is assumed that peers speaking this protocol are already authorized to access the
+Cabal. Section [Security Considerations](#7-security-considerations) includes an analysis of
 the types of anticipated attacks that legitimate cabal members may carry out.
 
 ## 3. Definitions
@@ -139,13 +140,13 @@ the types of anticipated attacks that legitimate cabal members may carry out.
 
 **Private Key**: An Ed25519 key, used for signing authored **post**s. Kept private and secret to all but the user who owns it.
 
-**Post**: An authored binary payload, signed by the private key of its creator user.
+**Post**: An authored binary payload, signed by the private key of its creator (a user).
 
-**Client**: A running instance computer program that implements cable (this specification).
-
-**Message**: An informative binary payload sent by and received from other cable peers. Each message is either a **request** or a **response**.
+**Client**: A running instance of a computer program that implements cable (this specification).
 
 **Peer**: A machine that a client is connected to over some transport protocol, on top of which the cable protocol is being spoken.
+
+**Message**: An informative binary payload sent by and received from other cable peers. Each message is either a **request** or a **response**.
 
 **Request**: A message originating from a particular **peer**, identified by a unique request ID.
 
@@ -159,7 +160,7 @@ the types of anticipated attacks that legitimate cabal members may carry out.
 
 **Link**: A **hash**, which acts as a reference to the post which hashes to said hash.
 
-**Chat message**: A post of type `post/text`, which is made within a particular channel.
+**Chat message**: A post of type `post/text` authored within a particular channel.
 
 **UNIX Epoch**: Midnight UTC on January 1st, 1970.
 
@@ -314,7 +315,8 @@ function containedInLinkChain (msg, h) {
 }
 ```
 
-Given then this set of chat messages,
+Given the following set of chat messages,
+
 ```js
 const m1 = {
   timestamp: 17,
@@ -338,24 +340,25 @@ const m4 = {
 }
 ```
 
-The new sort comparator using links would give
+The new sort comparator using `links` would yield:
+
 ```js
 [
-  'hi',
-  'hi from not-the-future; it is actually clock skew',
-  'hi from the real future (i can prove it)',
-  'hi from the seeming past, but actually future',
+  /* m1 */ 'hi',
+  /* m2 */ 'hi from not-the-future; it is actually clock skew',
+  /* m3 */ 'hi from the real future (i can prove it)',
+  /* m4 */ 'hi from the seeming past, but actually future',
 ]
 ```
 
-whereas the timestamp-only comparator would give
+whereas the timestamp-only comparator would yield:
 
 ```js
 [
-  'hi from the seeming past, but actually future',
-  'hi',
-  'hi from the real future (i can prove it)',
-  'hi from not-the-future; it is actually clock skew',
+  '/* m4 */ hi from the seeming past, but actually future',
+  '/* m1 */ hi',
+  '/* m3 */ hi from the real future (i can prove it)',
+  '/* m2 */ hi from not-the-future; it is actually clock skew',
 ]
 ```
 
@@ -372,24 +375,26 @@ disorientating or most informative to users (e.g. moving around chat messages
 in the display, or keeping the ordering stable).
 
 ### 5.2 Users
-Users of Cabal are identified by their Ed25519 public key, and use this and
+Users of Cabal are identified by their Ed25519 public key, and use it and
 their private key to prove themselves as verifiable authors of data shared with
-other peers, by including their public key and a crytographic signature on any
+other peers. This is done by including their public key and a crytographic signature on any
 post they author.
 
 #### 5.2.1 State
-A user is fully described at a given point in time by
+A user is fully described at a given point in time by the following:
+
 1. their public key, and
 2. the key/value pairs of the latest known `post/info` post made by that user.
 
 As of present, the only supported key is `name`, which defines a user's display
-name. Older `post/info`s made by a user are considered obsolete and can be
+name. Older `post/info` posts made by a user are considered obsolete and MAY be
 safely ignored or discarded.
 
 ### 5.3 Channels
-A channel is a named collection of
+A channel is a named collection consisting of the following:
+
 1. chat messages (`post/text`), and
-2. user joins and leaves (posts of type `post/{join,leave}`).
+2. user joins and leaves (`post/join` or `post/leave`).
 
 The act of a user issuing a post that writes a chat message to a channel or
 joins that channel implies that that named channel has been created, and now
@@ -404,12 +409,16 @@ A user is considered a member of a channel at a particular point in time if,
 from a client's perspective, that user has issued a `post/join`, `post/text`,
 or `post/topic` to that channel and has not issued a `post/leave` since.
 
+Clients SHOULD issue a `post/join` post before issuing any other posts that
+constitute participation in a channel. Namely, `post/text` and `post/topic`.
+
 A user whose latest interaction with a channel is a `post/leave` is considered
 an **ex-member**.
 
 #### 5.3.3 State
 A channel at any given moment, from the perspective of a client, is fully
 described by the following:
+
 1. The latest `post/info` post of each member and ex-member.
 2. The latest of each member and ex-member's `post/join` or `post/leave` post to the channel.
 3. The latest `post/topic` post made to the channel, made by any member or ex-member.
@@ -429,21 +438,21 @@ to maintain a "rolling window". For example, a user that wishes to stay
 up-to-date with the last week's worth of chat history would, on client
 start-up, issue a `Request Channel Time Range` request with
 `time_start=now()-25200` (25200 seconds in a week) for a given channel of
-interest. Known hashes provided by `Hash Response`s can be safely ignored,
-while new ones can be made to induce `Data Request`s for their content.
+interest. Known hashes provided by `Hash Response` messages can be safely ignored, while newly
+discovered hashes can be made to induce `Post Request` messages for their content.
 
-The purpose of keeping a rolling time window instead of just asking for
+The purpose of keeping a rolling time window instead of asking for
 `time_start=last_bootup_time`, is to capture messages that were missed because
 either a client or other peers were, at the time, offline or part of another
 network. This allows a client to make posts while offline, and still have them
-appear to others when they do come back online (within the client's rolling
-window's duration).
+appear to others when they do come back online (within a given client's rolling
+window).
 
 ### 5.4 Requests & Responses
 All request types can generate multiple responses. A request sent to a peer may
 result in several blocks of hashes or data being sent back by them as they scan
-their local database, and, if that peers forwards your request to its peers as
-well, they too may trickle back several responses over time.
+their local database. Additionally, if that peer forwards your request to its
+own set of peers, they too may trickle back several responses over time.
 
 #### 5.4.1 Lifetime of a Request
 In the lifetime of a given request, there are three exclusive roles an involved
@@ -454,26 +463,28 @@ client machine can have:
 
 2. An **intermediary peer**. This is any client who received the request from
    one or more peers and has also forwarded it to others. An intermediary peer
-   has both a set of *inbound peers* for a request as well as *outbound peers*.
+   has both a set of *inbound peers* for a request as well as a set of *outbound peers*.
 
 3. A **terminal peer**. This is a client who received the request from one or
    more peers and has NOT forwarded it to any others. A terminal peer has only
    a set of *inbound peers*.
 
 A peer handling a request who has *outbound peers* (original requester,
-intermediary peer) must satisfy any of the following, for each outbound peer:
-    1. Receives a "no more data" `Hash Response` (`hash_count=0`) from the peer.
-    2. Sends the peer a `Cancel Request`. This could be induced by an explicit
-       client action or e.g. a local timeout a client set on the request.
-    3. The connection to the peer is lost.
+intermediary peer) MUST satisfy any of the following, for each outbound peer:
+
+1. Receives a "no more data" `Hash Response` (`hash_count=0`) from the peer.
+2. Sends the peer a `Cancel Request`. This could be induced by an explicit
+   client action or e.g. a local timeout a client set on the request.
+3. The connection to the peer is lost.
 
 A peer handling a request who has *inbound peers* (intermediary peer, terminal
-peer) must satisfy any of the following, for each inbound peer:
-    1. Sends a "no more data" response back to the peer.
-    2. Receives a `Cancel Request`.
-    3. The connection to the peer is lost.
+peer) MUST satisfy any of the following, for each inbound peer:
 
-A request may be considered "concluded" and be safely deallocated (e.g. its
+1. Sends a "no more data" response back to the peer.
+2. Receives a `Cancel Request`.
+3. The connection to the peer is lost.
+
+A request SHOULD be considered "concluded" and be safely deallocated (e.g. its
 Request ID forgotten) once a given peer role (above) has satisfied all
 conditions for all inbound and outbound peers.
 
@@ -485,7 +496,7 @@ forwarded beyond its initial destination peer would set `ttl = 0` to signal this
 When an incoming request has a `ttl > 0`, a peer MAY choose to forward a
 request along to other peers, and then SHOULD forward their responses back to
 the peer who made the original request. Each peer performing this action SHOULD
-decrement the `ttl` by one. A request with `ttl == 0` should not be forwarded.
+decrement the `ttl` by one. A request with `ttl == 0` SHOULD NOT be forwarded.
 
 The TTL mechanism exists to allow clients with limited connectivity to peers
 (e.g. behind a strong NAT or a restricted mobile connection) to use the peers
@@ -522,7 +533,8 @@ field      | type     | desc
 `foo`      | `u8`     | description of the field `foo`
 `bar`      | `u8[4]`  | description of the field `bar`
 
-This example describes a binary payload that is 5 bytes long, where the one byte of field `foo` is followed immediately by the 4 bytes describing `bar`.
+This example describes a binary payload that is 5 bytes long, where the one byte
+of field `foo` is followed immediately by the 4 bytes describing `bar`.
 
 If `foo=17` and `bar=[3,6,8,64]`, the following binary payload would be expected:
 
@@ -554,9 +566,9 @@ field         | type     | desc
 `circuit_id`  | `u8[4]`  | id of a circuit for an established path, or `[0,0,0,0]` for no circuit
 `req_id`      | `u8[4]`  | unique id of this request (random)
 
-Message-specific fields follow after the `circuit_id`.
+Message-specific fields follow after the `req_id`.
 
-Each request and response type has have a unique `msg_type` (see below).
+Each request and response type has a unique `msg_type` (see below).
 
 Clients MAY experiment with custom message types beyond the ids used by this
 specification (where `msg_type >= 256`).
@@ -597,7 +609,7 @@ field        | type                | desc
 
 Its `msg_type` MUST be set to `2`.
 
-Results are provided by one or more `Post Response`s.
+Results are provided by one or more `Post Response` messages.
 
 The responder SHOULD immediately return what data is locally available, rather
 than holding on to the request in anticipation of perhaps seeing the requested
@@ -614,16 +626,22 @@ for that request.
 Some requests are long-lived, and stay open waiting for data to arrive.
 Such requests can be terminated using this request.
 
-Receiving this request indicates that any further responses sent back using the
-given `req_id` are likely to be discarded.
+field        | type                | desc
+-------------|---------------------|-------------------------------------
+`cancel_id`  | `varint`            | The Request ID (`req_id`) of the request to be cancelled
 
-This message type has no fields beyond the message and request headers.
+Receiving this request indicates that any further responses sent back with a
+`req_id` matching the given `cancel_id` are likely to be discarded.
 
 Its `msg_type` MUST be set to `3`.
 
-Its `req_id` SHOULD be set to the ID of the previous request to be cancelled.
+Its `cancel_id` SHOULD be set to the Request ID (`req_id`) of the request to be cancelled.
 
 No response to this message is expected.
+
+Like any other request, this MUST have its own unique `req_id` in order to
+function as intended. `cancel_id` is used to set the Request ID to cancel, not
+its `req_id`.
 
 A peer receiving a `Cancel Request` SHOULD forward it along the same route, to
 the same peers, as the original request matching the given `req_id`, so that
@@ -645,7 +663,7 @@ field          | type               | desc
 
 Its `msg_type` MUST be set to `4`.
 
-This request returns 0 or more `Hash Response`s.
+This request returns 0 or more `Hash Response` messages.
 
 Restrictions on channel names are defined above.
 
@@ -679,24 +697,25 @@ field          | type               | desc
 
 Its `msg_type` MUST be set to `5`.
 
-This request expects 0 or more `Hash Response`s in response, that pertain to
+This request expects 0 or more `Hash Response` in response, that pertain to
 posts that describe the current state of the channel.
 
-The posts included are all those comprised by the channel state (defined
-above), excluding chat messages.
+The hashes returned in a response are all those whose posts comprise the channel
+state (defined above), excluding chat messages.
 
-If `historic` is set to `1`, the requester expects to first receive the hashes
+If `historic` is set to `1`, the requester expects to receive the hashes
 of *all* posts that make up the current channel state from the perspective of
 the responding client.
 
 `updates` MUST be `>= 0`. The requester expects to receive up to `updates`
-posts hashes, as they occur in the future, that further alter this channel's
+post hashes, as they are produced in the future, which further alter this channel's
 state. Set `updates` to 0 to not receive any live / future state changes.
 
 Responses from a peer will keep coming until
+
 1. This request is concluded (see above for conditions), or both of
-2. `updates` live post hashes are returned (if `updates >= 1`), and
-3. all known historic hashes are returned (if `historic == 1`)
+    1. `updates` hashes are returned (if `updates >= 1`), and
+    2. all known historic hashes are returned (if `historic == 1`)   <---- revise me TODO
 
 ##### 6.2.2.6 Request Channel List
 
@@ -709,7 +728,7 @@ field          | type               | desc
 
 Its `msg_type` MUST be set to `6`.
 
-This request returns zero or more `Channel List Response`s.
+This request returns zero or more `Channel List Response` messages.
 
 A `limit` of 0 indicates a desire to receive the full set of known channels
 from a peer at the time of requesting.
@@ -723,6 +742,8 @@ Multiple responses may be generated for a single request and results trickle in 
 Every response MUST begin with the above message header.
 
 Responses containing an unknown `req_id` SHOULD be ignored.
+
+A response MUST have its `req_id` set to the same `req_id` of the request they are responding to.
 
 ##### 6.2.3.1 Hash Response
 
@@ -903,7 +924,7 @@ field          | type               | desc
 Its `post_type` MUST be set to `3`.
 
 A `topic` field MUST be a valid UTF-8 string, between 0 and 512 codepoints. A
-topic of length zero SHOULD be considered as no topic being set.
+topic of length zero SHOULD be considered as the current topic being cleared.
 
 #### 6.3.6 `post/join`
 
@@ -946,7 +967,7 @@ Documented here are attacks that can come from *within* a cabal — by those who
 #### 7.2.1.1 Inappropriate Use
 1. An attacker could issue `post/topic` posts to edit channel topics to garbage text, offensive content, or malicious content (e.g. phishing). Since most chat programs have channel topics controlled by "moderators" or "admins", this could cause confusion if users do not realize that anyone can set these strings.
 2. The list of channels in the `Channel List Response` message could be falsified to include channels that do not exist (i.e. no users have posted to them) or to omit the names channels that do exist.
-    1. A possible future mitigation to this might be inclusion of an explicit `post/channel` post type, to denote channel creation, which `Channel List Response` responders would need to cite the hashes of. However, an attacker could trivially produce 1000s or more legitimate channels anyways to this same end.
+    1. A possible future mitigation to this might be inclusion of an explicit `post/channel` post type, to denote channel creation, which `Channel List Response` responders would need to cite the hashes of. However, even in this scenario an attacker could trivially produce 1000s or more legitimate channels to this same end.
 
 #### 7.2.1.2 Spoofing
 1. An attacker could issue a `post/info` to alter their display name to be the same as another user, causing confusion as to which user is authoring certain chat messages.
@@ -956,21 +977,21 @@ Documented here are attacks that can come from *within* a cabal — by those who
 1. Authoring very large posts (gigabytes or larger) and/or a large number of smaller posts, and sharing them with others to download.
 2. Making a large quantity of expensive requests (e.g. a time range request on a channel with a long chat history that covers its entire lifetime, repeatedly).
     1. Clients could implement per-connection rate limiting on requests, to prevent a degradation of service from network participants.
-3. Creating a excessively large number of new channels (by writing at least one `post/text` post to each). Since channels can only be created and not removed, this has the potential to make a cabal somewhat unusable by legitimate users, if there are so many garbage channels they cannot locate real ones.
+3. Creating an excessively large number of new channels (by writing at least one `post/text` post to each). Since channels can only be created and not removed, this has the potential to make a cabal somewhat unusable by legitimate users, if there are so many garbage channels they cannot locate real ones.
     1. New channel creation could be rate-limited, although even at a limit of 1 channel/day, it still would not take long to produce high levels of noise.
+    2. Future moderation capabilities could curtail channels discovered to be garbage by issuing moderation posts that delete such channels.
 4. Providing a `Post Response` with large amounts of bogus data. Ultimately the content hashes from the requested hash and the data will not match, but the machine may expend a great deal of time and computational power determining each data block's legitimacy.
 
-#### 7.2.1.4 Confidentiality
-1. An attacker who appears legitimate (e.g. via a stolen machine belonging to a legitimate member) could connect to other members of the cabal and make ongoing and historic requests for cabal data, effectively spying on all members' posts, undetected, indefinitely.
-
-#### 7.2.1.5 Repudiation
+#### 7.2.1.4 Repudiation
 1. While all posts are cryptographically signed, a user can still claim that their private signing key was stolen, making reliable non-repudiation infeasible.
+    1. A limited mitigation could involve a user posting a new `post/tombstone` post that informs other peers that this identity has been compromised, and that it should no longer be trusted as legitimate henceforth.
 
-#### 7.2.1.6 Message Omission
-1. While a machine can not issue a `post/delete` to erase another user's posts, they could easily choose to omit post hashes from responses to requests made to them by others. This attack is only viable if the machine is a client's only means of accessing certain data (e.g. the client was unable to directly connect to any non-attacker machines). Once that client connects to other, non-malicious machines, they will be able to "fill the gaps" of missing data within the time window & channels in which they are interested.
+#### 7.2.1.5 Message Omission
+1. While a machine can not issue a `post/delete` to erase another user's posts, they could choose to omit post hashes from responses to requests made to them by others. This attack is only viable if the machine is a client's only means of accessing certain data (e.g. the client was unable to directly connect to any non-attacker machines). Once that client connects to other, non-malicious machines, they will be able to "fill the gaps" of missing data within the time window & channels in which they are interested.
 
-#### 7.2.1.7 Attacker Expulsion
+#### 7.2.1.6 Attacker Expulsion
 1. An attacker causing problems by means of spoofing, denial of service, passive listening, or inappropriate use cannot, as per the current protocol design, be expelled from the cabal group chat. Legitimate users have no means of recourse beyond starting a new cabal and not inviting the attacker.
+    1. Future moderation capabilities added to the protocol could render the attacker unable to connect with a significant portion of the cabal using e.g. transitive blocking capabilities, mitigating their inappropriate use.
 
 ### 7.2.2 Protections
 #### 7.2.2.1 Replay Attacks
@@ -978,8 +999,7 @@ Documented here are attacks that can come from *within* a cabal — by those who
 
 #### 7.2.2.2 Data Integrity
 1. All posts are crytographically signed, and cannot be altered or forged unless a user's private key has been compromised.
-
-2. Certain posts have implicit authorization (e.g. a `post/info` post can only alter its author's display name, and NOT be used to change another user's name), which is carried out by clients following the specification re: post ingestion logic.
+2. Certain posts have implicit authorization (e.g. a `post/info` post can only alter its author's display name, and cannot be used to change another user's name), which is carried out by clients following the specification re: post ingestion logic.
 
 #### 7.2.2.3 Privilege Escalation
 Cabal has no privilege levels beyond that of a) member and b) non-member. Non-members have zero privileges (not even able to participate at the wire protocol level), and all members hold the same privileges.
@@ -992,7 +1012,7 @@ Future work is planned around the outer layers of cable security:
 3. **Against inappropriate use by members**: having a system for moderation and write-access controls internal to a cabal, so that users can mitigate and expel attacks from those who have already gained legitimate membership.
 
 ## 8. Normative References
-- [Eventual consistency](https://en.wikipedia.org/wiki/Eventual_consistency)
+- [Vogels, Werner. "Eventually consistent." *Communications of the ACM*, vol. 52, Jan. 2009, pp. 40–44.](https://dl.acm.org/doi/pdf/10.1145/1435417.1435432)
 - [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119): Key words for use in RFCs to Indicate Requirement Levels
 - [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174): Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words
 - [BLAKE2b](https://www.blake2.net/blake2.pdf)
