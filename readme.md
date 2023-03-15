@@ -1012,9 +1012,9 @@ Future work is planned around the outer layers of cable security:
 3. **Against inappropriate use by members**: having a system for moderation and write-access controls internal to a cabal, so that users can mitigate and expel attacks from those who have already gained legitimate membership.
 
 ## 8. Normative References
-- [Vogels, Werner. "Eventually consistent." *Communications of the ACM*, vol. 52, Jan. 2009, pp. 40–44.](https://dl.acm.org/doi/pdf/10.1145/1435417.1435432)
-- [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119): Key words for use in RFCs to Indicate Requirement Levels
-- [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174): Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words
+- [Vogels, W. "Eventually consistent." *Communications of the ACM*, 52, 40–44, Janury 2009](https://dl.acm.org/doi/pdf/10.1145/1435417.1435432)
+- [Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", RFC 2119, July 2003](https://www.rfc-editor.org/rfc/rfc2119)
+- [Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", RFC 8174, May 2017](https://www.rfc-editor.org/rfc/rfc8174)
 - [BLAKE2b](https://www.blake2.net/blake2.pdf)
 - [Ed25519](https://ed25519.cr.yp.to/)
 - [Unicode 15.0.0](https://www.unicode.org/versions/Unicode15.0.0/)
