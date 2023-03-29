@@ -692,30 +692,28 @@ field          | type               | desc
 ---------------|--------------------|-----------------------------------
 `channel_len`  | `varint`           | length of the channel's name, in bytes (UTF-8)
 `channel`      | `u8[channel_len] ` | channel name as a string of text
-`historic`     | `varint`           | set to `1` to recv current state, or `0` to not
-`updates`      | `varint`           | maximum number of live / future hashes to return
+`future`       | `varint`           | whether to include live / future state hashes
 
 Its `msg_type` MUST be set to `5`.
 
-This request expects 0 or more `Hash Response` in response, that pertain to
-posts that describe the current state of the channel.
+This request expects 0 or more `Hash Response` messages in response, that
+pertain to posts that describe the current and/or previous state of the
+channel, depending on the request parameters set.
 
-The hashes returned in a response are all those whose posts comprise the channel
-state (defined above), excluding chat messages.
+See section 5.3.3 for context on what comprises channel state. Chat messages
+are not included in responses to this request.
 
-If `historic` is set to `1`, the requester expects to receive the hashes
-of *all* posts that make up the current channel state from the perspective of
-the responding client.
+`future` MUST be `1` or `0`. If `future = 1`, future channel state changes will
+be returned as they are produced. This will hold the request open indefinitely
+until a `Cancel Request` is issued. If `future = 0`, only the latest state
+posts will be included.
 
-`updates` MUST be `>= 0`. The requester expects to receive up to `updates`
-post hashes, as they are produced in the future, which further alter this channel's
-state. Set `updates` to 0 to not receive any live / future state changes.
+If `future = 1` and a post that is part of the latest state for a channel is
+deleted, this request SHOULD send the hash of the next-latest piece of state of
+that same type. For example, if the latest `post/topic` setting the channel's
+topic string is deleted with a `post/delete` post, the hash of the
+second-latest `post/topic` for this channel should be sent out.
 
-Responses from a peer will keep coming until
-
-1. This request is concluded (see above for conditions), or both of
-    1. `updates` hashes are returned (if `updates >= 1`), and
-    2. all known historic hashes are returned (if `historic == 1`)   <---- revise me TODO
 
 ##### 6.2.2.6 Request Channel List
 
@@ -890,6 +888,12 @@ Its `post_type` MUST be set to `2`.
 
 Several key/value pairs can be set at once. A post MUST indicate it is done
 setting pairs by setting a final `keyN_len` of zero.
+
+A `post/info` post is meant to be a complete description of a user's
+self-published information. A post of this type fully replaces a previously
+known version, and so they are not additive. If, for example, the `name` key is
+set in one `post/info` but not the subsequent one, this MUST be treated as
+`name` being unset / set to the empty string.
 
 Keys
 1. MUST be UTF-8 strings.
