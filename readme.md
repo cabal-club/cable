@@ -375,9 +375,9 @@ disorientating or most informative to users (e.g. moving around chat messages
 in the display, or keeping the ordering stable).
 
 ### 5.2 Users
-Users of Cabal are identified by their Ed25519 public key, and use it and
-their private key to prove themselves as verifiable authors of data shared with
-other peers. This is done by including their public key and a crytographic signature on any
+Users of Cabal are identified by their public key, and use it and their private
+key to prove themselves as verifiable authors of data shared with other peers.
+This is done by including their public key and a crytographic signature on any
 post they author.
 
 #### 5.2.1 State
@@ -809,8 +809,8 @@ Every post MUST begin with the following 6-field header:
 
 field        | type              | desc
 -------------|-------------------|-------------------------------------------------------
-`public_key` | `u8[32]`          | Ed25519 key that authored this post
-`signature`  | `u8[64]`          | Ed25519 signature of the fields that follow
+`public_key` | `u8[32]`          | public key that authored this post
+`signature`  | `u8[64]`          | signature of the fields that follow
 `num_links`  | `varint`          | how many BLAKE2b hashes this post links back to (0+)
 `links`      | `u8[32*num_links]`| BLAKE2b hashes of the latest messages in this channel/context
 `post_type`  | `varint`          | see custom post type sections below
