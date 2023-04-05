@@ -45,11 +45,11 @@ peer-to-peer group chatrooms.
     - [6.2.1 Message Header](#621-message-header)
     - [6.2.2 Requests](#622-requests)
       * [6.2.2.1 Header](#6221-header)
-      * [6.2.2.2 Request Post](#6222-request-post)
+      * [6.2.2.2 Post Request](#6222-request-post)
       * [6.2.2.3 Cancel Request](#6223-cancel-request)
-      * [6.2.2.4 Request Channel Time Range](#6224-request-channel-time-range)
-      * [6.2.2.5 Request Channel State](#6225-request-channel-state)
-      * [6.2.2.6 Request Channel List](#6226-request-channel-list)
+      * [6.2.2.4 Channel Time Range Request](#6224-request-channel-time-range)
+      * [6.2.2.5 Channel State Request](#6225-request-channel-state)
+      * [6.2.2.6 Channel List Request](#6226-request-channel-list)
     - [6.2.3 Responses](#623-responses)
       * [6.2.3.1 Hash Response](#6231-hash-response)
       * [6.2.3.2 Post Response](#6232-post-response)
@@ -425,16 +425,16 @@ described by the following:
 Above, "to the channel" refers to the `channel` field set on a given post.
 
 #### 5.3.4 Synchronization
-The `Request Channel State` and `Request Channel Time Range` requests are
+The `Channel State Request` and `Channel Time Range Request` requests are
 sufficient for a client to track the state of a channel that a user is
 interested in. The former request allowing tracking general state (who is in
 the channel, its topic, information about users in the channel), and the latter
 tracks its chat message history.
 
-The recommended way to use `Request Channel Time Range` to track a channel is
+The recommended way to use `Channel Time Range Request` to track a channel is
 to maintain a "rolling window". For example, a user that wishes to stay
 up-to-date with the last week's worth of chat history would, on client
-start-up, issue a `Request Channel Time Range` request with
+start-up, issue a `Channel Time Range Request` request with
 `time_start=now()-25200` (25200 seconds in a week) for a given channel of
 interest. Known hashes provided by `Hash Response` messages can be safely ignored, while newly
 discovered hashes can be made to induce `Post Request` messages for their content.
@@ -601,7 +601,7 @@ field      | type       | desc
 
 More fields follow for different request types below.
 
-##### 6.2.2.2 Request Post
+##### 6.2.2.2 Post Request
 
 Request a set of posts, given their hashes.
 
@@ -650,7 +650,7 @@ the same peers as the original request, so that all peers involved in the
 request are notified. This request's `ttl` SHOULD be ignored, in order to
 ensure all original recipients of the original request are reached.
 
-##### 6.2.2.4 Request Channel Time Range
+##### 6.2.2.4 Channel Time Range Request
 
 Request chat messages and chat message deletions written to a channel between a
 start and end time.
@@ -685,7 +685,7 @@ hundreds of thousands of chat message hashes.
 
 A `limit` of 0 indicates a desire to receive an unlimited number of hashes.
 
-##### 6.2.2.5 Request Channel State
+##### 6.2.2.5 Channel State Request
 
 Request posts that describe the current state of a channel and its users, and
 optionally subscribe to future state changes.
@@ -716,8 +716,7 @@ of state of that same type. For example, if the latest `post/topic` setting the
 channel's topic string is deleted with a `post/delete` post, the hash of the
 second-latest `post/topic` for that channel SHOULD be sent out.
 
-
-##### 6.2.2.6 Request Channel List
+##### 6.2.2.6 Channel List Request
 
 Request a list of known channels from peers.
 
@@ -761,7 +760,7 @@ intend to return any further data for the given request ID (`req_id`).
 
 ##### 6.2.3.2 Post Response
 
-Respond with a list of post contents in response to a `Request Post`.
+Respond with a list of post contents in response to a `Post Request`.
 
 field        | type                | desc
 -------------|---------------------|--------------------------
@@ -779,7 +778,7 @@ A recipient reads zero or more (`post_len`,`post_data`) pairs until a
 `post_len` set to 0 is encountered.
 
 Clients SHOULD hash an entire post to check whether it is post that it was
-expecting (i.e. had sent out a `Request Post` for).
+expecting (i.e. had sent out a `Post Request` for).
 
 Each post SHOULD contain the complete and valid body of a known post type, as
 specified below.
