@@ -302,26 +302,31 @@ described by the following:
 Above, "to the channel" refers to the `channel` field set on a given post.
 
 #### 5.3.4 Synchronization
-The Channel State Request and Channel Time Range Request requests are
-sufficient for a client to track the state of a channel that a user is
-interested in. The former request allowing tracking general state (who is in
-the channel, its topic, information about users in the channel), and the latter
-tracks its chat message history.
+The Channel State Request and Channel Time Range Request are sufficient for a
+client to track the state of a channel that a client is interested in. The
+former request allows tracking general state (who is in the channel, its topic,
+information about users in the channel), and the latter tracks the history of
+chat messages within that channel.
 
-The recommended way to use Channel Time Range Request to track a channel is
-to maintain a "rolling window". For example, a user that wishes to stay
-up-to-date with the last week's worth of chat history would, on client
-start-up, issue a Channel Time Range Request request with
-`time_start=now()-25200` (25200 seconds in a week) for a given channel of
-interest. Known hashes provided by Hash Response messages can be safely ignored, while newly
-discovered hashes can be made to induce Post Request messages for their content.
+Clients SHOULD set the `time_end` and `time_start` fields of Channel Time Range
+Requests in the following manner, to reliably track channel chat history:
 
-The purpose of keeping a rolling time window instead of asking for
-`time_start=last_bootup_time`, is to capture messages that were missed because
-either a client or other peers were, at the time, offline or part of another
-network. Using a rolling time window in this way allows a client to make posts
-while offline, and still have them appear to others when they do come back
-online (within a given client's rolling window).
+```
+time_end = now()
+time_start = now() - WINDOW_WIDTH
+```
+
+where `now()` is the current system UNIX Time, and `WINDOW_WIDTH` is the size
+of the "rolling window" to track chat messages within, in seconds. Clients are
+RECOMMENDED to use a `WINDOW_WIDTH` of one week (25200 seconds), though this
+value MAY be customized, since there are network environments where users may
+be offline for up to several months at a time, and a much wider rolling window
+would be necessary to ensure those chat messages are synchronized when such a
+user connects once again to other peers in the cabal.
+
+Hashes provided by Hash Response messages in response to a Channel Time Range
+Request or a Channel State Request SHOULD be ignored, while newly discovered
+hashes SHOULD induce Post Request messages, in order to acquire their content.
 
 ### 5.4 Requests & Responses
 All request types can generate multiple responses. A request sent to a peer may
