@@ -101,7 +101,7 @@ such as chat messages, spread across various user-defined topics.
 
 cable is designed to be:
 
-* fairly simple to implement in any language with only a single dependency (libsodium)
+* fairly simple to implement in any language with only a single dependency (e.g. libsodium)
 * able to bridge across different network transports
 * useful, even if written as a partial implementation
 * efficient in its use of network resources, by syncing only the relevant subsets of the full dataset
@@ -133,6 +133,8 @@ the types of anticipated attacks that legitimate cabal members may carry out.
 **Cabal**: A private group chat that a number of users can participate in, comprised of **users** and zero or more **channel**s.
 
 **Channel**: A conceptual object with its own unique name, a set of member **user**s, and a set of chat **post**s written to it.
+
+**Ed25519**: A public-key crytographic signature system.
 
 **User**: An Ed25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal. Sometimes also written as "member of a cabal".
 
@@ -170,24 +172,8 @@ the types of anticipated attacks that legitimate cabal members may carry out.
 
 **UTF-8**: The "UTF-8" encoding scheme outlined in [Chapter 2 Section 5](https://www.unicode.org/versions/Unicode15.0.0/ch02.pdf#G11165) of the Unicode 15.0.0 specification.
 
-## 4. Software Dependencies
-
-### 4.1 Cryptography
-
-Implementing cable requires access to implementations of the following:
-
-- [BLAKE2b](https://www.rfc-editor.org/rfc/rfc7693.txt) - Hash function described by RFC 7693. To be set to output 32-byte digests.
-- [Ed25519](https://ed25519.cr.yp.to/) - A public-key signature system. Used to generate, sign posts, and verify post signatures.
-
-This cryptographic functionality can be provided by [libsodium](https://libsodium.org) 1.0.18-stable, if bindings exist for one's implementation language of choice. In particular, these functions may be utilized, with their default settings:
-
-* `crypto_generichash()` - to hash messages with BLAKE2b
-* `crypto_sign_keypair()` - to generate public and secret Ed25519 keys
-* `crypto_sign()` - to calculate the signature of a post (in combined mode)
-* `crypto_sign_open()` - to verify the signature of a post (in combined mode)
-
-### 4.1.1 BLAKE2b Parameters
-The following are the general parameters to be used with BLAKE2b. If one is using 1.0.18-stable of libsodium, these are already set by default.
+### 4. BLAKE2b Parameters
+The following are the general parameters to be used with BLAKE2b.
 
 - Digest byte length: 32
 - Key byte length (not used): 0
@@ -211,13 +197,9 @@ sent to other peers in response to queries about them (e.g. chat messages
 within some time range).
 
 #### 5.1.2 Signing
-A signature for a post is produced by signing the entire post, starting
-immediately after the `signature` field of the post header (defined below).
-
-If using libsodium, one can use `crypto_sign()` in combined mode to generate
-the signature field for the fields that come after `signature`, as
-`crypto_sign()` will prepend the signature into the output, so the fields will
-be in the correct order.
+A signature for a post is produced by signing the entire post using the Ed25519
+signature scheme, starting immediately after the `signature` field of the post
+header (defined below).
 
 #### 5.1.3 Addressing
 As stated above, any post in cable can be addressed or referenced by its hash.
