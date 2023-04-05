@@ -137,13 +137,17 @@ members may carry out.
 
 **Ed25519**: A public-key crytographic signature system.
 
-**user**: An Ed25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal. Sometimes also written as "member of a cabal".
+**user**: An Ed25519 pair of keys identifying a person: a **public key**, and a **private key**, for use within a single cabal.
 
 **public key**: An Ed25519 key, which constitutes a user's public-facing identity within a cabal.
 
 **private key**: An Ed25519 key, used for signing authored **post**s. Kept private and secret to all but the user who owns it.
 
 **post**: An authored binary payload, signed by the private key of its creator (a user).
+
+**member**: In the context of a channel, a user whose latest `post/join` or `post/leave` interaction with a channel is a `post/join` post.
+
+**ex-member**: In the context of a channel, a user whose latest `post/join` or `post/leave` interaction with a channel is a `post/leave` post.
 
 **client**: A running instance of a computer program that implements cable.
 
@@ -404,9 +408,6 @@ or `post/topic` to that channel and has not issued a `post/leave` since.
 
 Clients SHOULD issue a `post/join` post before issuing any other posts that
 constitute participation in a channel. Namely, `post/text` and `post/topic`.
-
-A user whose latest interaction with a channel is a `post/leave` is considered
-an **ex-member**.
 
 #### 5.3.3 State
 A channel at any given moment, from the perspective of a client, is fully
