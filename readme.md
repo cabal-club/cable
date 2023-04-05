@@ -253,12 +253,6 @@ The term "roughly" is used because of the possible participation of client
 implementations that do not set links.
 
 #### 5.1.5 Ordering
-The following post types require sorting:
-
-- `post/text`
-- `post/info`
-- `post/topic`
-
 Only chat messages need to be sorted, and sorting only needs to happen at the
 level of a client implementation — not something a wire protocol
 implementation needs to worry about. Still, it is included here as a learning
