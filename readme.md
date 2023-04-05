@@ -419,19 +419,19 @@ described by the following:
 Above, "to the channel" refers to the `channel` field set on a given post.
 
 #### 5.3.4 Synchronization
-The `Channel State Request` and `Channel Time Range Request` requests are
+The Channel State Request and Channel Time Range Request requests are
 sufficient for a client to track the state of a channel that a user is
 interested in. The former request allowing tracking general state (who is in
 the channel, its topic, information about users in the channel), and the latter
 tracks its chat message history.
 
-The recommended way to use `Channel Time Range Request` to track a channel is
+The recommended way to use Channel Time Range Request to track a channel is
 to maintain a "rolling window". For example, a user that wishes to stay
 up-to-date with the last week's worth of chat history would, on client
-start-up, issue a `Channel Time Range Request` request with
+start-up, issue a Channel Time Range Request request with
 `time_start=now()-25200` (25200 seconds in a week) for a given channel of
-interest. Known hashes provided by `Hash Response` messages can be safely ignored, while newly
-discovered hashes can be made to induce `Post Request` messages for their content.
+interest. Known hashes provided by Hash Response messages can be safely ignored, while newly
+discovered hashes can be made to induce Post Request messages for their content.
 
 The purpose of keeping a rolling time window instead of asking for
 `time_start=last_bootup_time`, is to capture messages that were missed because
@@ -464,8 +464,8 @@ client machine can have:
 A peer handling a request who has *outbound peers* (original requester,
 intermediary peer) MUST satisfy any of the following, for each outbound peer:
 
-1. Receives a "no more data" `Hash Response` (`hash_count=0`) from the peer.
-2. Sends the peer a `Cancel Request`, induced by an explicit client action or,
+1. Receives a "no more data" Hash Response (`hash_count=0`) from the peer.
+2. Sends the peer a Cancel Request, induced by an explicit client action or,
    for example, a local timeout a client set on the request.
 3. The connection to the peer is lost.
 
@@ -473,7 +473,7 @@ A peer handling a request who has *inbound peers* (intermediary peer, terminal
 peer) MUST satisfy any of the following, for each inbound peer:
 
 1. Sends a "no more data" response back to the peer.
-2. Receives a `Cancel Request`.
+2. Receives a Cancel Request.
 3. The connection to the peer is lost.
 
 A request SHOULD be considered "concluded" and be safely deallocated (e.g. its
@@ -606,7 +606,7 @@ field        | type                | desc
 
 Its `msg_type` MUST be set to `2`.
 
-Results are provided by one or more `Post Response` messages.
+Results are provided by one or more Post Response messages.
 
 The responder SHOULD immediately return what data is locally available, rather
 than holding on to the request in anticipation of perhaps seeing the requested
@@ -639,7 +639,7 @@ Like any other request, this request MUST have its own unique `req_id` in order
 to function as intended. `cancel_id` is used to set the Request ID to cancel,
 not its `req_id`.
 
-A peer receiving a `Cancel Request` SHOULD forward it along the same route, to
+A peer receiving a Cancel Request SHOULD forward it along the same route, to
 the same peers as the original request, so that all peers involved in the
 request are notified. This request's `ttl` SHOULD be ignored, in order to
 ensure all original recipients of the original request are reached.
@@ -659,7 +659,7 @@ field          | type               | desc
 
 Its `msg_type` MUST be set to `4`.
 
-This request returns 0 or more `Hash Response` messages.
+This request returns 0 or more Hash Response messages.
 
 Restrictions on channel names are defined above.
 
@@ -692,7 +692,7 @@ field          | type               | desc
 
 Its `msg_type` MUST be set to `5`.
 
-This request expects 0 or more `Hash Response` messages in response, that
+This request expects 0 or more Hash Response messages in response, that
 pertain to posts that describe the current and/or previous state of the
 channel, depending on the request parameters set.
 
@@ -701,7 +701,7 @@ are not included in responses to this request.
 
 `future` MUST be `1` or `0`. If `future = 1`, future channel state changes will
 be returned as they are produced, and the request will be held open
-indefinitely until a `Cancel Request` is issued. If `future = 0`, only the
+indefinitely until a Cancel Request is issued. If `future = 0`, only the
 latest state posts will be included.
 
 If `future = 1` and a post that is part of the latest state for a channel is
@@ -721,7 +721,7 @@ field          | type               | desc
 
 Its `msg_type` MUST be set to `6`.
 
-This request returns zero or more `Channel List Response` messages.
+This request returns zero or more Channel List Response messages.
 
 A `limit` of 0 indicates a desire to receive the full set of known channels
 from a peer at the time of requesting.
@@ -749,12 +749,12 @@ field        | type                | desc
 
 Its `msg_type` MUST be set to `0`.
 
-A `Hash Response` message with `hash_count=0` indicates that a peer does not
+A Hash Response message with `hash_count=0` indicates that a peer does not
 intend to return any further data for the given request ID (`req_id`).
 
 ##### 6.2.3.2 Post Response
 
-Respond with a list of post contents in response to a `Post Request`.
+Respond with a list of post contents in response to a Post Request.
 
 field        | type                | desc
 -------------|---------------------|--------------------------
@@ -772,7 +772,7 @@ A recipient reads zero or more (`post_len`,`post_data`) pairs until a
 `post_len` set to 0 is encountered.
 
 Clients SHOULD hash an entire post to check whether it is post that it was
-expecting (i.e. had sent out a `Post Request` for).
+expecting (i.e. had sent out a Post Request for).
 
 Each post SHOULD contain the complete and valid body of a known post type, as
 specified below.
@@ -963,8 +963,8 @@ Documented here are attacks that can come from *within* a cabal — by those who
 ### 7.2.1 Susceptibilities
 #### 7.2.1.1 Inappropriate Use
 1. An attacker could issue `post/topic` posts to edit channel topics to garbage text, offensive content, or malicious content (e.g. phishing). Since most chat programs have channel topics controlled by "moderators" or "admins", this could cause confusion if users do not realize that anyone can set these strings.
-2. The list of channels in the `Channel List Response` message could be falsified to include channels that do not exist (i.e. no users have posted to them) or to omit the names channels that do exist.
-    1. A possible future mitigation to this might be inclusion of an explicit `post/channel` post type, to denote channel creation, which `Channel List Response` responders would need to cite the hashes of. However, even in this scenario an attacker could trivially produce 1000s or more legitimate channels to the same end.
+2. The list of channels in the Channel List Response message could be falsified to include channels that do not exist (i.e. no users have posted to them) or to omit the names channels that do exist.
+    1. A possible future mitigation to this might be inclusion of an explicit `post/channel` post type, to denote channel creation, which Channel List Response responders would need to cite the hashes of. However, even in this scenario an attacker could trivially produce 1000s or more legitimate channels to the same end.
 
 #### 7.2.1.2 Spoofing
 1. An attacker could issue a `post/info` to alter their display name to be the same as another user, causing confusion as to which user is authoring certain chat messages.
@@ -977,7 +977,7 @@ Documented here are attacks that can come from *within* a cabal — by those who
 3. Creating an excessively large number of new channels (by writing at least one `post/text` post to each). Since channels can only be created and not removed, this attack has the potential to make a cabal somewhat unusable by legitimate users, if there are so many garbage channels they cannot locate real ones.
     1. New channel creation could be rate-limited, although even at a limit of 1 channel/day, it still would not take long to produce high levels of noise.
     2. Future moderation capabilities could curtail channels discovered to be garbage by issuing moderation posts that delete such channels.
-4. Providing a `Post Response` with large amounts of bogus data. Ultimately the content hashes from the requested hash and the data will not match, but the machine may expend a great deal of time and computational power determining each data block's legitimacy.
+4. Providing a Post Response with large amounts of bogus data. Ultimately the content hashes from the requested hash and the data will not match, but the machine may expend a great deal of time and computational power determining each data block's legitimacy.
 
 #### 7.2.1.4 Repudiation
 1. While all posts are cryptographically signed, a user can still claim that their private signing key was stolen, making reliable non-repudiation infeasible.
