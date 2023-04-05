@@ -143,7 +143,7 @@ members may carry out.
 
 **private key**: An Ed25519 key, used for signing authored **post**s. Kept private and secret to all but the user who owns it.
 
-**post**: An authored binary payload, signed by the private key of its creator (a user).
+**post**: An binary payload, signed by the private key of the user who created it.
 
 **member**: In the context of a channel, a user whose latest `post/join` or `post/leave` interaction with a channel is a `post/join` post.
 
@@ -194,7 +194,7 @@ The following are the general parameters to be used with BLAKE2b.
 ## 5. Data Model
 
 ### 5.1 Posts
-All durable data exchanged over the protocol are called **posts**.
+All of the durable data exchanged over the protocol are composed of posts.
 
 Any post can be referred to by its BLAKE2b hash.
 
