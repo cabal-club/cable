@@ -377,7 +377,11 @@ in the display, or keeping the ordering stable).
 
 ### 5.2 Users
 
-#### 5.2.1 State
+#### 5.2.1 Names
+- A valid user name MUST be a UTF-8 encoded string.
+- A valid user name MUST between 1 and 32 codepoints.
+
+#### 5.2.2 State
 A user is fully described at a given point in time by the following:
 
 1. their public key, and
@@ -906,8 +910,6 @@ The following keys SHOULD be supported:
 key       | value format | desc
 ----------|--------------|---------------------------------------
 `name`    | UTF-8        | handle this user wishes to use as a pseudonym. Default value is "".
-
-A valid `name` field MUST be a valid UTF-8 string, between 1 and 32 codepoints.
 
 To save space, a client may wish to discard from disk older versions of these
 messages from a particular user.
