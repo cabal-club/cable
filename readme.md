@@ -487,6 +487,9 @@ across the peers who may handle it. For networks with up to 43 million active
 requests within a single cabal, the probability of collision remains below 1%.
 (i.e. `(1 - 1 / (2**32)) ** 43_000_000 > 0.99`)
 
+When generating a new `req_id`, a client MUST discard and generate a new one if
+the one generated collides with a known active `req_id`.
+
 When a client forwards a request to further peers, the `req_id` MUST NOT be
 changed, so that routing loops can be more easily detected by peers in the
 network.
