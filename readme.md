@@ -671,8 +671,9 @@ field        | type                | desc
 
 `msg_type` MUST be set to `0`.
 
-A Hash Response message with `hash_count = 0` indicates that a peer does not
-intend to return any further hashes for the given request ID (`req_id`).
+A responder MUST send a Hash Response message with `hash_count = 0` to indicate
+that they do not intend to return any further hashes for the given `req_id` and
+they have concluded the request on their side.
 
 ##### 6.2.3.2 Post Response
 
@@ -693,16 +694,17 @@ field        | type                | desc
 A recipient reads zero or more (`post_len`,`post_data`) pairs until a
 `post_len` set to 0 is encountered.
 
-A Post Response message with `post0_len = 0` indicates that a peer does not
-intend to return any further posts for the given request ID (`req_id`).
+A responder MUST send a Post Response message with `post0_len = 0` to indicate
+that they do not intend to return any further posts for the given `req_id` and
+they have concluded the request on their side.
 
 Clients SHOULD hash an entire post to check whether it is post that it was
 expecting (i.e. had sent out a Post Request for). However, misbehaving peers
 may end up providing posts that are still coincidentally useful to the client,
 so they MAY elect to keep certain posts anyways.
 
-Each post MUST contain the complete and valid body of a known post type, as
-specified in Section 6.3.
+Each post MUST contain the complete and valid body of a known post type
+(Section 6.3).
 
 ##### 6.2.3.3 Channel List Response
 
