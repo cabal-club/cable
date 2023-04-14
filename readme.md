@@ -206,9 +206,9 @@ sent to other peers in response to queries about them (e.g. chat messages
 within some time range).
 
 #### 5.1.2 Signing
-A signature for a post is produced by signing the entire post using the Ed25519
-signature scheme, starting immediately after the `signature` field of the post
-header (defined below).
+A signature for a post is produced by signing all fields of the post
+immediately after the `signature` field, using the Ed25519 signature scheme.
+See 6.3 Posts for more details on the structure of posts.
 
 #### 5.1.3 Addressing
 Any post in cable can be addressed or referenced by its hash.
