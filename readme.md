@@ -401,6 +401,24 @@ and `D` combined for `B` to potentially send back.
 A requester receiving more than `limit` hashes MAY choose to discard the
 extraneous ones.
 
+#### 5.4.4 Deduplication
+A client who is also an intermediary peer MAY elect to perform deduplication on
+the behalf of a requestor, in order to reduce redundant retransmission of post
+or hash data (Post Response and Hash Response, respectively).
+
+For example, consider a client `A` sends a request to `B` with `ttl = 1`, who
+then forwards that request to their peers `C` and `D`. If `B` responds to `A`
+with a set of N hashes or posts, `B` could track what they sent, and, in the
+case that `C` or `D`'s responses -- routed through `B` -- contain any
+duplicates that `B` knows were already sent back to `A`, `B` could choose to
+edit these response messages, to omit the duplicates from being needlessly
+retransmitted onwards back to `A`.
+
+Regarding the above section (5.4.3 Limits), hashes that are deduplicated by an
+intermediary peer, and thus not transmitted back to the requestor, do not count
+against the `limit`.
+
+
 ## 6. Wire Formats
 
 ### 6.1 Field tables
