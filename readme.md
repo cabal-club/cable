@@ -334,7 +334,27 @@ peer may result in several blocks of hashes or data being sent back by them as
 they scan their local database. Additionally, if that peer forwards a request
 to its own set of peers, they too may trickle back several responses over time.
 
-#### 5.4.1 Lifetime of a Request
+#### 5.4.1 Time To Live
+The TTL mechanism exists to allow clients with limited connectivity to peers
+(e.g. behind a strong NAT or a restricted mobile connection) to use the peers
+they can reach as a relay to find and retrieve data they are interested in more
+easily.
+
+The `ttl` field, set in the request header, expresses an upper bound on how
+many times a request is forwarded to other peers. A client wishing a request
+not be forwarded beyond its initial destination peer MUST set `ttl = 0`.
+
+An incoming request with `ttl = 0` MUST NOT be forwarded.
+
+An incoming request with a `ttl > 0` SHOULD be forwarded along to all peers the
+client is connected to. A peer forwarding a request MUST decrement the `ttl` by
+one before sending it, to ensure the number of network hops does not exceed
+what the original requestor specified.
+
+To prevent request loops in the network, an incoming request with a known
+`req_id` MUST be discarded.
+
+#### 5.4.2 Lifetime of a Request
 In the lifetime of a given request, there are three exclusive roles an involved
 client machine can have:
 
@@ -366,26 +386,6 @@ concluded, for each inbound peer:
 2. Receives a Cancel Request.
 3. The connection to the peer is lost.
 
-#### 5.4.2 Time To Live
-The TTL mechanism exists to allow clients with limited connectivity to peers
-(e.g. behind a strong NAT or a restricted mobile connection) to use the peers
-they can reach as a relay to find and retrieve data they are interested in more
-easily.
-
-The `ttl` field, set in the request header, expresses an upper bound on how
-many times a request is forwarded to other peers. A client wishing a request
-not be forwarded beyond its initial destination peer MUST set `ttl = 0`.
-
-An incoming request with `ttl = 0` MUST NOT be forwarded.
-
-An incoming request with a `ttl > 0` SHOULD be forwarded along to all peers the
-client is connected to. A peer forwarding a request MUST decrement the `ttl` by
-one before sending it, to ensure the number of network hops does not exceed
-what the original requestor specified.
-
-To prevent request loops in the network, an incoming request with a known
-`req_id` MUST be discarded.
-
 #### 5.4.3 Limits
 Some requests have a `limit` field specifying an upper bound on how many hashes
 a client wishes to receive in response. A peer responding to such a request
@@ -396,11 +396,7 @@ client has forwarded that request to.
 For example, assume `A` sends a request to `B` with `limit = 50` and `ttl = 1`, and
 `B` forwards the request to `C` and `D`. `B` may send back 15 hashes to `A` at
 first, which means there are now a maximum of `50 - 15 = 35` hashes left for `C`
-and `D` combined for `B` to potentially send back. `B` can choose to track
-hashes and perform deduplication, so that if `C` and `D` were to both send back
-a hash `f88954b3e6adc067af61cca2aea7e3baecfea4238cb1594e705ecd3c92a67cb1`, `B`
-could ensure it was only passed back to `A` one time, thus reducing the
-remaining `limit` by 1 instead of 2.
+and `D` combined for `B` to potentially send back.
 
 A requester receiving more than `limit` hashes MAY choose to discard the
 extraneous ones.
