@@ -205,12 +205,7 @@ perhaps indexed by the hash of the content for easy querying. Posts are only
 sent to other peers in response to queries about them (e.g. chat messages
 within some time range).
 
-#### 5.1.2 Signing
-A signature for a post is produced by signing all fields of the post
-immediately after the `signature` field, using the Ed25519 signature scheme.
-See 6.3 Posts for more details on the structure of posts.
-
-#### 5.1.3 Addressing
+#### 5.1.2 Addressing
 Any post in cable can be addressed or referenced by its hash.
 
 The hash for a post is produced by putting a post's verbatim binary content,
@@ -219,7 +214,7 @@ including the post header, through the BLAKE2b function.
 Implementations may benefit from a storage design that allows for quick look-up
 of a post's contents by its hash.
 
-#### 5.1.4 Links
+#### 5.1.3 Links
 The `links` field in each post's header enables any post to refer to 0 or more
 other posts by means of specifying those posts' hashes.
 
@@ -236,7 +231,7 @@ clients that are participating in a cabal that do not set links, the more
 vulnerable to clock skew or maliciously inaccurate timestamps its participants
 will be.
 
-##### 5.1.4.1 Setting links
+##### 5.1.3.1 Setting links
 In order to set links on a post, each channel's current heads MUST be tracked.
 
 If a client is setting links on new posts, it MUST set the `links` field to the
@@ -751,6 +746,11 @@ field        | type              | desc
 `links`      | `u8[32*num_links]`| hashes of the latest posts in this channel/context
 `post_type`  | `varint`          | see custom post type sections below
 `timestamp`  | `varint`          | seconds since UNIX Epoch
+
+The `signature` for a post is produced by signing all fields of the post
+immediately after the `signature` field, including the `post_type`-specific
+fields specified in the sections that follow, using the Ed25519 signature
+scheme.
 
 The post type sections below document the fields that MUST follow these initial
 fields, depending on the `post_type`.
