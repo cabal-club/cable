@@ -159,6 +159,8 @@ carry out.
 
 **responder**: A peer authoring a response message, in reference to a request sent to them.
 
+**`req_id`**: A unique 32-bit number that uniquely identifies a request existing in the network.
+
 **hash**: A 32-byte BLAKE2b digest of a particular sequence of bytes.
 
 **link**: A hash appearing in a post's `links` field, which acts as a reference to the post whose content hashes to said hash.
@@ -479,9 +481,11 @@ discard it.
 
 The `circuit_id` field is not currently in use, and MUST be set to all zeros.
 
-The request ID, `req_id`, is a 256-bit number, generated randomly by the
+The request ID, `req_id`, is a 32-bit number, generated randomly by the
 requester. It is used to uniquely identify the request during its lifetime
-across the peers who may handle it.
+across the peers who may handle it. For networks with up to 43 million active
+requests within a single cabal, the probability of collision remains below 1%.
+(i.e. `(1 - 1 / (2**32)) ** 43_000_000 > 0.99`)
 
 When a client forwards a request to further peers, the `req_id` MUST NOT be
 changed, so that routing loops can be more easily detected by peers in the
