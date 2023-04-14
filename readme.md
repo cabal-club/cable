@@ -205,6 +205,15 @@ perhaps indexed by the hash of the content for easy querying. Posts are only
 sent to other peers in response to queries about them (e.g. chat messages
 within some time range).
 
+| `post_type` numeric id | common name  | description |
+|------------------------|--------------|-------------|
+| 0                      | `post/text`  | a textual chat message, posted to a channel |
+| 1                      | `post/delete`| the deletion of a previously published post |
+| 2                      | `post/info`  | set or clear informative key/value pairs on a user  |
+| 3                      | `post/topic` | set or clear a channel's topic string |
+| 4                      | `post/join`  | announce membership to a channel |
+| 5                      | `post/leave` | announce cessation of membership to a channel |
+
 #### 5.1.2 Addressing
 Any post in cable can be addressed or referenced by its hash.
 
@@ -330,6 +339,17 @@ All request types MAY yield multiple responses from peers. A request sent to a
 peer may result in several blocks of hashes or data being sent back by them as
 they scan their local database. Additionally, if that peer forwards a request
 to its own set of peers, they too may trickle back several responses over time.
+
+| `msg_type` numeric id | common name                   | description |
+|-----------------------|-------------------------------|-------------|
+| 2                     | Post Request                  | request the posts that hash to particular set of hashes |
+| 3                     | Cancel Request                | abort a previously issued request |
+| 4                     | Channel Time Range Request    | request hashes of chat messages and deletions within a time range |
+| 5                     | Channel State Request         | request hashes describing a given channel's state |
+| 6                     | Channel List Request          | request a list of all known channel names |
+| 0                     | Hash Response                 | a list of hashes, pertaining to some request |
+| 1                     | Post Response                 | a list of posts, pertaining to some request |
+| 7                     | Channel List Response         | a list of channel names |
 
 #### 5.4.1 Time To Live
 The TTL mechanism exists to allow clients with limited connectivity to peers
