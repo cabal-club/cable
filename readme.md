@@ -127,55 +127,49 @@ analysis of the types of anticipated attacks that authorized members may still
 carry out.
 
 ## 3. Definitions
-**cabal**: A private group chat that **users** can participate in, comprised of zero or more **channels**.
+**client**: A running instance of a computer program that implements cable.
 
-**channel**: A conceptual object with its own unique name, a set of **members**, and a set of **posts** written to it.
+**cabal**: An instance of a private group chat, whose client participants speak the cable protocol.
+
+**peer**: A client, to whom the referred to client is connected to over some transport protocol.
 
 **Ed25519**: A public-key cryptographic signature system.
 
-**user**: A pair of Ed25519 keys -- a **public key** and **private key** -- identifying a distinct person or program in a cabal.
-
-**public key**: An Ed25519 key, which constitutes a user's public-facing identity within a cabal.
-
-**private key**: An Ed25519 key, used for signing authored **posts**. Kept secret to all but the user who controls it.
-
-**post**: A binary payload, signed by the private key of the user who created it.
-
-**member**: In the context of a channel, a user whose latest `post/join` or `post/leave` interaction with a channel is a `post/join` post.
-
-**ex-member**: In the context of a channel, a user whose latest `post/join` or `post/leave` interaction with a channel is a `post/leave` post.
-
-**client**: A running instance of a computer program that implements cable.
-
-**peer**: A machine that a client is connected to over some transport protocol, on top of which the cable protocol is being spoken.
-
-**message**: A binary payload sent by and received from other cable peers. Each message is either a **request** or a **response**.
-
-**request**: A binary payload originating from a particular **requester** peer.
-
-**response**: A binary payload, traversing the network from a **responder**, back to the peer who originally made the request.
-
-**requester**: A client authoring a request message, to be sent to other peers.
-
-**responder**: A peer authoring a response message, in reference to a request sent to them.
-
-**`req_id`**: A unique 32-bit number that uniquely identifies a request existing in the network.
-
 **hash**: A 32-byte BLAKE2b digest of a particular sequence of bytes.
 
-**link**: A hash appearing in a post's `links` field, which acts as a reference to the post whose content hashes to said hash.
+**public key**: An Ed25519 key that can be known by others.
 
-**chat message**: A post of type `post/text`.
+**private key**: An Ed25519 key, used for signing data. Kept secret to all but whoever controls it.
 
-**latest**: When used to refer to a post, the latest post is the post that, from a client's perspective at a given moment in time, is the **head** with the greatest **timestamp**.
+**signature**: A unique sequence of binary data that can be produced by combining a private key and an input text. The signature can then be verified by the private key's corresponding public key.
+
+**user**: A pair of Ed25519 keys -- a public key and private key -- identifying a distinct person or program in a cabal. A user is known by others by their public key.
+
+**post**: A binary payload of a specific format, signed with the private key of the user who created it.
+
+**link**: A hash appearing in a post, which acts as a reference to another post.
+
+**channel**: A conceptual object with its own unique name, that users can participate in by authoring posts that reference the channel.
+
+**request**: A binary payload originating from a particular client.
+
+**response**: A binary payload, traversing the network from a particular client back to the one who issued an original request.
+
+**`req_id`**: A unique 32-bit number that uniquely identifies a request traversing in the network, and any corresponding responses.
+
+**requester**: A client authoring a request, to be sent to other peers.
+
+**responder**: A client authoring a response, in reference to a request sent to them.
+
+**message**: Either a request or a response.
+
+**UNIX epoch**: Midnight UTC on January 1st, 1970.
+
+**timestamp**: A point in time represented by the number of seconds since the UNIX epoch.
 
 **head**: When used to refer to a post, any post that no other known post links to.
 
-**timestamp**: A UNIX timestamp.
-
-**UNIX timestamp**: A point in time represented by the number of seconds since the UNIX epoch.
-
-**UNIX epoch**: Midnight UTC on January 1st, 1970.
+**latest**: When used to refer to a post, the latest post is the post that, from a client's perspective at a given moment in time, is the head with the greatest timestamp.
 
 **varint**: a variable-length unsigned integer. cable uses Protocol Buffer-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints).
 
@@ -295,6 +289,10 @@ client's perspective, that user has issued a `post/join`, `post/text`, or
 
 If a user's latest known post to a channel is a `post/leave`, they are not a
 member of that channel.
+
+A user is an ex-member of a channel at a particular point in time if, from a
+client's perspective, that user has issued no further posts interacting with a
+channel since a `post/leave` post was issued.
 
 Clients SHOULD issue a `post/join` post before issuing any other posts to a
 channel.
