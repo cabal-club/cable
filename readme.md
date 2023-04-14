@@ -916,7 +916,7 @@ Documented here are attacks that can come from *within* a cabal — by those who
 
 #### 7.2.1.4 Repudiation
 1. While all posts are cryptographically signed, a user can still claim that their private signing key was stolen, making reliable non-repudiation infeasible.
-    1. A limited mitigation could involve a user posting a new `post/tombstone` post that informs other peers that this identity has been compromised, and that it should no longer be trusted as legitimate henceforth.
+    1. A limited mitigation could involve a user posting a new, hypothetical `post/tombstone` type post that informs other peers that this identity has been compromised, and that it should no longer be trusted as legitimate henceforth.
 
 #### 7.2.1.5 Message Omission
 1. While a machine can not issue a `post/delete` to erase another user's posts, they could choose to omit post hashes from responses to requests made to them by others. This attack is only viable if the machine is a client's only means of accessing certain data (e.g. the client was unable to directly connect to any non-attacker machines). Once that client connects to other, non-malicious machines, they will be able to "fill the gaps" of missing data within the time window & channels in which they are interested.
