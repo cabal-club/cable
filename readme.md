@@ -353,7 +353,7 @@ A peer handling a request who has *outbound peers* (original requester,
 intermediary peer) MUST satisfy any of the following in order to consider a
 request concluded, for each outbound peer:
 
-1. Receives a "no more data" Hash Response (`hash_count=0`) from the peer.
+1. Receives a "no more data" Hash Response (`hash_count = 0`) from the peer.
 2. Sends the peer a Cancel Request, induced by an explicit client action or,
    for example, a local timeout a client set on the request.
 3. The connection to the peer is lost.
@@ -376,7 +376,7 @@ The `ttl` field, set in the request header, expresses an upper bound on how
 many times a request is forwarded to other peers. A client wishing a request
 not be forwarded beyond its initial destination peer MUST set `ttl = 0`.
 
-An incoming request with `ttl == 0` MUST NOT be forwarded.
+An incoming request with `ttl = 0` MUST NOT be forwarded.
 
 An incoming request with a `ttl > 0` SHOULD be forwarded along to all peers the
 client is connected to. A peer forwarding a request MUST decrement the `ttl` by
@@ -393,9 +393,9 @@ MUST honour that limit by counting how many hashes they send back to the
 requester, including hashes received through other peers that the responding
 client has forwarded that request to.
 
-For example, assume `A` sends a request to `B` with `limit=50` and `ttl=1`, and
+For example, assume `A` sends a request to `B` with `limit = 50` and `ttl = 1`, and
 `B` forwards the request to `C` and `D`. `B` may send back 15 hashes to `A` at
-first, which means there are now a maximum of `50-15=35` hashes left for `C`
+first, which means there are now a maximum of `50 - 15 = 35` hashes left for `C`
 and `D` combined for `B` to potentially send back. `B` can choose to track
 hashes and perform deduplication, so that if `C` and `D` were to both send back
 a hash `f88954b3e6adc067af61cca2aea7e3baecfea4238cb1594e705ecd3c92a67cb1`, `B`
@@ -420,7 +420,7 @@ The above example describes a binary payload that is 5 bytes long, where the
 one byte of field `foo` is followed immediately by the 4 bytes describing
 `bar`.
 
-If `foo=17` and `bar=[3,6,8,64]`, the following binary payload would be as follows:
+If `foo = 17` and `bar = [3,6,8,64]`, the following binary payload would be as follows:
 
 ```
  foo   bar
@@ -469,7 +469,7 @@ changed, so that routing loops can be more easily detected by peers in the
 network.
 
 The protocol MAY be extended by implementors by creating additional
-`msg_type`s. Implementors MUST only use `msg_type`s greater than `255`. The
+`msg_type`s. Implementors MUST only use `msg_type > 255`. The
 first 256 are reserved for core protocol use.
 
 #### 6.2.2 Requests
@@ -530,7 +530,7 @@ to function as intended. `cancel_id` is used to set the request identifier to
 cancel, not the `req_id`.
 
 A peer receiving a Cancel Request MUST forward it along the same route and
-peers it forwarded the original message with `req_id==cancel_id`, to the same
+peers it forwarded the original message with `req_id = cancel_id`, to the same
 peers as the original request, so that all peers who know of the original
 request are notified. This request's `ttl` MUST be ignored, in order to ensure
 all original recipients of the original request are reached.
@@ -602,7 +602,7 @@ If `future = 1`, the responder SHOULD respond with future channel state changes
 as they become known to the responder, and the request SHOULD be held open
 indefinitely on both the requester and responder side until a Cancel Request is
 issued by the requester, or the responder elects to end the request by sending
-a Hash Response with `hash_count=0`.
+a Hash Response with `hash_count = 0`.
 
 If `future = 1` and a post that is part of the latest state for a channel is
 deleted, the responder MUST immediately send the hash of the next-latest
@@ -657,7 +657,7 @@ field        | type                | desc
 
 `msg_type` MUST be set to `0`.
 
-A Hash Response message with `hash_count=0` indicates that a peer does not
+A Hash Response message with `hash_count = 0` indicates that a peer does not
 intend to return any further hashes for the given request ID (`req_id`).
 
 ##### 6.2.3.2 Post Response
@@ -679,7 +679,7 @@ field        | type                | desc
 A recipient reads zero or more (`post_len`,`post_data`) pairs until a
 `post_len` set to 0 is encountered.
 
-A Post Response message with `post0_len=0` indicates that a peer does not
+A Post Response message with `post0_len = 0` indicates that a peer does not
 intend to return any further posts for the given request ID (`req_id`).
 
 Clients SHOULD hash an entire post to check whether it is post that it was
@@ -705,7 +705,7 @@ field          | type                | desc
 `msg_type` MUST be set to `7`.
 
 A recipient reads the zero or more (`channel_len`,`channel`) pairs until
-`channel_len` is 0.
+`channel_len = 0`.
 
 In order for pagination to work properly, clients MUST to use a stable sort
 method for the names of channels.
@@ -728,7 +728,7 @@ The post type sections below document the fields that MUST follow these initial
 fields, depending on the `post_type`.
 
 The protocol MAY be extended by implementors by creating additional
-`post_type`s. Implementors MUST only use `post_type`s greater than `255`. The
+`post_type`s. Implementors MUST only use `post_type > 255`. The
 first 256 are reserved for core protocol use.
 
 `num_links` MUST be set to 0 if there are no posts to link to.
