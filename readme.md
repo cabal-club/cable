@@ -418,6 +418,11 @@ Regarding the above section (5.4.3 Limits), hashes that are deduplicated by an
 intermediary peer, and thus not transmitted back to the requestor, do not count
 against the `limit`.
 
+An intermediary peer MAY also elect to perform deduplication in the other
+direction on Post Requests, by first checking their local database to see which
+hashes they already have posts for, and editing the original Post Request
+message to no longer request those posts, before forwarding that message on to
+further peers.
 
 ## 6. Wire Formats
 
