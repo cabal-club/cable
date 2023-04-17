@@ -177,13 +177,27 @@ carry out.
 
 **UTF-8**: The "UTF-8" encoding scheme outlined in [Chapter 2 Section 5](https://www.unicode.org/versions/Unicode15.0.0/ch02.pdf#G11165) of the Unicode 15.0.0 specification.
 
-### 4. BLAKE2b Parameters
+### 4. Cryptographic Parameters
+
+### 4.1 BLAKE2b
 The following are the general parameters to be used with BLAKE2b.
 
 - Digest byte length: 32
 - Key byte length (not used): 0
 - Salt (hexadecimal): `5b6b 41ed 9b34 3fe0`
 - Personalization (hexadecimal): `5126 fb2a 3740 0d2a`
+
+### 4.2 Ed25519
+
+Cable uses the Ed25519-SHA-512 variant of [Ed25519][Ed25519]:
+
+- *b* = 256
+- *H* = SHA-512
+- *q* = 2<sup>255</sup> - 19
+- The 255-bit encoding of **F**<sub>2<sup>255</sup>-19</sub> is the usual little-endian encoding of { 0, 1, ..., 2<sup>255</sup> - 20 }
+- ℓ = 2<sup>252</sup> + 27742317777372353535851937790883648493
+- *d* = -121655 / 121666 ∈ **F**<sub>q</sub>
+- *B* is the unique point (*x*,4/5) ∈ *E* for which *x* is positive
 
 ## 5. Data Model
 
@@ -966,7 +980,7 @@ Future work is planned around the outer layers of cable security:
 - [Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", RFC 2119, July 2003](https://www.rfc-editor.org/rfc/rfc2119)
 - [Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", RFC 8174, May 2017](https://www.rfc-editor.org/rfc/rfc8174)
 - [BLAKE2b](https://www.blake2.net/blake2.pdf)
-- [Ed25519](https://ed25519.cr.yp.to/)
+- [Ed25519][Ed25519]
 - [Unicode 15.0.0](https://www.unicode.org/versions/Unicode15.0.0/)
 
 ## 9. Informative References
@@ -983,3 +997,4 @@ Future work is planned around the outer layers of cable security:
 [BCP 14]: https://www.rfc-editor.org/bcp/bcp14
 [Tor]: https://www.torproject.org
 [I2P]: https://geti2p.net/en/
+[Ed25519]: https://ed25519.cr.yp.to/
