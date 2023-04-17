@@ -17,7 +17,7 @@ peer-to-peer group chatrooms.
   + [1.1 Terminology](#11-terminology)
 * [2. Scope](#2-scope)
 * [3. Definitions](#3-definitions)
-  + [4. Cryptographic Parameters](#4-cryptographic-parameters)
+* [4. Cryptographic Parameters](#4-cryptographic-parameters)
   + [4.1 BLAKE2b](#41-blake2b)
   + [4.2 Ed25519](#42-ed25519)
 * [5. Data Model](#5-data-model)
@@ -179,7 +179,7 @@ carry out.
 
 **UTF-8**: The "UTF-8" encoding scheme outlined in [Chapter 2 Section 5](https://www.unicode.org/versions/Unicode15.0.0/ch02.pdf#G11165) of the Unicode 15.0.0 specification.
 
-### 4. Cryptographic Parameters
+## 4. Cryptographic Parameters
 
 ### 4.1 BLAKE2b
 The following are the general parameters to be used with BLAKE2b.
