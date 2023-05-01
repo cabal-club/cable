@@ -41,7 +41,7 @@ peer-to-peer group chatrooms.
     - [5.4.4 Deduplication](#544-deduplication)
 * [6. Wire Formats](#6-wire-formats)
   + [6.1 Field tables](#61-field-tables)
-  + [6.2 Messages](#62-messages)
+  + [6.2 Message Formats](#62-message-formats)
     - [6.2.1 Message Header](#621-message-header)
     - [6.2.2 Requests](#622-requests)
       * [6.2.2.1 Header](#6221-header)
@@ -54,7 +54,7 @@ peer-to-peer group chatrooms.
       * [6.2.3.1 Hash Response](#6231-hash-response)
       * [6.2.3.2 Post Response](#6232-post-response)
       * [6.2.3.3 Channel List Response](#6233-channel-list-response)
-  + [6.3 Posts](#63-posts)
+  + [6.3 Post Formats](#63-post-formats)
     - [6.3.1 Header](#631-header)
     - [6.3.2 `post/text`](#632-posttext)
     - [6.3.3 `post/delete`](#633-postdelete)
@@ -487,7 +487,7 @@ The following data types are used:
 - `varint`: a variable-length unsigned integer. cable uses Protocol Buffer-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints).
 
 
-### 6.2 Messages
+### 6.2 Message Formats
 
 #### 6.2.1 Message Header
 
@@ -767,7 +767,7 @@ A recipient reads the zero or more (`channel_len`,`channel`) pairs until
 In order for pagination to work properly, clients MUST to use a stable sort
 method for the names of channels.
 
-### 6.3 Posts
+### 6.3 Post Formats
 
 #### 6.3.1 Header
 Every post MUST begin with the following 6-field header:
