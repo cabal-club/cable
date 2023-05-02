@@ -94,7 +94,7 @@ protocol.
 
 ## 1. Introduction
 The purpose of the cable wire protocol is to facilitate the members of a group
-chat to exchange crytographically signed documents with each other, such as
+chat to exchange cryptographically signed documents with each other, such as
 chat messages, spread across various user-defined channels.
 
 cable is designed to be:
@@ -207,7 +207,7 @@ Cable uses the Ed25519-SHA-512 variant of [Ed25519][Ed25519]:
 All of the durable data exchanged over the protocol are composed of posts.
 
 A post MUST have an author (via the required `public_key` field), and MUST
-provide a crytographic signature (via the required `signature` field) to prove
+provide a cryptographic signature (via the required `signature` field) to prove
 that they, in fact, authored it.
 
 When a user "makes a post", they are only writing to some local storage,
@@ -380,7 +380,7 @@ An incoming request with `ttl = 0` MUST NOT be forwarded.
 An incoming request with a `ttl > 0` SHOULD be forwarded along to all peers the
 client is connected to. A peer forwarding a request MUST decrement the `ttl` by
 one before sending it, to ensure the number of network hops does not exceed
-what the original requestor specified.
+what the original requester specified.
 
 To prevent request loops in the network, an incoming request with a known
 `req_id` MUST be discarded.
@@ -434,7 +434,7 @@ extraneous ones.
 
 #### 5.4.4 Deduplication
 A client who is also an intermediary peer MAY elect to perform deduplication on
-the behalf of a requestor, in order to reduce redundant retransmission of post
+the behalf of a requester, in order to reduce redundant retransmission of post
 or hash data (Post Response and Hash Response, respectively).
 
 For example, consider a client `A` sends a request to `B` with `ttl = 1`, who
@@ -446,7 +446,7 @@ edit these response messages, to omit the duplicates from being needlessly
 retransmitted onwards back to `A`.
 
 Regarding the above section (5.4.3 Limits), hashes that are deduplicated by an
-intermediary peer, and thus not transmitted back to the requestor, do not count
+intermediary peer, and thus not transmitted back to the requester, do not count
 against the `limit`.
 
 An intermediary peer MAY also elect to perform deduplication in the other
@@ -523,8 +523,8 @@ When a client forwards a request to further peers, the `req_id` MUST NOT be
 changed, so that routing loops can be more easily detected by peers in the
 network.
 
-The protocol MAY be extended by implementors by creating additional
-`msg_type`s. Implementors MUST only use `msg_type > 255`. The
+The protocol MAY be extended by implementers by creating additional
+`msg_type`s. Implementers MUST only use `msg_type > 255`. The
 first 256 are reserved for core protocol use.
 
 #### 6.2.2 Requests
@@ -626,7 +626,7 @@ lacks sufficient resources at the time to return thousands or hundreds of
 thousands of chat message hashes.
 
 A `limit` of 0 MUST be understood as having no maximum on the number of hashes
-the requestor wishes to receive.
+the requester wishes to receive.
 
 ##### 6.2.2.5 Channel State Request
 
@@ -643,10 +643,10 @@ field          | type               | desc
 
 A responder receiving this request MUST respond with 1 or more Hash Response
 messages, with only posts that relate to the current state of the channel.
-Requestors MAY discard hashes mapping to posts that do not contain relevant
+Requesters MAY discard hashes mapping to posts that do not contain relevant
 information.
 
-See Section 5.3.3 for context on what comprises channel state. Chat messages
+See Section 5.3.4 for context on what comprises channel state. Chat messages
 MUST NOT be included in responses to this request. Clients MUST be able to
 handle the hashes of unexpected types appearing in responses, and MAY choose
 for themselves whether to discard them or not.
@@ -764,7 +764,7 @@ field          | type                | desc
 A recipient reads the zero or more (`channel_len`,`channel`) pairs until
 `channel_len = 0`.
 
-In order for pagination to work properly, clients MUST to use a stable sort
+In order for pagination to work properly, clients MUST use a stable sort
 method for the names of channels.
 
 ### 6.3 Posts
@@ -789,8 +789,8 @@ scheme.
 The post type sections below document the fields that MUST follow these initial
 fields, depending on the `post_type`.
 
-The protocol MAY be extended by implementors by creating additional
-`post_type`s. Implementors MUST only use `post_type > 255`. The
+The protocol MAY be extended by implementers by creating additional
+`post_type`s. Implementers MUST only use `post_type > 255`. The
 first 256 are reserved for core protocol use.
 
 `num_links` MUST be set to 0 if there are no posts to link to.
@@ -825,7 +825,7 @@ their local storage, and not store the referenced posts in the future.
 field           | type                   | desc
 ----------------|------------------------|-------------------------
 `num_deletions` | `varint`               | how many hashes of posts there are to be deleted
-`hash`          | `u8[32*num_deletions]` | concatenated hashes of posts to be deleted
+`hashes`        | `u8[32*num_deletions]` | concatenated hashes of posts to be deleted
 
 `post_type` MUST be set to `1`.
 
@@ -894,7 +894,7 @@ the empty string, "".
 
 #### 6.3.6 `post/join`
 
-Publically announce membership in a channel.
+Publicly announce membership in a channel.
 
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
@@ -905,7 +905,7 @@ field          | type               | desc
 
 #### 6.3.7 `post/leave`
 
-Publically announce termination of membership in a channel.
+Publicly announce termination of membership in a channel.
 
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
@@ -964,7 +964,7 @@ Documented here are attacks that can come from *within* a cabal — by those who
 1. Posts that have already been ingested will be deduplicated (i.e. not re-ingested) by their content hash, so resending hashes or data does no harm in itself.
 
 #### 7.2.2.2 Data Integrity
-1. All posts are crytographically signed, and cannot be altered or forged unless a user's private key has been compromised.
+1. All posts are cryptographically signed, and cannot be altered or forged unless a user's private key has been compromised.
 2. Certain posts have implicit authorization (e.g. a `post/info` post can only alter its author's display name, and cannot be used to change another user's name), which is carried out by clients following the specification re: post ingestion logic.
 
 #### 7.2.2.3 Privilege Escalation
