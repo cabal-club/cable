@@ -83,7 +83,7 @@ peer-to-peer group chatrooms.
 ## 0. Background
 [Cabal][Cabal] is existing distributed peer-to-peer computer software for
 private group chats. It operates in a fashion different from the typical
-server-client model, where no machine is either an official nor *de facto*
+server-client model, where no machine is either an official nor de facto
 authority over others in the network. Instead, peers collaborate with each
 other to share data and build an eventually consistent view of that data.
 
@@ -155,7 +155,7 @@ carry out.
 
 **request**: A binary payload originating from a particular client.
 
-**response**: A binary payload, traversing the network from a particular client back to the one who issued an original request.
+**response**: A binary payload, traversing the network from a particular client back to the client who issued the original request.
 
 **`req_id`**: A unique 32-bit number that uniquely identifies a request traversing in the network, and any corresponding responses.
 
@@ -171,7 +171,7 @@ carry out.
 
 **head**: When used to refer to a post, any post that no other known post links to.
 
-**latest**: When used to refer to a post, the latest post is the post that, from a client's perspective at a given moment in time, is the head with the greatest timestamp.
+**latest**: When used to refer to a post, the latest post is that post which, from a client's perspective at a given moment in time, is the head with the greatest timestamp.
 
 **varint**: a variable-length unsigned integer. cable uses Protocol Buffer-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints).
 
@@ -229,9 +229,6 @@ Any post in cable can be addressed or referenced by its hash.
 
 The hash for a post is produced by putting a post's verbatim binary content,
 including the post header, through the BLAKE2b function.
-
-Implementations may benefit from a storage design that allows for quick look-up
-of a post's contents by its hash.
 
 #### 5.1.3 Links
 The `links` field in each post's header enables any post to refer to 0 or more
@@ -389,15 +386,15 @@ To prevent request loops in the network, an incoming request with a known
 In the lifetime of a given request, there are three exclusive roles an involved
 client machine can have:
 
-1. The **original requester**, who allocated the new request and has a set of
+1. The **original requester**: the client who allocated the new request and has a set of
    *outbound peers* they have sent that request to.
 
-2. An **intermediary peer**, who is any client who received the request from
+2. An **intermediary peer**: any client who received the request from
    one or more peers and has also forwarded it to others. An intermediary peer
    has both a set of *inbound peers* for a request as well as a set of *outbound peers*.
 
-3. A **terminal peer**, who is a client who received the request from one or
-   more peers and does NOT forwarded it to any others. A terminal peer has only
+3. A **terminal peer**: a client who received the request from one or
+   more peers and does NOT forward it to any others. A terminal peer has only
    a set of *inbound peers*.
 
 A peer handling a request who has *outbound peers* (original requester,
@@ -424,7 +421,7 @@ MUST honour that limit by counting how many hashes they send back to the
 requester, including hashes received through other peers that the responding
 client has forwarded that request to.
 
-For example, assume `A` sends a request to `B` with `limit = 50` and `ttl = 1`, and
+For example, assume `A` sends a request to `B` with `limit = 50` and `ttl = 1`.
 `B` forwards the request to `C` and `D`. `B` may send back 15 hashes to `A` at
 first, which means there are now a maximum of `50 - 15 = 35` hashes left for `C`
 and `D` combined for `B` to potentially send back.
@@ -437,9 +434,9 @@ A client who is also an intermediary peer MAY elect to perform deduplication on
 the behalf of a requester, in order to reduce redundant retransmission of post
 or hash data (Post Response and Hash Response, respectively).
 
-For example, consider a client `A` sends a request to `B` with `ttl = 1`, who
-then forwards that request to their peers `C` and `D`. If `B` responds to `A`
-with a set of N hashes or posts, `B` could track what they sent, and, in the
+For example, consider a client `A` which sends a request to `B` with `ttl = 1`.
+`B` then forwards that request to their peers `C` and `D`. If `B` responds to `A`
+with a set of N hashes or posts `B` could track what they sent. Additionally, in the
 case that `C` or `D`'s responses -- routed through `B` -- contain any
 duplicates that `B` knows were already sent back to `A`, `B` could choose to
 edit these response messages, to omit the duplicates from being needlessly
@@ -484,7 +481,7 @@ If `foo = 17` and `bar = [3,6,8,64]`, the following binary payload would be as f
 The following data types are used:
 - `u8`: a single unsigned byte.
 - `u8[N]`: a sequence of exactly `N` unsigned bytes.
-- `varint`: a variable-length unsigned integer. cable uses Protocol Buffer-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints).
+- `varint`: a variable-length unsigned integer. 
 
 
 ### 6.2 Messages
@@ -598,7 +595,7 @@ start and end time, optionally subscribing to future chat messages.
 field          | type               | desc
 ---------------|--------------------|----------------------------
 `channel_len`  | `varint`           | length of the channel's name, in bytes
-`channel`      | `u8[channel_len] ` | channel name, as a UTF-8 string
+`channel`      | `u8[channel_len] ` | channel name (UTF-8)
 `time_start`   | `varint`           | seconds since UNIX Epoch
 `time_end`     | `varint`           | seconds since UNIX Epoch
 `limit`        | `varint`           | maximum number of hashes to return
@@ -635,8 +632,8 @@ optionally subscribe to future state changes.
 
 field          | type               | desc
 ---------------|--------------------|-----------------------------------
-`channel_len`  | `varint`           | length of the channel's name, in bytes (UTF-8)
-`channel`      | `u8[channel_len] ` | channel name as a string of text
+`channel_len`  | `varint`           | length of the channel's name, in bytes 
+`channel`      | `u8[channel_len] ` | channel name (UTF-8)
 `future`       | `varint`           | whether to include live / future state hashes
 
 `msg_type` MUST be set to `5`.
@@ -742,7 +739,7 @@ they have concluded the request on their side.
 Clients SHOULD hash an entire post to check whether it is post that it was
 expecting (i.e. had sent out a Post Request for). However, misbehaving peers
 may end up providing posts that are still coincidentally useful to the client,
-so they MAY elect to keep certain posts anyways.
+so clients MAY elect to keep certain posts.
 
 Each post MUST contain the complete and valid body of a known post type
 (Section 6.3).
@@ -808,9 +805,9 @@ Post a chat message to a channel.
 field          | type               | desc
 ---------------|--------------------|---------------------------------
 `channel_len`  | `varint`           | length of the channel's name, in bytes
-`channel`      | `u8[channel_len] ` | channel name, a UTF-8 string
+`channel`      | `u8[channel_len] ` | channel name (UTF-8)
 `text_len`     | `varint`           | length of the text field, in bytes
-`text`         | `u8[text_len] `    | chat message text, a UTF-8 string
+`text`         | `u8[text_len] `    | chat message text (UTF-8)
 
 `post_type` MUST be set to `0`.
 
@@ -833,20 +830,22 @@ A client interpreting this post MUST only perform a local deletion of the
 referenced posts if the author (`post.public_key`) matches the author of the
 post to be deleted (i.e. only the user who authored a post may delete it).
 
+    comment: specify that num_deletions MUST be 1 or higher?
+
 #### 6.3.4 `post/info`
 
 Set public information about one's self.
 
 field        | type               | desc
 -------------|--------------------|-------------------------
-`key1_len`   | `varint`           | length of the first key to set
+`key1_len`   | `varint`           | length of the first key to set, in bytes
 `key1`       | `u8[key_len]`      | name of the first key to set (UTF-8)
-`value1_len` | `varint`           | length of the first value to set, belonging to `key1`
+`value1_len` | `varint`           | length of the first value to set, belonging to `key1`, in bytes
 `value1`     | `u8[value_len]`    | value of the first key:value pair
 ...          |                    |
-`keyN_len`   | `varint`           | length of the Nth key to set
+`keyN_len`   | `varint`           | length of the Nth key to set, in bytes
 `keyN`       | `u8[key_len]`      | name of the Nth key to set (UTF-8)
-`valueN_len` | `varint`           | length of the Nth value to set, belonging to `keyN`
+`valueN_len` | `varint`           | length of the Nth value to set, belonging to `keyN`, in bytes
 `valueN`     | `u8[value_len]`    | value of the Nth key:value pair
 
 `post_type` MUST be set to `2`.
@@ -882,9 +881,9 @@ Set a topic for a channel.
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
 `channel_len`  | `varint`           | length of the channel's name, in bytes
-`channel`      | `u8[channel_len] ` | channel name, as a UTF-8 string
+`channel`      | `u8[channel_len] ` | channel name (UTF-8)
 `topic_len`    | `varint`           | length of the topic field, in bytes
-`topic`        | `u8[topic_len] `   | topic content, as a UTF-8 string
+`topic`        | `u8[topic_len] `   | topic content (UTF-8)
 
 `post_type` MUST be set to `3`.
 
@@ -899,7 +898,7 @@ Publicly announce membership in a channel.
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
 `channel_len`  | `varint`           | length of the channel's name, in bytes
-`channel`      | `u8[channel_len] ` | channel name, as a UTF-8 string
+`channel`      | `u8[channel_len] ` | channel name (UTF-8)
 
 `post_type` MUST be set to `4`.
 
@@ -910,7 +909,7 @@ Publicly announce termination of membership in a channel.
 field          | type               | desc
 ---------------|--------------------|-------------------------------------------------------
 `channel_len`  | `varint`           | length of the channel's name, in bytes
-`channel`      | `u8[channel_len] ` | channel name, as a UTF-8 string
+`channel`      | `u8[channel_len] ` | channel name (UTF-8)
 
 `post_type` MUST be set to `5`.
 
