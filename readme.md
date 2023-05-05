@@ -608,7 +608,7 @@ field          | type               | desc
 A responder receiving this request MUST respond with 1 or more Hash Response
 messages.
 
-`time_start` is the post with the oldest timestamp the requestor is interested
+`time_start` is the post with the oldest timestamp the requester is interested
 in; `time_end` is the newest.
 
 A responder SHOULD include the hashes of all known `post/text` and
