@@ -41,7 +41,7 @@ peer-to-peer group chatrooms.
     - [5.4.5 Synchronization](#545-synchronization)
 * [6. Wire Formats](#6-wire-formats)
   + [6.1 Field tables](#61-field-tables)
-  + [6.2 Posts](#62-posts)
+  + [6.2 Post Formats](#62-post-formats)
     - [6.2.1 Header](#621-header)
     - [6.2.2 `post/text`](#622-posttext)
     - [6.2.3 `post/delete`](#623-postdelete)
@@ -49,7 +49,7 @@ peer-to-peer group chatrooms.
     - [6.2.5 `post/topic`](#625-posttopic)
     - [6.2.6 `post/join`](#626-postjoin)
     - [6.2.7 `post/leave`](#627-postleave)
-  + [6.3 Messages](#63-messages)
+  + [6.3 Message Formats](#63-message-formats)
     - [6.3.1 Message Header](#631-message-header)
     - [6.3.2 Requests](#632-requests)
       * [6.3.2.1 Header](#6321-header)
@@ -483,7 +483,7 @@ The following data types are used:
 - `u8[N]`: a sequence of exactly `N` unsigned bytes.
 - `varint`: a variable-length unsigned integer. 
 
-### 6.2 Posts
+### 6.2 Post Formats
 
 #### 6.2.1 Header
 Every post MUST begin with the following 6-field header:
@@ -632,7 +632,7 @@ field          | type               | desc
 
 `post_type` MUST be set to `5`.
 
-### 6.3 Messages
+### 6.3 Message Formats
 
 #### 6.3.1 Message Header
 
