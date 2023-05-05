@@ -167,7 +167,7 @@ carry out.
 
 **UNIX epoch**: Midnight UTC on January 1st, 1970.
 
-**timestamp**: A point in time represented by the number of seconds since the UNIX epoch.
+**timestamp**: A point in time represented by the number of milliseconds since the UNIX epoch.
 
 **head**: When used to refer to a post, any post that no other known post links to.
 
