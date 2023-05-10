@@ -455,19 +455,24 @@ farther back in time to acquire a more complete set of chat message history.
 ## 6. Wire Formats
 
 ### 6.1 Field tables
-The following sections make use of tables to convey the ordering of bytes for
-various message types, such as the following:
+The following tables of fields describe how to encode binary payloads using a
+combination of varints and fixed-length unsigned byte sequences. Each table
+also defines the exact byte order required to produce a particular type of
+payload, where the first field describes the first set of bytes and so on.
+Taken together, field tables describe how to produce and decode binary payloads
+from and into the different post and message types described in subsequent
+sections.
 
 field      | type     | desc
 -----------|----------|-------------------------------------------------------------
 `foo`      | `u8`     | description of the field `foo`
 `bar`      | `u8[4]`  | description of the field `bar`
 
-The above example describes a binary payload that is 5 bytes long, where the
-one byte of field `foo` is followed immediately by the 4 bytes describing
-`bar`.
+The above example describes a 5 byte binary payload. The payload's first byte
+is defined to be `foo`. The 1 byte `foo` is followed immediately by `bar`,
+which is defined to be 4 bytes long.
 
-If `foo = 17` and `bar = [3,6,8,64]`, the following binary payload would be as follows:
+If `foo = 17` and `bar = [3,6,8,64]`, the binary payload would be as follows:
 
 ```
  foo   bar
