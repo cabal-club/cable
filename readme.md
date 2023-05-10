@@ -442,8 +442,8 @@ time_start = now() - WINDOW_WIDTH
 ```
 
 where `now()` is the current system UNIX Time, and `WINDOW_WIDTH` is the size
-of the "rolling window" to track chat messages within, in seconds. Clients are
-RECOMMENDED to use a `WINDOW_WIDTH` of one week (25200 seconds), though this
+of the "rolling window" to track chat messages within, in milliseconds. Clients are
+RECOMMENDED to use a `WINDOW_WIDTH` of one week (25,200,000 milliseconds), though this
 value MAY be customized, since there are network environments where users may
 be offline for up to several months at a time, and a much wider rolling window
 would be necessary to ensure those chat messages are synchronized when such a
@@ -495,7 +495,7 @@ field        | type              | desc
 `num_links`  | `varint`          | how many hashes this post links back to (0+)
 `links`      | `u8[32*num_links]`| hashes of the latest posts in this channel/context
 `post_type`  | `varint`          | see custom post type sections below
-`timestamp`  | `varint`          | seconds since UNIX Epoch
+`timestamp`  | `varint`          | milliseconds since UNIX Epoch
 
 The `signature` for a post is produced by signing all fields of the post
 immediately after the `signature` field, including the `post_type`-specific
@@ -744,8 +744,8 @@ field          | type               | desc
 ---------------|--------------------|----------------------------
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name (UTF-8)
-`time_start`   | `varint`           | seconds since UNIX Epoch
-`time_end`     | `varint`           | seconds since UNIX Epoch
+`time_start`   | `varint`           | milliseconds since UNIX Epoch
+`time_end`     | `varint`           | milliseconds since UNIX Epoch
 `limit`        | `varint`           | maximum number of hashes to return
 
 `msg_type` MUST be set to `4`.
