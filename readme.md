@@ -767,7 +767,8 @@ A responder SHOULD include the hashes of all known `post/text` and
 A `time_end` of 0 MUST be understood as a request to keep this request alive
 even after all known hashes in the range `time_start` to `now()` are provided,
 and continue to receive any new chat messages that the responder learns of in
-the future, so long as this request is still alive.
+the future, so long as this request is still alive. `time_start` MUST be
+respected regardless of whether `time_end` is 0 or some definite value.
 
 Responding clients SHOULD respond with all known chat messages within the
 requested time range, though they may desire not to in certain circumstances,
