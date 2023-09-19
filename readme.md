@@ -719,7 +719,7 @@ This request can be used to terminated previously sent, long-lived requests.
 
 field        | type                | desc
 -------------|---------------------|-------------------------------------
-`cancel_id`  | `varint`            | the `req_id` of the request to be cancelled
+`cancel_id`  | `u8[4]`             | the `req_id` of the request to be cancelled
 
 Receiving this request indicates that any further responses sent back with a
 `req_id` matching the given `cancel_id` will be ignored and discarded.
