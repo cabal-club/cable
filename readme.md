@@ -563,12 +563,12 @@ Set public information about one's self.
 field        | type               | desc
 -------------|--------------------|-------------------------
 `key1_len`   | `varint`           | length of the first key to set, in bytes
-`key1`       | `u8[key_len]`      | name of the first key to set (UTF-8)
+`key1`       | `u8[key1_len]`     | name of the first key to set (UTF-8)
 `value1_len` | `varint`           | length of the first value to set, belonging to `key1`, in bytes
 `value1`     | `u8[value_len]`    | value of the first key:value pair
 ...          |                    |
 `keyN_len`   | `varint`           | length of the Nth key to set, in bytes
-`keyN`       | `u8[key_len]`      | name of the Nth key to set (UTF-8)
+`keyN`       | `u8[keyN_len]`     | name of the Nth key to set (UTF-8)
 `valueN_len` | `varint`           | length of the Nth value to set, belonging to `keyN`, in bytes
 `valueN`     | `u8[value_len]`    | value of the Nth key:value pair
 
