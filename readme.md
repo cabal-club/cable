@@ -173,7 +173,7 @@ carry out.
 
 **latest**: When used to refer to a post, the latest post is that post which, from a client's perspective at a given moment in time, is the head with the greatest timestamp.
 
-**varint**: a variable-length unsigned integer. cable uses Protocol Buffer-style [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints).
+**varint**: a variable-length unsigned integer, encoded as [Unsigned LEB128](https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128).
 
 **Unicode**: The [Unicode 15.0.0 standard](https://www.unicode.org/versions/Unicode15.0.0/).
 
