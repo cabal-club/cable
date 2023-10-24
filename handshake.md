@@ -380,12 +380,15 @@ might as well disconnect, right? But a victim can't necessarily tell the
 difference. Feedback welcome.*
 
 ### 5.1 Message encoding
-When a Cable Wire Protocol message is to be sent, it MUST first be passed to
-the Noise function `EncryptWithAd(ad, plaintext)`, with `ad` being 0 bytes of
-data, and `plaintext` being the entirety of the Cable Wire Protocol message.
+When a Cable Wire Protocol message, `plaintext` is to be sent, it MUST follow
+these steps:
 
-The resulting ciphertext MUST then be prefixed with a 2-byte little endian
-unsigned integer equal to the length of the payload, in bytes.
+1. Be converted to a ciphertext, using the Noise function EncryptWithAd: `ciphertext = EncryptWithAd(ad, plaintext)`, with `ad` being 0 bytes of data.
+
+2. Write a 2-byte little endian unsigned integer to the other host, equal to
+   the length of `ciphertext`, in bytes.
+
+3. Write the bytes of `ciphertext` to the other host.
 
 For example, if the `ciphertext` bytes were `21 f3 cc a0`, the bytes sent over
 the network transport would be a little endian-encoded prefix of `4`, followed
@@ -395,12 +398,17 @@ Note that the maximum Noise message length is 65535 bytes, so any input
 `plaintext` MUST be less than or equal to this in length.
 
 ### 5.2. Message decoding
-Any next two bytes received MUST be interpreted as a length indicator of how many bytes long the Cable Wire Protocol message is to follow.
+Reading a message MUST follow these steps:
 
-Once read from the transport, this ciphertext MUST be passed into the Noise
-function `DecryptWithAd(ad, ciphertext)`, with `ad` being 0 bytes of data, and
-`ciphertext` being the raw bytes of received data. The returned plaintext MAY
-then be parsed as a Cable Wire Protocol message.
+1. Read two bytes from the host, interpreting them as a little-endian unsigned
+   integer, `len`.
+
+2. Read `len` bytes from the host, `ciphertext`.
+
+3. Decrypt the ciphertext, using the Noise function DecryptWithAd: `plaintext = DecryptWithAd(ad, ciphertext)`, with `ad` being 0 bytes of data.
+
+4. The returned `plaintext` may then be parsed as a Cable Wire Protocol
+   message.
 
 ## 6. Security considerations
 ### 6.1 Out-of-scope attacks
