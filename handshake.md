@@ -2,6 +2,8 @@
 
 Version: 1.0-draft
 
+Published: October 2023
+
 Author: Kira Oakley
 
 ## Table of Contents
@@ -47,7 +49,7 @@ Wire Protocol.
 
 The purpose of the Cable Handshake is three-fold:
 
-1. In order to both ensure hosts' implementation versions are compatible.
+1. To ensure both hosts' implementation versions are compatible.
 2. For each host to prove to the other that they know the secret *cabal key*.
 2. To establish an encrypted channel between the two hosts, allowing Cable Wire
    Protocol messages to flow.
@@ -202,7 +204,7 @@ successfully complete a Noise handshake.
 The cabal key effectively acts as a "secret passphrase": only hosts who know
 the key can successfully handshake and then exchange Cable Wire Protocol
 messages. If either party doesn't know the key, Noise will indicate handshake
-failure. This key is only ever used locally is never sent over the network
+failure. This key is only ever used locally and is never sent over the network
 transport. Members of a cabal can share the cabal key over various out-of-band
 means (e.g. other chat programs, written on paper, etc.)
 
@@ -212,7 +214,7 @@ The pre-shared key MUST be mixed into the handshake state as per the rules in
 ## 3. Version Exchange
 ### 3.1 Protocol versioning scheme
 Each revision of the Cable specification has a major and minor version
-associated with it. For example, `1.3`. An implementation the Cable
+associated with it. For example, `1.3`. An implementation of the Cable
 specification shares the same version name as the specification version it
 implements. So, an implementation of version `3.5` of the Cable specification
 would consider its version to also be `3.5`.
