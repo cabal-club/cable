@@ -396,8 +396,8 @@ For example, if the `ciphertext` bytes were `21 f3 cc a0`, the bytes sent over
 the network transport would be a little endian-encoded prefix of `4`, followed
 by the ciphertext bytes: `04 00 21 f3 cc a0`.
 
-Note that the maximum Noise message length is 65535 bytes, so any input
-`plaintext` MUST be less than or equal to this in length.
+The maximum Noise message length is 65535 bytes, so any input `plaintext` MUST
+be less than or equal to this in length.
 
 ### 5.2. Message decoding
 Reading a message MUST follow these steps:
