@@ -22,9 +22,10 @@ Author: Kira Oakley
   + [3.2 Protocol Version Message exchange](#32-protocol-version-message-exchange)
 * [4. Noise Handshake](#4-noise-handshake)
 * [5. Post-Handshake Operation](#5-post-handshake-operation)
-  + [5.1 Fragmentation](#51-fragmentation)
-  + [5.2 Message encoding](#52-message-encoding)
-  + [5.3 Message decoding](#53-message-decoding)
+  + [5.1 Pseudocode functions](#51-pseudocode-functions)
+  + [5.2 Fragmentation](#52-fragmentation)
+  + [5.3 Message encoding](#53-message-encoding)
+  + [5.4 Message decoding](#54-message-decoding)
 * [6. Security considerations](#6-security-considerations)
   + [6.1 Out-of-scope attacks](#61-out-of-scope-attacks)
   + [6.2 In-scope attacks](#62-in-scope-attacks)
@@ -378,6 +379,7 @@ In this context, "transport messages" are Cable Wire Protocol messages. If
 `DecryptWithAd()` signals an error due to `DECRYPT()` failure, the client
 SHOULD terminate the connection.
 
+### 5.1 Pseudocode functions
 For the remainder of this section, define the following pseudocode elements:
 
 - Let `ZERO` be a empty sequence of bytes.
@@ -389,7 +391,7 @@ For the remainder of this section, define the following pseudocode elements:
 - Let `bytes.length` be a hypothetical member variable that returns the length of the byte sequence `bytes`, in bytes.
 - Let `min(a, b)` be a hypothetical function that returns the smaller number of `a` and `b`.
 
-### 5.1 Fragmentation
+### 5.2 Fragmentation
 The maximum Noise message length is 65535 bytes, so any input `plaintext`
 exceeding this length must be fragmented in order to facilitate encrypted
 transport.
@@ -400,7 +402,7 @@ of the payload are encrypted and written to the network.
 
 See the subsequent subsections for concrete details.
 
-### 5.2 Message encoding
+### 5.3 Message encoding
 This subsection defines pseudocode function `WriteMsg(plaintext)` that takes
 the full Cable Wire Protocol message payload, `plaintext`, as bytes, and writes
 them to the network, performing encryption and fragmentation:
@@ -436,7 +438,7 @@ For example, if the `ciphertext` bytes were `21 f3 cc a0`, the bytes sent over
 the network transport would be a little endian-encoded prefix of `4`, followed
 by the ciphertext bytes: `04 00 21 f3 cc a0`.
 
-### 5.3 Message decoding
+### 5.4 Message decoding
 This subsection defines pseudocode function `plaintext = ReadMsg(len)` that
 reads a ciphertext message of length `len`, performing de-fragmentation and
 decryption:
