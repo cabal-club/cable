@@ -373,14 +373,9 @@ followed:
 > `DecryptWithAd()` signal an error due to nonce exhaustion, then the
 > application must delete the `CipherState` and terminate the session.
 
-In this context, "transport messages" are Cable Wire Protocol messages.
-
-**Q(kira)**: *unsure about whether impls SHOULD or SHOULD NOT terminate the
-connection if decryption fails. If it's a spoofed packet, NOT terminating is
-the way to go -- just ignore the garbage. But if an active attacker is
-modifying ciphertexts to make them invalid, they could do that indefinitely, so
-might as well disconnect, right? But a victim can't necessarily tell the
-difference. Feedback welcome.*
+In this context, "transport messages" are Cable Wire Protocol messages. If
+`DecryptWithAd()` signals an error due to `DECRYPT()` failure, the client
+SHOULD terminate the connection.
 
 For the next two subsections,
 
