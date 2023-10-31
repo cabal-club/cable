@@ -349,10 +349,11 @@ described here, for how incoming and outgoing data speaking the Cable Wire
 Protocol must be encoded and decoded.
 
 At a high level, all Cable Wire Protocol messages need to be passed through
-Noise for encryption, and then prefixed with a length indicator. Incoming Cable
-Wire Protocol messages will also be length-prefixed, and the message bodies
-will be encrypted as *ciphertext*s, and must be run through Noise for
-decryption.
+Noise for encryption, and then prefixed with an encrypted length indicator.
+Incoming Cable Wire Protocol messages will also be length-prefixed, and the
+message bodies will be encrypted as *ciphertext*s, and must be run through
+Noise for decryption. There are additional steps to handle message
+fragmentation, described in the next subsection.
 
 The Noise function `Split()`, run at the end of the Noise Handshake, returns a
 pair of `CipherState` objects `(c1, c2)` to be used as follows:
@@ -384,11 +385,46 @@ difference. Feedback welcome.*
 For the next two subsections,
 
 - Let `ZERO` be a empty sequence of bytes.
-- Let `EncryptWithAd()` and `DecryptWithAd` be the Noise functions of the same names.
+- Let `EncryptWithAd()` and `DecryptWithAd()` be the Noise functions of the same names.
 - Let `WriteBytes(bytes)` be a hypothetical function that writes `bytes` bytes over the network to the other host.
 - Let `bytes = ReadBytes(len)` be a hypothetical function that reads `len` bytes over the network to the other host, and returns those bytes as `bytes`.
+- Let `bytes.slice(start, length)` be a hypothetical member function that returns a slice of a sequence of bytes, starting at position `start`, and including the next `length` bytes.
+- Let `result = bytes.concat(bytes2)` be a hypothetical member function that concatenates the byte sequence `bytes2` onto the existing byte sequence `bytes`, producing the new byte sequence `result`.
+- Let `bytes.length` be a hypothetical member variable that returns the length of the byte sequence `bytes`, in bytes.
+- Let `min(a, b)` be a hypothetical function that returns the smaller number of `a` and `b`.
 
-### 5.1 Message encoding
+### 5.1 Fragmentation
+The maximum Noise message length is 65535 bytes, so any input `plaintext`
+exceeding this length must be fragmented in order to facilitate encrypted
+transport.
+
+At a high level, this is done by breaking the payload into segments of length
+at most 65535 bytes, and encrypting and sending each segment, until all bytes
+of the payload are encrypted and written to the network.
+
+See the subsequent subsections for concrete details.
+
+### 5.2 Message encoding
+This subsection defines pseudocode function `WriteMsg(plaintext)` that takes
+the full Cable Wire Protocol message payload, `plaintext`, as bytes, and writes
+them to the network, performing encryption and fragmentation:
+
+```js
+function WriteMsg (plaintext) {
+  let written = 0
+  while (written < plaintext.length) {
+    let bytes = plaintext.slice(written, min(65535, plaintext.length - written))
+    let ciphertext = EncryptWithAd(ZERO, bytes)
+    WriteBytes(ciphertext)
+    written += bytes.length
+  }
+}
+```
+
+If, for example, a `plaintext` of length 90200 were to be encoded & written,
+the first 65535 bytes would first be encrypted and written, followed by the
+remaining 24665 bytes being encrypted and written.
+
 When a Cable Wire Protocol message, `plaintext` is to be sent, it MUST follow
 these steps:
 
@@ -398,28 +434,39 @@ these steps:
 
 3. `WriteBytes(cipherlen)`
 
-4. `ciphertext = EncryptWithAd(ZERO, plaintext)`.
-
-5. `WriteBytes(ciphertext)`
+4. `WriteMsg(plaintext)`
 
 For example, if the `ciphertext` bytes were `21 f3 cc a0`, the bytes sent over
 the network transport would be a little endian-encoded prefix of `4`, followed
 by the ciphertext bytes: `04 00 21 f3 cc a0`.
 
-The maximum Noise message length is 65535 bytes, so any input `plaintext` MUST
-be less than or equal to this in length.
+### 5.3 Message decoding
+This subsection defines pseudocode function `plaintext = ReadMsg(len)` that
+reads a ciphertext message of length `len`, performing de-fragmentation and
+decryption:
 
-### 5.2. Message decoding
-Reading a message MUST follow these steps:
+```js
+function ReadMsg (len) {
+  let plaintext = ZERO
+  let bytesRemaining = len
+  while (bytesRemaining > 0 {
+    let segmentLen = min(65535, bytesRemaining)
+    let ciphertext = ReadBytes(segmentLen)
+    let segment = DecryptWithAd(ZERO, ciphertext)
+    plaintext = plaintext.concat(segment)
+    bytesRemaining -= segmentLen
+  }
+}
+```
+
+Reading a Cable Wire Protocol message MUST follow these steps:
 
 1. `cipherlen = ReadBytes(2)`, interpreting these 2 bytes as a little-endian
    unsigned integer.
 
 2. `len = DecryptWithAd(ZERO, cipherlen)`
 
-3. `ciphertext = ReadBytes(len)`
-
-4. `plaintext = DecryptWithAd(ZERO, ciphertext)`
+4. `plaintext = ReadMsg(len)`
 
 5. The resulting bytes `plaintext` may then be parsed as a Cable Wire Protocol
    message.
@@ -458,11 +505,6 @@ hosts running older versions with known security vulnerabilities, this
 information could be used to then explicitly target that host. It's worth
 mentioning that, at time of writing, no such vulnerabilities are known to
 exist.
-
-Post-handshake messages are length-prefixed in cleartext, so an active attacker
-could prevent message ciphertexts from being properly parsed by their intended
-recipient by modifying length prefixes to make messages unparseable by their
-recipient.
 
 This document does not provide any mandates on how the cabal key is stored. If
 stored on disk in plaintext, it would be vulnerable to any unauthorized access
