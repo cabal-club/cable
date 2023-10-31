@@ -396,9 +396,10 @@ The maximum Noise message length is 65535 bytes, so any input `plaintext`
 exceeding this length must be fragmented in order to facilitate encrypted
 transport.
 
-At a high level, this is done by breaking the payload into segments of length
-at most 65535 bytes, and encrypting and sending each segment, until all bytes
-of the payload are encrypted and written to the network.
+At a high level, this is done by the following steps:
+
+1. If the remaining unsent bytes are less than 65536 bytes in length, encrypt and send it over the network; done.
+2. Otherwise, encrypt and send the first 65535 bytes; return to step 1.
 
 See the subsequent subsections for concrete details.
 
