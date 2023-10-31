@@ -381,16 +381,26 @@ modifying ciphertexts to make them invalid, they could do that indefinitely, so
 might as well disconnect, right? But a victim can't necessarily tell the
 difference. Feedback welcome.*
 
+For the next two subsections,
+
+- Let `ZERO` be a empty sequence of bytes.
+- Let `EncryptWithAd()` and `DecryptWithAd` be the Noise functions of the same names.
+- Let `WriteBytes(bytes)` be a hypothetical function that writes `bytes` bytes over the network to the other host.
+- Let `bytes = ReadBytes(len)` be a hypothetical function that reads `len` bytes over the network to the other host, and returns those bytes as `bytes`.
+
 ### 5.1 Message encoding
 When a Cable Wire Protocol message, `plaintext` is to be sent, it MUST follow
 these steps:
 
-1. Be converted to a ciphertext, using the Noise function EncryptWithAd: `ciphertext = EncryptWithAd(ad, plaintext)`, with `ad` being 0 bytes of data.
+1. Compute the length of the payload, `plaintext`, in bytes, `len`.
 
-2. Write a 2-byte little endian unsigned integer to the other host, equal to
-   the length of `ciphertext`, in bytes.
+2. Encrypt `len` as a two-byte unsigned little endian integer: `cipherlen = EncryptWithAd(ZERO, len)`.
 
-3. Write the bytes of `ciphertext` to the other host.
+3. `WriteBytes(cipherlen)`
+
+4. `ciphertext = EncryptWithAd(ZERO, plaintext)`.
+
+5. `WriteBytes(ciphertext)`
 
 For example, if the `ciphertext` bytes were `21 f3 cc a0`, the bytes sent over
 the network transport would be a little endian-encoded prefix of `4`, followed
@@ -402,14 +412,16 @@ be less than or equal to this in length.
 ### 5.2. Message decoding
 Reading a message MUST follow these steps:
 
-1. Read two bytes from the host, interpreting them as a little-endian unsigned
-   integer, `len`.
+1. `cipherlen = ReadBytes(2)`, interpreting these 2 bytes as a little-endian
+   unsigned integer.
 
-2. Read `len` bytes from the host, `ciphertext`.
+2. `len = DecryptWithAd(ZERO, cipherlen)`
 
-3. Decrypt the ciphertext, using the Noise function DecryptWithAd: `plaintext = DecryptWithAd(ad, ciphertext)`, with `ad` being 0 bytes of data.
+3. `ciphertext = ReadBytes(len)`
 
-4. The returned `plaintext` may then be parsed as a Cable Wire Protocol
+4. `plaintext = DecryptWithAd(ZERO, ciphertext)`
+
+5. The resulting bytes `plaintext` may then be parsed as a Cable Wire Protocol
    message.
 
 ## 6. Security considerations
