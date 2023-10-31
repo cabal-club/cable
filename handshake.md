@@ -378,7 +378,7 @@ In this context, "transport messages" are Cable Wire Protocol messages. If
 `DecryptWithAd()` signals an error due to `DECRYPT()` failure, the client
 SHOULD terminate the connection.
 
-For the next two subsections,
+For the remainder of this section, define the following pseudocode elements:
 
 - Let `ZERO` be a empty sequence of bytes.
 - Let `EncryptWithAd()` and `DecryptWithAd()` be the Noise functions of the same names.
