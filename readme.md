@@ -639,10 +639,6 @@ field          | type               | desc
 
 ### 6.3 Message Formats
 
-Messages MUST NOT exceed 65535 bytes in length. This is to accommodate a
-ciphertext restriction in the operation of encryption in the [Cable Handshake
-protocol](./handshake.md), under *5.1 Message encoding*.
-
 #### 6.3.1 Message Header
 
 All messages MUST begin with the following header fields:
