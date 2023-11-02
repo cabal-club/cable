@@ -382,13 +382,13 @@ SHOULD terminate the connection.
 ### 5.1 Pseudocode functions
 For the remainder of this section, define the following pseudocode elements:
 
-- Let `ZERO` be a empty sequence of bytes.
+- Let `ZERO` be an empty sequence of bytes.
 - Let `EncryptWithAd()` and `DecryptWithAd()` be the Noise functions of the same names.
 - Let `WriteBytes(bytes)` be a hypothetical function that writes `bytes` bytes over the network to the other host.
-- Let `bytes = ReadBytes(len)` be a hypothetical function that reads `len` bytes over the network to the other host, and returns those bytes as `bytes`.
-- Let `bytes.slice(start, length)` be a hypothetical member function that returns a slice of a sequence of bytes, starting at position `start`, and including the next `length` bytes.
-- Let `result = bytes.concat(bytes2)` be a hypothetical member function that concatenates the byte sequence `bytes2` onto the existing byte sequence `bytes`, producing the new byte sequence `result`.
-- Let `bytes.length` be a hypothetical member variable that returns the length of the byte sequence `bytes`, in bytes.
+- Let `bytes = ReadBytes(len)` be a hypothetical function that reads `len` bytes over the network from the other host, and returns those bytes as `bytes`.
+ - Let `bytes.slice(start, length)` be a hypothetical function on a byte sequence that returns a slice of a sequence of bytes, starting at position `start`, and including the next `length` bytes.
+ - Let `result = bytes.concat(bytes2)` be a hypothetical function on a byte sequence that concatenates the byte sequence `bytes2` onto the existing byte sequence `bytes`, producing the new byte sequence `result`.
+ - Let `bytes.length` be a hypothetical property of a byte sequence that returns the length of the byte sequence `bytes`, in bytes.
 - Let `min(a, b)` be a hypothetical function that returns the smaller number of `a` and `b`.
 
 ### 5.2 Fragmentation
@@ -448,7 +448,7 @@ decryption:
 function ReadMsg (len) {
   let plaintext = ZERO
   let bytesRemaining = len
-  while (bytesRemaining > 0 {
+  while (bytesRemaining > 0) {
     let segmentLen = min(65535, bytesRemaining)
     let ciphertext = ReadBytes(segmentLen)
     let segment = DecryptWithAd(ZERO, ciphertext)
@@ -504,6 +504,10 @@ hosts running older versions with known security vulnerabilities, this
 information could be used to then explicitly target that host. It's worth
 mentioning that, at time of writing, no such vulnerabilities are known to
 exist.
+
+An active attacker could manipulate the Protocol Version messages such that two
+hosts are handshake due to maliciously changed version number, making each host
+appear to have sent an incompatible major version number.
 
 This document does not provide any mandates on how the cabal key is stored. If
 stored on disk in plaintext, it would be vulnerable to any unauthorized access
