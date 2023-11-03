@@ -45,7 +45,7 @@ Cable consists of two protocols:
 1. The Cable Handshake (explained in this document)
 2. The Cable Wire Protocol [[4]](#ref4)
 
-The Cable Handshake protocol must be executed first. Upon successful completion
+The Cable Handshake protocol MUST be executed first. Upon successful completion
 of the handshake, the pair of hosts may then exchange messages using the Cable
 Wire Protocol.
 
@@ -118,7 +118,7 @@ Framework*, which is discussed further in the next subsection.
 Since different transports have different properties, a single rule cannot be
 provided as to which host takes on which role. However, for transport protocols
 where there are well-defined *client* and *server* roles, such as TCP/IP,
-implementations MUST regard the client as the initiator and the server as the
+implementations SHOULD regard the client as the initiator and the server as the
 responder.
 
 The role chosen only decides the order of messages sent during the handshake
@@ -377,7 +377,7 @@ followed:
 
 In this context, "transport messages" are Cable Wire Protocol messages. If
 `DecryptWithAd()` signals an error due to `DECRYPT()` failure, the client
-SHOULD terminate the connection.
+MUST terminate the connection.
 
 ### 5.1 Pseudocode functions
 For the remainder of this section, define the following pseudocode elements:
@@ -393,8 +393,8 @@ For the remainder of this section, define the following pseudocode elements:
 
 ### 5.2 Fragmentation
 The maximum Noise message length is 65535 bytes, so any input `plaintext`
-exceeding this length must be fragmented in order to facilitate encrypted
-transport.
+exceeding this length MUST be fragmented as specified below in order to
+facilitate encrypted transport.
 
 At a high level, this is done by the following steps:
 
