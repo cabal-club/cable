@@ -435,10 +435,6 @@ these steps:
 
 4. `WriteMsg(plaintext)`
 
-For example, if the `ciphertext` bytes were `21 f3 cc a0`, the bytes sent over
-the network transport would be a little endian-encoded prefix of `4`, followed
-by the ciphertext bytes: `04 00 21 f3 cc a0`.
-
 ### 5.4 Message decoding
 This subsection defines pseudocode function `plaintext = ReadMsg(len)` that
 reads a ciphertext message of length `len`, performing de-fragmentation and
