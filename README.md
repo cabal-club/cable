@@ -4,7 +4,7 @@
 
 Cable operates differently from the traditional server-client model, where the
 server is a centralized authority. Instead, in Cable no node in the network has
-authority over any othe node. Members of a cabal peer with each other and
+authority over any other node. Members of a cabal peer with each other and
 collaborate to share data and build an eventually consistent view of the state
 of each cabal they are a part of.
 
