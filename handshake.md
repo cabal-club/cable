@@ -318,7 +318,8 @@ pair.
 
 This keypair SHOULD be generated when a user first joins or creates a cabal,
 and SHOULD be persisted in some manner, so that it can be re-used for the
-handshake of every peer connection made.
+handshake of every peer connection made. The keypair MUST be unique to that
+cabal, and not shared across other cabals.
 
 The keypair is used to both authenticate connections and to sign posts in the
 Cable Wire Protocol. The same keypair SHOULD be used for both.
