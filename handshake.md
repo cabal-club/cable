@@ -1,6 +1,6 @@
 # Cable Handshake
 
-Version: 1.0-draft2
+Version: 1.0-draft3
 
 Published: October 2023
 
