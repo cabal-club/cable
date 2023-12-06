@@ -98,15 +98,17 @@ INITIATOR                                 RESPONDER         STEP
 
   Noise ephemeral key ------------------------->            (3)
 
-  <------------------------- Noise ephemeral key            (4)
+  <------------ Noise ephemeral key + static key            (4)
 
-  <----- Bidirectional encrypted messages ----->            (5)
+  Noise static key ---------------------------->            (5)
+
+  <----- Bidirectional encrypted messages ----->            (6)
 ```
 *Figure 1.0      Handshake message exchange overview*
 
 Steps 1 and 2 are part of the Version Exchange phase of the handshake, and
-steps 3 and 4 belong to the Noise Handshake phase. Upon completion of steps
-1-4, the protocol enters into Post-Handshake Operation phase in step 5.
+steps 3-5 belong to the Noise Handshake phase. Upon completion of steps
+1-5, the protocol enters into Post-Handshake Operation phase in step 6.
 
 ## 2. Key concepts
 
@@ -145,11 +147,10 @@ A specific Noise protocol is defined by a unique string -- the *protocol name*
 pre-shared keys are used (and when they are incorporated), and iii) the suite
 of cryptographic primitives to be used.
 
-The *protocol name* used by Cable is `Noise_NNpsk0_25519_ChaChaPoly_BLAKE2b`.
+The *protocol name* used by Cable is `Noise_XXpsk0_25519_ChaChaPoly_BLAKE2b`.
 This can be broken down into the following components:
 
-- `NN` is a Noise *handshake pattern* indicating that each host is using an
-  ephemeral key.
+- `XX` is a Noise *handshake pattern* indicating that each host will be securely transmitting a static public key to the other party.
 - `psk0` implies that a pre-shared 32-byte key must be known by both hosts
   wishing to communicate, mixed into the cryptographic state as the first step.
 - `25519` implies the use of Curve25519 key pairs and X25519 for
@@ -310,6 +311,20 @@ could change greatly in the future to allow us to respond to unanticipated
 needs.
 
 ## 4. Noise Handshake
+
+### 4.1 Static Keypair
+Each user in a cabal is identified by a static public/private Curve25519 key
+pair.
+
+This keypair SHOULD be generated when a user first joins or creates a cabal,
+and SHOULD be persisted in some manner, so that it can be re-used for the
+handshake of every peer connection made. The keypair MUST be unique to that
+cabal, and not shared across other cabals.
+
+The keypair is used to both authenticate connections and to sign posts in the
+Cable Wire Protocol. The same keypair SHOULD be used for both.
+
+### 4.2 Process
 The Noise Handshake phase is performed by following the listed steps in the
 Noise specification, under *6. Processing rules*, which MUST be executed:
 
@@ -331,7 +346,7 @@ structures, and parameters that the Noise specification explicitly defines.
 
 The following constraints also apply:
 - The string `"CABLE"` MUST be used as the `prologue` in `Initialize()`.
-- The string `"NNpsk0"` MUST be used as the `handshake_pattern` in
+- The string `"XXpsk0"` MUST be used as the `handshake_pattern` in
   `Initialize()`.
 - The initiator MUST set `initiator` to `true` in `Initialize()`. Otherwise, it
   MUST be set to `false`.
@@ -527,11 +542,10 @@ generating its nonce, and ensuring not to use the same nonce for multiple
 sessions.
 
 #### 6.2.2 Protected
-The Noise `NN` handshake pattern requires both parties to generate new,
-ephemeral keypairs for each handshake instance, meaning that every host that is
-connected to will have a unique secret shared key for that session, and if a
-secret key is discovered after a session ends, it can't be used to break future
-communications.
+The `XX` Noise handshake pattern always uses fresh ephemeral keypairs to
+initialize the handshake, so every Cable session will have a unique secret
+shared key for that session. If that secret key is discovered after a session
+ends, it cannot be used to break future communications.
 
 The ChaCha20-Poly1305 streaming cipher provides confidentiality via the
 ChaCha20 cipher, and data integrity via the Poly1305 authenticator. The use of
