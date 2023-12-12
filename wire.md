@@ -1,6 +1,6 @@
 # cable
 
-Version: 1.0-draft
+Version: 1.0-draft1
 
 Author: Kira Oakley
 
@@ -749,8 +749,8 @@ field          | type               | desc
 ---------------|--------------------|----------------------------
 `channel_len`  | `varint`           | length of the channel's name, in bytes
 `channel`      | `u8[channel_len] ` | channel name (UTF-8)
-`time_start`   | `varint`           | milliseconds since UNIX Epoch
-`time_end`     | `varint`           | milliseconds since UNIX Epoch
+`time_start`   | `varint`           | milliseconds since UNIX Epoch (inclusive)
+`time_end`     | `varint`           | milliseconds since UNIX Epoch (exclusive)
 `limit`        | `varint`           | maximum number of hashes to return
 
 `msg_type` MUST be set to `4`.
@@ -942,6 +942,8 @@ Documented here are attacks that can come from *within* a cabal — by those who
 #### 7.2.1.2 Spoofing
 1. An attacker could issue a `post/info` to alter their display name to be the same as another user, causing confusion as to which user is authoring certain chat messages.
     1. Client-side mitigation options exist, such as colourizing names by the public key of the user, or displaying a short hash digest of their key next to their name when there are multiple users sharing a name.
+
+2. Posts are signed by their author, but do not contain a reference to the cabal they were written to. an attacker could perform a replay attack by sharing a post made on one cabal into another cabal, and it would appear authentic. This is mitigated by the Handshake Protocol specification having an explicit advisory to never re-use identity keys between cabals, allowing for users and clients to assume that any public keys that are the same across cabals are completely coincidental and not the same person.
 
 #### 7.2.1.3 Denial of Service
 1. Authoring very large posts (gigabytes or larger) and/or a large number of smaller posts, and sharing them with others to download.
