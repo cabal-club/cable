@@ -424,9 +424,11 @@ facilitate encrypted transport.
 
 At a high level, this is done by the following steps:
 
-1. If the remaining unsent bytes are less than 65536 bytes in length, encrypt
-   and send it over the network; done.
-2. Otherwise, encrypt and send the first 65535 bytes; return to step 1.
+1. Write an encrypted unsigned little endian 32-bit integer that states the
+   length of the message to be sent.
+2. If the remaining unsent bytes in a message are less than 65536 bytes in
+   length, encrypt and send it over the network; done.
+3. Otherwise, encrypt and send the first 65535 bytes; return to step 2.
 
 See the subsequent subsections for concrete details.
 
@@ -457,7 +459,7 @@ these steps:
 
 1. Compute the length of the payload, `plaintext`, in bytes, `len`.
 
-2. Encrypt `len` as a two-byte unsigned little endian integer: `cipherlen = EncryptWithAd(ZERO, len)`.
+2. Encrypt `len` as a 32-bit, four-byte unsigned little endian integer: `cipherlen = EncryptWithAd(ZERO, len)`.
 
 3. `WriteBytes(cipherlen)`
 
@@ -484,7 +486,7 @@ function ReadMsg (len) {
 
 Reading a Cable Wire Protocol message MUST follow these steps:
 
-1. `cipherlen = ReadBytes(2)`, interpreting these 2 bytes as a little-endian
+1. `cipherlen = ReadBytes(4)`, interpreting these 4 bytes as a little-endian
    unsigned integer.
 
 2. `len = DecryptWithAd(ZERO, cipherlen)`
