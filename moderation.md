@@ -78,7 +78,6 @@ chatrooms.
     + [5.1.4 `post/block`](#514-postblock)
       - [5.1.4.1 Dropping a user](#5141-dropping-a-user)
     + [5.1.5 `post/unblock`](#515-postunblock)
-    + [5.1.6 Opting out of roles with `post/info`](#516-opting-out-of-roles-with-postinfo)
   * [5.2 Message Formats](#52-message-formats)
     + [5.2.1 Requests](#521-requests)
       - [5.2.1.1 Moderation State Request](#5211-moderation-state-request)
@@ -394,11 +393,16 @@ may be discarded.
 
 #### 4.2.4 Declining roles
 
-A user who wants to opt-out of being assigned roles MAY author a
-`post/info` with key and value respectively set to `accept-role = 0`. A
-user who previously opted out MAY opt-in to receiving roles again by
-authoring a `post/info` and setting `accept-role = 1`. When opting in to
-roles, any old roles that were not discarded MAY apply.
+A user MAY opt-out of roles, such as moderator or admin, being assigned
+them by other users by setting `post/info`'s key `accept-role` with
+`value = 0`.
+
+-   Set `accept-role = 1` for a user accepting roles being assigned to
+    them.
+-   Set `accept-role = 0` for a user opting-out of roles being assigned
+    to them.
+
+The default value is `accept-role = 1`.
 
 A user with `accept-role = 0` set MUST be regarded as a normal user,
 irrespective of any roles previously set on them. Posts of type
@@ -1239,19 +1243,6 @@ Unblock users, allowing the unblocked user's posts to be synchronized.
 Setting `undrop` to 1 SHOULD undo the drop of all posts authored by
 `recipient`, making them possible to retrieve again. Setting `undrop` to
 0 SHOULD keep the old posts as dropped.
-
-#### 5.1.6 Opting out of roles with `post/info`
-
-A user MAY opt-out of roles, such as moderator or admin, being assigned
-them by other users by setting `post/info`'s key `accept-role` with
-`value = 0`.
-
--   Set `accept-role = 1` for a user accepting roles being assigned to
-    them.
--   Set `accept-role = 0` for a user opting-out of roles being assigned
-    to them.
-
-The default value is `accept-role = 1`.
 
 ### 5.2 Message Formats
 
