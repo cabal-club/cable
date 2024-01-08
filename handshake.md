@@ -418,17 +418,17 @@ For the remainder of this section, define the following pseudocode elements:
   `a` and `b`.
 
 ### 5.2 Fragmentation
-The maximum Noise message length is 65535 bytes, so any input `plaintext`
+The maximum Noise message length is 65519 bytes, so any input `plaintext`
 exceeding this length MUST be fragmented as specified below in order to
 facilitate encrypted transport.
 
 At a high level, this is done by the following steps:
 
 1. Write an unsigned little endian 32-bit integer that states the length of the
-   message to be sent.
-2. If the remaining unsent bytes in a message are less than 65536 bytes in
-   length, encrypt and send it over the network; done.
-3. Otherwise, encrypt and send the first 65535 bytes; return to step 2.
+   message to be sent, in bytes.
+2. If the number of remaining unsent bytes in a message are less than or equal
+   to 65519, encrypt and send them over the network; done.
+3. Otherwise, encrypt and send the first 65519 bytes; return to step 2.
 
 See the subsequent subsections for concrete details.
 
@@ -441,7 +441,7 @@ them to the network, performing encryption and fragmentation:
 function WriteMsg (plaintext) {
   let written = 0
   while (written < plaintext.length) {
-    let segmentLen = min(65535, plaintext.length - written)
+    let segmentLen = min(65519, plaintext.length - written)
     let bytes = plaintext.slice(written, segmentLen)
     let ciphertext = EncryptWithAd(ZERO, bytes)
     WriteBytes(ciphertext)
@@ -451,8 +451,8 @@ function WriteMsg (plaintext) {
 ```
 
 If, for example, a `plaintext` of length 90200 were to be encoded & written,
-the first 65535 bytes would first be encrypted and written, followed by the
-remaining 24665 bytes being encrypted and written.
+the first 65519 bytes would first be encrypted and written, followed by the
+remaining 24681 bytes being encrypted and written.
 
 When a Cable Wire Protocol message, `plaintext` is to be sent, it MUST follow
 these steps:
@@ -474,7 +474,7 @@ function ReadMsg (len) {
   let plaintext = ZERO
   let bytesRemaining = len
   while (bytesRemaining > 0) {
-    let segmentLen = min(65535, bytesRemaining)
+    let segmentLen = min(65519, bytesRemaining)
     let ciphertext = ReadBytes(segmentLen)
     let segment = DecryptWithAd(ZERO, ciphertext)
     plaintext = plaintext.concat(segment)
