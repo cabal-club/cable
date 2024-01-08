@@ -591,9 +591,11 @@ The valid bytes for a value depends on the key. See the table below.
 
 The following keys SHOULD be supported:
 
-key       | value format | desc
-----------|--------------|---------------------------------------
-`name`    | UTF-8        | the name this user wishes to be known as. Default value is "" (empty string).
+key             | value format | desc
+----------------|--------------|---------------------------------------
+`name`          | UTF-8        | the name this user wishes to be known as. Default value is "" (empty string).
+`accept-role`   | varint       | determines whether this user accepts moderation roles being assigned them. Default value is 1 (accepts roles).
+
 
 To save space, a client MAY discard older versions of these messages for a
 particular user.
