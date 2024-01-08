@@ -1391,7 +1391,7 @@ posts authored by a user.
 In particular, illegal number and similar attacks are handled by the
 system in that individual posts and all posts by a single user can be
 designated as dropped, causing them to be removed locally and prevent
-resynchronizing of the designated posts. This functionality enables all
+resynchronization of the designated posts. This functionality enables all
 users, individually and collectively, to avoid permanently compromising
 their systems.
 
