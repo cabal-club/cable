@@ -1009,11 +1009,11 @@ Every moderation action MUST begin with the 6-field header from [section
 of the Cable Wire Protocol document, and those 6 fields MUST be followed
 by the following 3-field header:
 
-| field       | type              | desc                                                      |
-|-------------|-------------------|-----------------------------------------------------------|
-| reason_size | varint            |                                                           |
-| reason      | u8\[reason_size\] | optional text description for reason of moderation action |
-| privacy     | varint            | 0 = public, 1 = local-only                                |
+| field       | type              | desc                                                             |
+|-------------|-------------------|------------------------------------------------------------------|
+| reason_size | varint            | length of the reason, in bytes                                   |
+| reason      | u8\[reason_size\] | optional text description for reason of moderation action (UTF-8)|
+| privacy     | varint            | 0 = public, 1 = local-only                                       |
 
 `reason` MAY be used to communicate the rationale behind an action or as
 a reminder for why it was taken. `reason` MUST be a valid UTF-8 string,
@@ -1031,12 +1031,12 @@ encrypted per *Authenticated Encryption*.
 
 Propose roles and grant moderation authority to users.
 
-| field        | type               | desc                                            |
-|--------------|--------------------|-------------------------------------------------|
-| channel_size | varint             | set to 0 if applying to entire cabal            |
-| channel      | u8\[channel_size\] |                                                 |
-| recipient    | u8\[32\]           | public key of role recipient                    |
-| role         | varint             | 0 = set admin, 1 = set mod, 2 = set normal user |
+| field        | type               | desc                                                                      |
+|--------------|--------------------|---------------------------------------------------------------------------|
+| channel_size | varint             | length of the channel's name, in bytes, set to 0 to apply to entire cabal |
+| channel      | u8\[channel_size\] | channel name (UTF-8)                                                      |
+| recipient    | u8\[32\]           | public key of role recipient                                              |
+| role         | varint             | 0 = set admin, 1 = set mod, 2 = set normal user                           |
 
 `post_type` MUST be set to `6`.
 
@@ -1090,8 +1090,8 @@ Perform moderation actions on users, posts, and channels.
 
 | field           | type                        | desc                                                                                                    |
 |-----------------|-----------------------------|---------------------------------------------------------------------------------------------------------|
-| channel_size    | varint                      | set to 0 to apply to entire cabal                                                                       |
-| channel         | u8\[channel_size\]          | channel name                                                                                            |
+| channel_size    | varint                      | length of the channel's name, in bytes, set to 0 to apply to entire cabal                               |
+| channel         | u8\[channel_size\]          | channel name (UTF-8)                                                                                    |
 | recipient_count | varint                      | set to 0 if acting on a channel and not a user or a post                                                |
 | recipient       | u8\[recipient_count \* 32\] | when operating on users contains the public key of recipient and when operating on posts, the post hash |
 | action          | varint                      | 0 = hide user, 2 = hide post, 4 = drop post, 6 = drop (archive) channel                                 |
@@ -1193,8 +1193,8 @@ author.
 
 | field           | type                        | desc                                                    |
 |-----------------|-----------------------------|---------------------------------------------------------|
-| recipient_count | varint                      |                                                         |
-| recipient       | u8\[recipient_count \* 32\] | public key of recipient                                 |
+| recipient_count | varint                      | number of recipients to block                           |
+| recipient       | u8\[recipient_count \* 32\] | public key of recipient, concatenated together          |
 | drop            | varint                      | 0 = keep old posts, 1 = drop all old posts              |
 | notify          | varint                      | 0 = do not notify blocked user, 1 = notify blocked user |
 
@@ -1232,8 +1232,8 @@ Unblock users, allowing the unblocked user's posts to be synchronized.
 
 | field           | type                        | desc                                                   |
 |-----------------|-----------------------------|--------------------------------------------------------|
-| recipient_count | varint                      |                                                        |
-| recipient       | u8\[recipient_count \* 32\] | public key of recipient                                |
+| recipient_count | varint                      | number of recipients to unblock                        |
+| recipient       | u8\[recipient_count \* 32\] | public key of recipient, concatenated together         |
 | undrop          | varint                      | 0 = keep user's old posts as dropped, 1 = undrop posts |
 
 `post_type` MUST be set to `9`.
@@ -1263,11 +1263,11 @@ channels, and optionally subscribe to future state changes.
 
 | field         | type                | desc                                                  |
 |---------------|---------------------|-------------------------------------------------------|
-| channel0_size | varint              |                                                       |
-| channel0      | u8\[channel0_size\] |                                                       |
+| channel0_size | varint              | length in bytes of the 0th channel name, in bytes     |
+| channel0      | u8\[channel0_size\] | the 0th channel name (UTF-8)                          |
 | ...           |                     |                                                       |
-| channelN_size | varint              |                                                       |
-| channelN      | u8\[channelN_size\] |                                                       |
+| channelN_size | varint              | length in bytes of the Nth channel name, in bytes     |
+| channelN      | u8\[channelN_size\] | the Nth channel name (UTF-8)                          |
 | future        | varint              | whether to include future state hashes                |
 | oldest        | varint              | milliseconds since UNIX Epoch. Set to 0 for all posts |
 
