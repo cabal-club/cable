@@ -225,7 +225,7 @@ Roles are represented by post type `post/role`. Given the subjective
 nature of this moderation system, any user MAY author a `post/role` for
 another user. However, only roles authored by users with role admin
 SHOULD be applied. Application of roles is tackled in depth in section
-[Applying and resolving roles](#525-applying-and-resolving-roles).
+[Applying and resolving roles](#425-applying-and-resolving-roles).
 
 #### 4.2.1 Moderation authority
 
@@ -255,7 +255,7 @@ local user as *role transitivity*.
 
 If the local user regards another user as role admin then roles issued
 from the admin SHOULD generally be applied. Section [Applying and
-resolving roles](#525-applying-and-resolving-roles) fully details how
+resolving roles](#425-applying-and-resolving-roles) fully details how
 and when role assignments should be resolved and applied.
 
 ###### 4.2.1.1.2 Transitive moderation authority
@@ -651,8 +651,8 @@ user with moderation authority abuses their delegated power.
 
 In addition to dropping a single post, a channel, and a user MAY also be
 dropped. The result of both of these actions is described in the
-sections for [`post/moderation`](#613-postmoderation) and
-[`post/block`](#614-postblock), but briefly: dropping a channel drops
+sections for [`post/moderation`](#513-postmoderation) and
+[`post/block`](#514-postblock), but briefly: dropping a channel drops
 all of the posts associated with that channel. Dropping a user drops all
 of the posts authored by that user.
 
@@ -682,7 +682,7 @@ knowledge of such a post only concerns the local user.
 To guard the contents of a post with `privacy = 1 local-only` against
 unintentional sharing, the post binary MUST be encrypted using the
 procedure outlined in section [Authenticated
-Encryption](#552-authenticated-encryption). Implementations MUST only
+Encryption](#452-authenticated-encryption). Implementations MUST only
 store the encrypted post, referencing it with the hash of the
 unencrypted post.
 
@@ -749,7 +749,7 @@ blocked user. In the event of receiving a blocked user's posts, the
 received posts MUST be discarded. Peers SHOULD NOT forward a blocking
 user's posts to a blocked user, the behaviour of which is described in
 detail in section [Authenticated
-Connections](#5611-authenticated-connections). The `post/block`
+Connections](#4611-authenticated-connections). The `post/block`
 establishing the block SHOULD NOT be sent to the blocked user
 `post/block` unless field `notify = 1` is set. Already stored posts
 authored by the blocked user MAY continue to be stored and displayed
@@ -933,7 +933,7 @@ between 0 and 128 codepoints. `reason` MAY be left empty in which case
 If a moderation action or role should not be synchronized with other
 users, field `privacy` MUST be set to `1` and the post binary MUST be
 encrypted in the manner described in section [Authenticated
-Encryption](#552-authenticated-encryption). If `privacy` is set to `0`
+Encryption](#452-authenticated-encryption). If `privacy` is set to `0`
 the post MUST be synchronized as any other post and MUST NOT be
 encrypted per *Authenticated Encryption*.
 
@@ -981,8 +981,8 @@ authority.
 Has moderation authority and may issue moderation actions. Moderation
 actions authored by a user with role mod MUST be applied according to
 the behaviour described in sections [Applying moderation
-actions](#544-applying-moderation-actions) and [Conflicting moderation
-actions](#545-conflicting-moderation-actions). A user regarded as having
+actions](#444-applying-moderation-actions) and [Conflicting moderation
+actions](#445-conflicting-moderation-actions). A user regarded as having
 role mod MUST NOT have any `post/role` they author applied.
 
 ##### 5.1.2.3 `role = 0 set admin`
@@ -1023,7 +1023,7 @@ the entire cabal, `channel_size = 0` MUST be set.
 
 **Note**: dropping a user may instead be accomplished by authoring a
 `post/block` and setting fields `drop = 1` and `privacy = 1`, see
-section [Dropping a user](#6141-dropping-a-user).
+section [Dropping a user](#5141-dropping-a-user).
 
 ##### 5.1.3.2 Acting on posts
 
@@ -1069,7 +1069,7 @@ The post being dropped MUST be of either post type `post/text` or
 `post/topic`. All other post types MUST NOT be dropped with this action.
 
 Dropped posts MUST be removed from the local store in the manner
-described in section [Dropping posts](#546-dropping-posts).
+described in section [Dropping posts](#446-dropping-posts).
 
 `channel_size` MUST be set to `0`.
 
@@ -1084,7 +1084,7 @@ MUST NOT be requested nor stored.
 
 Posts associated with a dropped channel MUST be removed from the local
 store in the manner described in section [Dropping
-posts](#546-dropping-posts).
+posts](#446-dropping-posts).
 
 `channel` MUST be set to channel name being dropped.
 
@@ -1154,10 +1154,10 @@ Setting `undrop` to 1 SHOULD undo the drop of all posts authored by
 `recipient`, making them possible to retrieve again. Setting `undrop` to
 0 SHOULD keep the old posts as dropped.
 
-#### 5.1.6 Opting out of roles with `post/info` 
+#### 5.1.6 Opting out of roles with `post/info`
 
 A user MAY opt-out of roles, such as moderator or admin, being assigned
-them by other users through setting `post/info`'s key `accept-role` with
+them by other users by setting `post/info`'s key `accept-role` with
 `value = 0`.
 
 -   Set `accept-role = 1` for a user accepting roles being assigned to
@@ -1293,7 +1293,7 @@ user-initiated options regarding message omission. All these
 user-initiated actions leave a trace in the form of authoring a
 corresponding post. A user may however enact message omission without
 leaving any traces by following the procedure outlined in section [Post
-privacy](#55-post-privacy), performing local data removal rendering the
+privacy](#45-post-privacy), performing local data removal rendering the
 act readable only by the local user.
 
 ### 6.4 Protections
