@@ -78,7 +78,7 @@ chatrooms.
     + [5.1.4 `post/block`](#514-postblock)
       - [5.1.4.1 Dropping a user](#5141-dropping-a-user)
     + [5.1.5 `post/unblock`](#515-postunblock)
-    + [5.1.6 `post/info` key `accept-role`](#516-postinfo-key-accept-role)
+    + [5.1.6 Opting out of roles with `post/info`](#516-opting-out-of-roles-with-postinfo)
   * [5.2 Message Formats](#52-message-formats)
     + [5.2.1 Requests](#521-requests)
       - [5.2.1.1 Moderation State Request](#5211-moderation-state-request)
