@@ -13,10 +13,11 @@ cabals, by allowing peers to exchange cryptographically signed documents with
 each other, such as chat messages, spread across various user-defined channels.
 All of this happens over an encrypted channel between each peer.
 
-Cable consists of two protocols:
+Cable consists of three protocols:
 
 1. The [Cable Handshake](./handshake.md), which determines if two peers are compatible and establishes a secure channel between them.
 2. The [Cable Wire Protocol](./wire.md), which allows two peers to request and exchange signed data (*posts*) from each other by their content hashes.
+2. The [Cable Moderation Protocol](./moderation.md), which layers a content moderation system on top of the Cable Wire Protocol.
 
 Cable is designed to be:
 
