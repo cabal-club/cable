@@ -868,9 +868,9 @@ section.
 
 ##### 4.6.1.1 Authenticated Connections
 
-In a future change of the Cable Handshake Protocol peers MAY establish
-authenticated connections, causing each party of a successful connection
-to know the ed25519 public key of the other.
+Through the Cable Handshake Protocol peers MAY establish authenticated
+connections, causing each party of a successful connection to know the
+ed25519 public key of the other.
 
 The behaviour described in this section MUST apply to responses created
 by the terminal peer as well as to forwarded responses and it MUST only
@@ -1275,7 +1275,7 @@ Responders SHOULD be a member of at least one of the requested channels
 and respond with hashes for:
 
 -   all `post/block` and `post/unblock`, regardless of post author,
-    recipient, and channel
+    recipient, `oldest`, and channel
 -   the set of *relevant roles* matching at least one of the requested
     channels or where the role is set for the entire cabal
 -   the *relevant moderation actions* issued by a member of at least one
@@ -1292,6 +1292,11 @@ posts whose hashes are being returned SHOULD fulfill
 `post.timestamp >= oldest`. Implementations are RECOMMENDED to set a
 large value for `oldest`, for example on the order of 1 year from the
 time of requesting: `oldest = <current time ms> - 31536000000`.
+
+A response to this request SHOULD return **all** known hashes concerning
+types `post/block` and `post/unblock`, i.e. disregarding the value of field
+`oldest` if set. This to ensure user safety by respecting issued
+blocks such that they will reach all users of a channel.
 
 A post MUST indicate it is done specifying channels by setting the final
 `channelN_size` to 0.
