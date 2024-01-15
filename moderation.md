@@ -82,8 +82,8 @@ chatrooms.
     + [5.2.1 Requests](#521-requests)
       - [5.2.1.1 Moderation State Request](#5211-moderation-state-request)
 - [6 Security Considerations](#6-security-considerations)
-  * [6.1 7.1 Out of scope Threats](#61-71-out-of-scope-threats)
-  * [6.2 7.2 In-scope Threats](#62-72-in-scope-threats)
+  * [6.1 Out of scope Threats](#61-out-of-scope-threats)
+  * [6.2 In-scope Threats](#62-in-scope-threats)
   * [6.3 Susceptibilities](#63-susceptibilities)
     + [6.3.1 Privilege Escalation](#631-privilege-escalation)
     + [6.3.2 Message Omission](#632-message-omission)
@@ -1318,7 +1318,7 @@ Protections](https://github.com/cabal-club/cable/blob/main/wire.md#722-protectio
 are affected by the introduction of the moderation system described in
 this document.
 
-### 6.1 7.1 Out of scope Threats
+### 6.1 Out of scope Threats
 
 1.  Attacks on the transport layer by non-members of the cabal. This
     covers the *confidentiality* of a connection between peers, and
@@ -1337,7 +1337,7 @@ this document.
     For example, an attacker with access to the user's machine being
     able to access their stored private key or chat history on disk.
 
-### 6.2 7.2 In-scope Threats
+### 6.2 In-scope Threats
 
 Documented here are attacks that can come from *within* a cabal — by
 those who are technically legitimate members and can peer freely with
