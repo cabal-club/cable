@@ -992,7 +992,7 @@ All posts described by this document begin with the 6-field header from
 6.2.1](https://github.com/cabal-club/cable/blob/main/wire.md#621-header)
 of the Cable Wire Protocol document. Additionally, we add a new header
 specific for moderation actions described in section
-\[Header\]\[#611-post-header\] below, which follow immediately after the
+[Header](#511-header) below, which follow immediately after the
 6-field post header.
 
 | `post_type` numeric id | common name       | description                                            |
