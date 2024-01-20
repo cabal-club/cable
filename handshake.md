@@ -1,6 +1,6 @@
 # Cable Handshake
 
-Version: 1.0-draft5
+Version: 1.0-draft6
 
 Published: January 2024
 
@@ -419,13 +419,13 @@ For the remainder of this section, define the following pseudocode elements:
 
 ### 5.2 Fragmentation
 The maximum Noise message length is 65519 bytes, so any input `plaintext`
-exceeding this length MUST be fragmented as specified below in order to
-facilitate encrypted transport.
+exceeding this length MUST be fragmented into segments, as specified below, in
+order to facilitate encrypted transport.
 
 At a high level, this is done by the following steps:
 
-1. Write an unsigned little endian 32-bit integer that states the length of the
-   message to be sent, in bytes.
+1. Write an unsigned little endian 32-bit integer that states the length of all
+   ciphertext segments to be sent, in bytes.
 2. If the number of remaining unsent bytes in a message are less than or equal
    to 65519, encrypt and send them over the network; done.
 3. Otherwise, encrypt and send the first 65519 bytes; return to step 2.
@@ -450,19 +450,22 @@ function WriteMsg (plaintext) {
 }
 ```
 
-If, for example, a `plaintext` of length 90200 were to be encoded & written,
-the first 65519 bytes would first be encrypted and written, followed by the
-remaining 24681 bytes being encrypted and written.
-
 When a Cable Wire Protocol message, `plaintext` is to be sent, it MUST follow
 these steps:
 
-1. Compute the length of the payload, `plaintext`, in bytes, as `len`, a 32-bit
-   unsigned little endian integer.
+1. Compute the total length of all of the cipertexts fragments, in bytes, as
+   `len`, a 32-bit unsigned little endian integer.
 
 2. `WriteBytes(len)`
 
 3. `WriteMsg(plaintext)`
+
+If, for example, a `plaintext` of length 90200 were to be encoded & written,
+the first 65519 bytes would first be encrypted and written, followed by the
+remaining 24681 bytes being encrypted and written. Since each ciphertext has an
+extra 16 bytes added of authentication data, and there are two segments
+written, the total written length would be `65519 + 24681 + 16 * 2 = 90232`
+bytes.
 
 ### 5.4 Message decoding
 This subsection defines pseudocode function `plaintext = ReadMsg(len)` that
@@ -474,7 +477,7 @@ function ReadMsg (len) {
   let plaintext = ZERO
   let bytesRemaining = len
   while (bytesRemaining > 0) {
-    let segmentLen = min(65519, bytesRemaining)
+    let segmentLen = min(65535, bytesRemaining)
     let ciphertext = ReadBytes(segmentLen)
     let segment = DecryptWithAd(ZERO, ciphertext)
     plaintext = plaintext.concat(segment)
