@@ -1278,9 +1278,8 @@ and respond with hashes for:
     recipient, `oldest`, and channel
 -   the set of *relevant roles* matching at least one of the requested
     channels or where the role is set for the entire cabal
--   the *relevant moderation actions* issued by a member of at least one
-    of the requested channels or where the action applies to the entire
-    cabal
+-   the *relevant moderation actions* issued for one of the requested channels or
+    those actions applying to the entire cabal
 
 Responders MUST NOT include post hashes corresponding to `post/role` set
 on users who have opted out of roles by setting `accept-role = 0` in
