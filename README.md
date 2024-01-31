@@ -1,6 +1,6 @@
 # Cable Protocol
 
-> A peer-to-peer protocol for private group chats, called *cabals*.
+> A p2p protocol for private group chats, called *cabals*.
 
 Cable operates differently from the traditional server-client model, where the
 server is a centralized authority. Instead, in Cable no node in the network has
