@@ -26,6 +26,7 @@ Author: Kira Oakley
   + [5.2 Fragmentation](#52-fragmentation)
   + [5.3 Message encoding](#53-message-encoding)
   + [5.4 Message decoding](#54-message-decoding)
+  + [5.5 End of stream](#55-end-of-stream)
 * [6. Security considerations](#6-security-considerations)
   + [6.1 Out-of-scope attacks](#61-out-of-scope-attacks)
   + [6.2 In-scope attacks](#62-in-scope-attacks)
@@ -371,7 +372,7 @@ Noise for encryption, and then prefixed with an encrypted length indicator.
 Incoming Cable Wire Protocol messages will also be length-prefixed, and the
 message bodies will be encrypted as *ciphertext*s, and must be run through
 Noise for decryption. There are additional steps to handle message
-fragmentation, described in the next subsection.
+fragmentation and end of stream markers, described in the next subsection.
 
 The Noise function `Split()`, run at the end of the Noise Handshake, returns a
 pair of `CipherState` objects `(c1, c2)` to be used as follows:
@@ -460,12 +461,17 @@ these steps:
 
 3. `WriteMsg(plaintext)`
 
+4. `WriteBytes(0)`
+
 If, for example, a `plaintext` of length 90200 were to be encoded & written,
 the first 65519 bytes would first be encrypted and written, followed by the
 remaining 24681 bytes being encrypted and written. Since each ciphertext has an
 extra 16 bytes added of authentication data, and there are two segments
 written, the total written length would be `65519 + 24681 + 16 * 2 = 90232`
 bytes.
+
+The fourth step is described in the [End of stream](#55-end-of-stream)
+subsection.
 
 ### 5.4 Message decoding
 This subsection defines pseudocode function `plaintext = ReadMsg(len)` that
@@ -495,6 +501,13 @@ Reading a Cable Wire Protocol message MUST follow these steps:
 
 3. The resulting bytes `plaintext` may then be parsed as a Cable Wire Protocol
    message.
+
+### 5.5 End of stream
+After a complete Cable Wire Protocol message is sent, regardless of whether
+it consists of one or several fragments, the sender MUST write a message of
+`length=0`. This final message serves as an end of stream marker for the
+receiving peer and enables the peer to differentiate between an intentionally
+terminated stream and a dropped connection.
 
 ## 6. Security considerations
 ### 6.1 Out-of-scope attacks
