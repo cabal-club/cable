@@ -1,8 +1,8 @@
 # Cable Handshake
 
-Version: 1.0-draft6
+Version: 1.0-draft7
 
-Published: January 2024
+Published: February 2024
 
 Author: Kira Oakley
 
