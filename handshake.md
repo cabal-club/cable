@@ -498,11 +498,17 @@ Reading a Cable Wire Protocol message MUST follow these steps:
    message.
 
 ### 5.5 End of stream
-After a complete Cable Wire Protocol message is sent, regardless of whether
-it consists of one or several fragments, the sender MUST write a message of
-`length=0`. This final message serves as an end of stream marker for the
-receiving peer and enables the peer to differentiate between an intentionally
-terminated stream and a dropped connection.
+When a host has decided to terminate the exchange of messages, they MUST send
+a message of length zero to indicate this intention, and MUST NOT send any
+further messages. The zero-length message is known as an end-of-stream marker.
+
+The host receiving an end-of-stream marker SHOULD respond with an
+end-of-stream marker of its own to indicate it has also finished writing. An
+implementation SHOULD have a time-out of some kind in case the other side does
+not transmit an end-of-stream marker or the marker is truncated by an attacker.
+
+When a host has both sent and received a zero-length message, it is then safe
+for the underlying transport to execute its own disconnect logic, if any.
 
 ## 6. Security considerations
 ### 6.1 Out-of-scope attacks
