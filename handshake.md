@@ -372,7 +372,7 @@ Noise for encryption, and then prefixed with an encrypted length indicator.
 Incoming Cable Wire Protocol messages will also be length-prefixed, and the
 message bodies will be encrypted as *ciphertext*s, and must be run through
 Noise for decryption. There are additional steps to handle message
-fragmentation and end of stream markers, described in the next subsection.
+fragmentation and the end of the stream, described in the next subsection.
 
 The Noise function `Split()`, run at the end of the Noise Handshake, returns a
 pair of `CipherState` objects `(c1, c2)` to be used as follows:
