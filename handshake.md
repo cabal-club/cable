@@ -461,17 +461,12 @@ these steps:
 
 3. `WriteMsg(plaintext)`
 
-4. `WriteBytes(0)`
-
 If, for example, a `plaintext` of length 90200 were to be encoded & written,
 the first 65519 bytes would first be encrypted and written, followed by the
 remaining 24681 bytes being encrypted and written. Since each ciphertext has an
 extra 16 bytes added of authentication data, and there are two segments
 written, the total written length would be `65519 + 24681 + 16 * 2 = 90232`
 bytes.
-
-The fourth step is described in the [End of stream](#55-end-of-stream)
-subsection.
 
 ### 5.4 Message decoding
 This subsection defines pseudocode function `plaintext = ReadMsg(len)` that
