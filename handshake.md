@@ -1,8 +1,8 @@
 # Cable Handshake
 
-Version: 1.0-draft6
+Version: 1.0-draft7
 
-Published: January 2024
+Published: February 2024
 
 Author: Kira Oakley
 
@@ -26,6 +26,7 @@ Author: Kira Oakley
   + [5.2 Fragmentation](#52-fragmentation)
   + [5.3 Message encoding](#53-message-encoding)
   + [5.4 Message decoding](#54-message-decoding)
+  + [5.5 End of stream](#55-end-of-stream)
 * [6. Security considerations](#6-security-considerations)
   + [6.1 Out-of-scope attacks](#61-out-of-scope-attacks)
   + [6.2 In-scope attacks](#62-in-scope-attacks)
@@ -371,7 +372,7 @@ Noise for encryption, and then prefixed with an encrypted length indicator.
 Incoming Cable Wire Protocol messages will also be length-prefixed, and the
 message bodies will be encrypted as *ciphertext*s, and must be run through
 Noise for decryption. There are additional steps to handle message
-fragmentation, described in the next subsection.
+fragmentation and the end of the stream, described in the next subsection.
 
 The Noise function `Split()`, run at the end of the Noise Handshake, returns a
 pair of `CipherState` objects `(c1, c2)` to be used as follows:
@@ -495,6 +496,19 @@ Reading a Cable Wire Protocol message MUST follow these steps:
 
 3. The resulting bytes `plaintext` may then be parsed as a Cable Wire Protocol
    message.
+
+### 5.5 End of stream
+When a host has decided to terminate the exchange of messages, they MUST send
+a message of length zero to indicate this intention, and MUST NOT send any
+further messages. The zero-length message is known as an end-of-stream marker.
+
+The host receiving an end-of-stream marker SHOULD respond with an
+end-of-stream marker of its own to indicate it has also finished writing. An
+implementation SHOULD have a time-out of some kind in case the other side does
+not transmit an end-of-stream marker or the marker is truncated by an attacker.
+
+When a host has both sent and received a zero-length message, it is then safe
+for the underlying transport to execute its own disconnect logic, if any.
 
 ## 6. Security considerations
 ### 6.1 Out-of-scope attacks
