@@ -255,10 +255,10 @@ hashes of all known heads in the channel being posted in. Doing so will converge
 the number of heads in a channel down to 1 (the post being made).
 
 ### 5.2 Requests & Responses
-All request types MAY yield multiple responses from peers. A request sent to a
-peer may result in several blocks of hashes or data being sent back by them as
-they scan their local database. Additionally, if that peer forwards a request
-to its own set of peers, they too may trickle back several responses over time.
+All request types MAY yield multiple responses from peers. This could happen
+for multiple reasons, such as due to the delays inherent in a peer forwarding a
+request to its own set of peers, who may trickle back their own responses over
+time.
 
 | `msg_type` numeric id | common name                   | description |
 |-----------------------|-------------------------------|-------------|
