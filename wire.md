@@ -262,7 +262,7 @@ time.
 
 | `msg_type` numeric id | common name                   | description |
 |-----------------------|-------------------------------|-------------|
-| 2                     | Post Request                  | request the posts that hash to particular set of hashes |
+| 2                     | Post Request                  | request the posts identified by a particular set of hashes |
 | 3                     | Cancel Request                | abort a previously issued request |
 | 4                     | Channel Time Range Request    | request hashes of chat messages and deletions within a time range |
 | 5                     | Channel State Request         | request hashes describing a given channel's state |
