@@ -386,7 +386,7 @@ A channel is a named collection consisting of the following:
 3. a topic string (`post/topic`)
 
 A user writing a chat message or join to a channel implies that that named
-channel has now been created, if it hasn't already, and thus MUST be returned
+channel has now been created, if it hasn't already been, and thus MUST be returned
 in Channel List Requests.
 
 #### 5.4.1 Names
