@@ -532,8 +532,8 @@ mentioning that, at time of writing, no such vulnerabilities are known to
 exist.
 
 An active attacker could manipulate the Protocol Version messages such that two
-hosts are handshake due to maliciously changed version number, making each host
-appear to have sent an incompatible major version number.
+hosts successfully handshake due to maliciously changed version number, making
+each host appear to have sent an incompatible major version number.
 
 This document does not provide any mandates on how the cabal key is stored. If
 stored on disk in plaintext, it would be vulnerable to any unauthorized access
