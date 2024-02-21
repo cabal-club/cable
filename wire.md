@@ -684,7 +684,7 @@ header fields:
 
 field      | type       | desc
 -----------|------------|-----------------------------------
-`ttl`      | `varint`   | number of network hops remaining
+`ttl`      | `u8`       | number of network hops remaining
 
 The value of `ttl` MUST be between 0 and 16. 0 means "do not forward this
 request to any other peers".
