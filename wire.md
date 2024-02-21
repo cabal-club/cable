@@ -242,10 +242,10 @@ is spoofed.
 
 Implementations are RECOMMENDED to set and utilize links on chat messages
 specifically (`post/text`). Clients that do not support setting links will
-reduce the quality of the cabal's data's eventual consistency. The fewer
-clients that are participating in a cabal that do not set links, the more
-vulnerable to clock skew or maliciously inaccurate timestamps its participants
-will be.
+reduce the quality of the cabal's data's eventual consistency. The greater the
+number of clients that are participating in a cabal that do not set links, the
+more vulnerable to clock skew or maliciously inaccurate timestamps its
+participants will be.
 
 ##### 5.1.3.1 Setting links
 In order to set links on a post, each channel's current heads MUST be tracked.
