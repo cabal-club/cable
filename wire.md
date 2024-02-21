@@ -387,7 +387,7 @@ A channel is a named collection consisting of the following:
 
 A user writing a chat message or join to a channel implies that that named
 channel has now been created, if it hasn't already been, and thus MUST be returned
-in Channel List Requests.
+in future Channel List Requests.
 
 #### 5.4.1 Names
 - A valid channel name MUST be a UTF-8 string.
