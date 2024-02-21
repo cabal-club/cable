@@ -514,8 +514,6 @@ The protocol MAY be extended by implementers by creating additional
 `post_type`s. Implementers MUST only use `post_type > 255`. The
 first 256 are reserved for core protocol use.
 
-`num_links` MUST be set to 0 if there are no posts to link to.
-
 Clients SHOULD discard posts with a `post_type` that they don't understand or
 support.
 
