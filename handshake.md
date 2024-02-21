@@ -435,7 +435,7 @@ See the subsequent subsections for concrete details.
 ### 5.3 Message encoding
 This subsection defines a pseudocode function `WriteMsg(plaintext)` that takes
 the full Cable Wire Protocol message payload, `plaintext`, as bytes, and writes
-them to the network, performing encryption and fragmentation:
+the bytes  to the network, performing encryption and fragmentation:
 
 ```js
 function WriteMsg (plaintext) {
