@@ -362,7 +362,7 @@ At the end of a successful Noise Handshake, both hosts will have a pair of
 ## 5. Post-Handshake Operation
 Once the Version Exchange and Noise Handshake phases are complete, the Cable
 Handshake is in the Post-Handshake Operation phase, where Cable Wire Protocol
-messages MAY be transmitted and received. There are a final set of rules,
+messages MAY be transmitted and received. There is a final set of rules,
 described here, for how incoming and outgoing data speaking the Cable Wire
 Protocol must be encoded and decoded.
 
