@@ -81,11 +81,11 @@ peer-to-peer group chatrooms.
 * [9. Informative References](#9-informative-references)
 
 ## 0. Background
-[Cabal][Cabal] is existing distributed peer-to-peer computer software for
-private group chats. It operates in a fashion different from the typical
-server-client model, where no machine is either an official nor de facto
-authority over others in the network. Instead, peers collaborate with each
-other to share data and build an eventually consistent view of that data.
+[Cabal][Cabal] is a distributed peer-to-peer software platform for private
+group chats. It operates in a fashion different from the typical server-client
+model, where no machine is either an official nor de facto authority over
+others in the network. Instead, peers collaborate with each other to share data
+and build an eventually consistent view of that data.
 
 Cabal's original protocol was based off of [hypercore][hypercore], which was
 found to have limitations and trade-offs that didn't suit Cabal's needs well.
