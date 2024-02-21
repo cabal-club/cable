@@ -502,7 +502,7 @@ field        | type              | desc
 `post_type`  | `varint`          | see custom post type sections below
 `timestamp`  | `varint`          | milliseconds since UNIX Epoch
 
-The `signature` for a post is produced by signing all fields of the post
+The `signature` for a post is produced by signing the concatenation of all fields of the post
 immediately after the `signature` field, including the `post_type`-specific
 fields specified in the sections that follow, using the Ed25519 signature
 scheme.
