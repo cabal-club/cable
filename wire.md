@@ -169,7 +169,7 @@ carry out.
 
 **timestamp**: A point in time represented by the number of milliseconds since the UNIX epoch.
 
-**head**: When used to refer to a post, any post that no other known post links to.
+**head**: A post that is not referenced (linked to) by any other known post.
 
 **latest**: When used to refer to a post, the latest post is that post which, from a client's perspective at a given moment in time, is the head with the greatest timestamp.
 
