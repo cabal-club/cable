@@ -1,6 +1,6 @@
 # Cable Handshake
 
-Version: 1.0-draft6
+Version: 1.0-draft7
 
 Published: January 2024
 
@@ -17,23 +17,20 @@ Author: Kira Oakley
     - [2.3.1 Protocol name](#231-protocol-name)
     - [2.3.2 General operation](#232-general-operation)
   + [2.4 Cabal key](#24-cabal-key)
-* [3. Version Exchange](#3-version-exchange)
-  + [3.1 Protocol versioning scheme](#31-protocol-versioning-scheme)
-  + [3.2 Protocol Version Message exchange](#32-protocol-version-message-exchange)
-* [4. Noise Handshake](#4-noise-handshake)
-* [5. Post-Handshake Operation](#5-post-handshake-operation)
-  + [5.1 Pseudocode functions](#51-pseudocode-functions)
-  + [5.2 Fragmentation](#52-fragmentation)
-  + [5.3 Message encoding](#53-message-encoding)
-  + [5.4 Message decoding](#54-message-decoding)
-* [6. Security considerations](#6-security-considerations)
-  + [6.1 Out-of-scope attacks](#61-out-of-scope-attacks)
-  + [6.2 In-scope attacks](#62-in-scope-attacks)
-    - [6.2.1 Susceptible](#621-susceptible)
-    - [6.2.2 Protected](#622-protected)
-* [7. References](#7-references)
-  + [7.1 Normative References](#71-normative-references)
-  + [7.2 Informative References](#72-informative-references)
+* [3. Noise Handshake](#4-noise-handshake)
+* [4. Post-Handshake Operation](#5-post-handshake-operation)
+  + [4.1 Pseudocode functions](#51-pseudocode-functions)
+  + [4.2 Fragmentation](#52-fragmentation)
+  + [4.3 Message encoding](#53-message-encoding)
+  + [4.4 Message decoding](#54-message-decoding)
+* [5. Security considerations](#6-security-considerations)
+  + [5.1 Out-of-scope attacks](#61-out-of-scope-attacks)
+  + [5.2 In-scope attacks](#62-in-scope-attacks)
+    - [5.2.1 Susceptible](#621-susceptible)
+    - [5.2.2 Protected](#622-protected)
+* [6. References](#7-references)
+  + [6.1 Normative References](#71-normative-references)
+  + [6.2 Informative References](#72-informative-references)
 
 ## 1. Introduction
 Cable is a peer-to-peer protocol, communicated between a pair of hosts over an
@@ -72,19 +69,15 @@ of the Cable Wire Protocol must also be implemented in order to form a valid
 Cable implementation.
 
 ### 1.3 Protocol overview
-A Cable Handshake is comprised of 3 phases, which, in a successful handshake,
+A Cable Handshake is comprised of 2 phases, which, in a successful handshake,
 are progressed through in sequence:
 
-1. Version Exchange
-2. Noise Handshake
-3. Post-Handshake Operation
+1. Noise Handshake
+2. Post-Handshake Operation
 
-At a high level, the (1) Version Exchange exists to ensure protocol version
-compatibility between both hosts. For hosts that are compatible, the (2) Noise
-handshake then allows the exchange of ephemeral public keys, used with
-Diffie-Hellman to produce a shared secret key for the session. That secret key,
-in the (3) Post-Handshake Operation phase, is used to encrypt/decrypt and
-authenticate all further outgoing and incoming Cable Wire Protocol messages.
+At a high level, the (1) Noise Handshake establishes a secure channel between
+hosts, which the (2) Post-Handshake Operation phase uses to send encrypted and
+authenticated further outgoing and incoming Cable Wire Protocol messages.
 
 A successful Cable Handshake will resemble the following exchange of
 *handshake messages*:
@@ -92,23 +85,18 @@ A successful Cable Handshake will resemble the following exchange of
 ```
 INITIATOR                                 RESPONDER         STEP
 ========================================================================
-  [MAJOR].[MINOR] version ---------------------->           (1)
-  
-  <---------------------- [MAJOR].[MINOR] version           (2)
+  Noise ephemeral key ------------------------->            (1)
 
-  Noise ephemeral key ------------------------->            (3)
+  <------------ Noise ephemeral key + static key            (2)
 
-  <------------ Noise ephemeral key + static key            (4)
+  Noise static key ---------------------------->            (3)
 
-  Noise static key ---------------------------->            (5)
-
-  <----- Bidirectional encrypted messages ----->            (6)
+  <----- Bidirectional encrypted messages ----->            (4)
 ```
 *Figure 1.0      Handshake message exchange overview*
 
-Steps 1 and 2 are part of the Version Exchange phase of the handshake, and
-steps 3-5 belong to the Noise Handshake phase. Upon completion of steps
-1-5, the protocol enters into Post-Handshake Operation phase in step 6.
+Steps 1-3 are part of the Noise Handshake phase. Upon completion of steps 1-3,
+the protocol enters into the final phase, Post-Handshake Operation, in step 4.
 
 ## 2. Key concepts
 
@@ -214,105 +202,9 @@ means (e.g. other chat programs, written on paper, etc.)
 The pre-shared key MUST be mixed into the handshake state as per the rules in
 *9. Pre-shared symmetric keys* of the Noise specification.
 
-## 3. Version Exchange
-### 3.1 Protocol versioning scheme
-Each revision of the Cable specification has a major and minor version
-associated with it. For example, `1.3`. An implementation of the Cable
-specification shares the same version name as the specification version it
-implements. So, an implementation of version `3.5` of the Cable specification
-would consider its version to also be `3.5`.
+## 3. Noise Handshake
 
-A version is comprised of two components:
-
-1. Major Version
-2. Minor Version
-
-A new *major version* of the specification indicates a breaking change. When
-two implementations have differing major versions, they would be unable to
-properly communicate with each other, or it is unsafe for them to. This could
-be for various reasons, such as a change in the ciphersuite used for
-encryption, a change in how messages are structured, or a new security
-constraint that has been added.
-
-A new *minor version* of the specification indicates a non-breaking change. Two
-implementations with differing minor versions will still be able to communicate
-properly with each other, although there may be features available to an
-implementation with a newer version that the older may not be able to take
-advantage of. Examples of changes necessitating a new minor version include new
-Cabal Wire Protocol message or post types that older versions can safely
-ignore, or changes to "SHOULD" or "MAY" directives in the protocol that do not
-break interoperability.
-
-A specific Cable version can be expressed by writing "`[MAJOR].[MINOR]`". For
-example, `4.7` or `9.1`. Each version component is limited to the range `0 -
-255`.
-
-The minor version is reset to zero upon the release of a new major version.
-
-### 3.2 Protocol Version Message exchange
-The first phase of the handshake is an exchange of messages containing each
-host's implementation version. This is done to ensure compatibility between the
-hosts' implementations, and constitutes the first two steps from Figure 1.0
-above:
-
-```
-INITIATOR                           RESPONDER       STEP
-=========================================================
-  [MAJOR].[MINOR] version ---------------->          (1)
-  
-  <---------------- [MAJOR].[MINOR] version          (2)
-```
-Figure 2.0  The first two messages sent in a Cable Handshake
-
-Each of these messages is a *Protocol Version Message*. This is a 2-byte binary
-message with the following structure, using the style described in [[3](#ref3)]:
-
-```
-     0                   1             
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Major Version |  Minor Version  |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-```
-
-where:
-
-**Major Version: 1 unsigned byte**. This is an implementation's major version.
-
-**Minor Version: 1 unsigned byte**. This is an implementation's minor version.
-
-The handshake protocol begins with Step 1: the initiator MUST send a Protocol
-Version Message to the responder after a connection is established.
-
-Step 2: When this message is received by the responder, the responder compares its
-major version to the major version received.
-
-If the major version of its implementation differs from the one received, the
-responder SHOULD respond with its own Protocol Version Message, and then MUST
-terminate the connection to the other host. In the case of a major version
-mismatch, it is valid for the responder to not send a Protocol Version Message
-reply, but discouraged, since the initiator will not be able to distinguish
-major version incompatibility from e.g. a connection being accidentally lost.
-
-If the major versions are the same, the responder MUST send a Protocol Version
-Message to the initiator. The responder now enters the Noise Handshake phase.
-
-Upon receiving the responder's Protocol Version Message, the initiator compares
-its major version to the one received. If they do not match, the initiator MUST
-terminate the connection: the implementations are not compatible. If the major
-versions match, the initiator also moves to the Noise Handshake phase.
-
-NOTE: A nice quality of this approach is that if we ever wanted to add more
-features to the handshake, like the exchange of feature flags (e.g.
-compression), this could be added before or after the Noise Handshake in a
-breaking major version change. This means we only need to commit upfront to
-this maximally simple version exchange mechanism now, and the overall mechanism
-could change greatly in the future to allow us to respond to unanticipated
-needs.
-
-## 4. Noise Handshake
-
-### 4.1 Static Keypair
+### 3.1 Static Keypair
 Each user in a cabal is identified by a static public/private Curve25519 key
 pair.
 
@@ -325,7 +217,7 @@ Protocol's Security Considerations section for a more detailed explanation.)
 The keypair is used to both authenticate connections and to sign posts in the
 Cable Wire Protocol. The same keypair SHOULD be used for both.
 
-### 4.2 Process
+### 3.2 Process
 The Noise Handshake phase is performed by following the listed steps in the
 Noise specification, under *6. Processing rules*, which MUST be executed:
 
@@ -346,7 +238,7 @@ structures, and parameters, so this document attempts to keep to the functions,
 structures, and parameters that the Noise specification explicitly defines.
 
 The following constraints also apply:
-- The string `"CABLE"` MUST be used as the `prologue` in `Initialize()`.
+- The string `"CABLE1.0"` MUST be used as the `prologue` in `Initialize()`. The number "1.0" in the prologue is so because this version of the protocol is 1.0.
 - The string `"XXpsk0"` MUST be used as the `handshake_pattern` in
   `Initialize()`.
 - The initiator MUST set `initiator` to `true` in `Initialize()`. Otherwise, it
@@ -359,12 +251,12 @@ The following constraints also apply:
 At the end of a successful Noise Handshake, both hosts will have a pair of
 `CipherState` objects, to be used in the final phase, Post-Handshake Operation.
 
-## 5. Post-Handshake Operation
-Once the Version Exchange and Noise Handshake phases are complete, the Cable
-Handshake is in the Post-Handshake Operation phase, where Cable Wire Protocol
-messages MAY be transmitted and received. There is a final set of rules,
-described here, for how incoming and outgoing data speaking the Cable Wire
-Protocol must be encoded and decoded.
+## 4. Post-Handshake Operation
+Once the Noise Handshake phase is complete, the Cable Handshake is in the
+Post-Handshake Operation phase, where Cable Wire Protocol messages MAY be
+transmitted and received. There is a final set of rules, described here, for
+how incoming and outgoing data speaking the Cable Wire Protocol must be encoded
+and decoded.
 
 At a high level, all Cable Wire Protocol messages need to be passed through
 Noise for encryption, and then prefixed with an encrypted length indicator.
@@ -395,7 +287,7 @@ In this context, "transport messages" are Cable Wire Protocol messages. If
 `DecryptWithAd()` signals an error due to `DECRYPT()` failure, the client
 MUST terminate the connection.
 
-### 5.1 Pseudocode functions
+### 4.1 Pseudocode functions
 For the remainder of this section, define the following pseudocode elements:
 
 - Let `ZERO` be an empty sequence of bytes.
@@ -417,7 +309,7 @@ For the remainder of this section, define the following pseudocode elements:
 - Let `min(a, b)` be a hypothetical function that returns the smaller number of
   `a` and `b`.
 
-### 5.2 Fragmentation
+### 4.2 Fragmentation
 The maximum Noise message length is 65519 bytes, so any input `plaintext`
 exceeding this length MUST be fragmented into segments, as specified below, in
 order to facilitate encrypted transport.
@@ -432,7 +324,7 @@ At a high level, this is done by the following steps:
 
 See the subsequent subsections for concrete details.
 
-### 5.3 Message encoding
+### 4.3 Message encoding
 This subsection defines a pseudocode function `WriteMsg(plaintext)` that takes
 the full Cable Wire Protocol message payload, `plaintext`, as bytes, and writes
 the bytes  to the network, performing encryption and fragmentation:
@@ -467,7 +359,7 @@ extra 16 bytes added of authentication data, and there are two segments
 written, the total written length would be `65519 + 24681 + 16 * 2 = 90232`
 bytes.
 
-### 5.4 Message decoding
+### 4.4 Message decoding
 This subsection defines pseudocode function `plaintext = ReadMsg(len)` that
 reads a ciphertext message of length `len`, performing de-fragmentation and
 decryption:
@@ -496,13 +388,13 @@ Reading a Cable Wire Protocol message MUST follow these steps:
 3. The resulting bytes `plaintext` may then be parsed as a Cable Wire Protocol
    message.
 
-## 6. Security considerations
-### 6.1 Out-of-scope attacks
+## 5. Security considerations
+### 5.1 Out-of-scope attacks
 Attacks on the inner Cable Wire Protocol are not considered here. See the
 Security Considerations section on its specification [[4](#ref4)].
 
-### 6.2 In-scope attacks
-#### 6.2.1 Susceptible
+### 5.2 In-scope attacks
+#### 5.2.1 Susceptible
 The most significant security concern is regarding the secrecy of the cabal
 key. The privacy of a cabal hinges entirely on the secrecy of the cabal key
 associated with it. If a cabal's key is leaked to unintended recipients or made
@@ -524,17 +416,6 @@ not unlike a TCP SYN flood attack. Implementations using transports like TCP/IP
 may be able to mitigate by refusing connections from IPs that have been opening
 an unreasonable number of connections.
 
-A passive attacker could sniff packets to determine what version of Cabal
-various hosts are running, since the version exchange happens in the clear. For
-hosts running older versions with known security vulnerabilities, this
-information could be used to then explicitly target that host. It's worth
-mentioning that, at time of writing, no such vulnerabilities are known to
-exist.
-
-An active attacker could manipulate the Protocol Version messages such that two
-hosts successfully handshake due to maliciously changed version number, making
-each host appear to have sent an incompatible major version number.
-
 This document does not provide any mandates on how the cabal key is stored. If
 stored on disk in plaintext, it would be vulnerable to any unauthorized access
 to the device storing it.
@@ -544,7 +425,7 @@ susceptible to it being guessed. ChaCha20 also has similar risks around
 generating its nonce, and ensuring not to use the same nonce for multiple
 sessions.
 
-#### 6.2.2 Protected
+#### 5.2.2 Protected
 The `XX` Noise handshake pattern always uses fresh ephemeral keypairs to
 initialize the handshake, so every Cable session will have a unique secret
 shared key for that session. If that secret key is discovered after a session
@@ -566,13 +447,13 @@ Diffie-Hellman secret key derivation performed by Noise prevents a passive
 attacker from learning the shared secret, despite public keys being exchanged
 in the clear.
 
-## 7. References
-### 7.1 Normative References
+## 6. References
+### 6.1 Normative References
 - <a id="ref1"></a>**[1]** [Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", RFC 8174, May 2017](https://www.rfc-editor.org/rfc/rfc8174)
 - <a id="ref2"></a>**[2]** [Perrin, T., "The Noise Protocol Framework", 11 July 2018](vendor/noise_34.pdf)
 - <a id="ref3"></a>**[3]** [McQuistin, S., Band, V., Jacob, D., and C. Perkins, "Describing Protocol Data Units with Augmented Packet Header Diagrams", Work in Progress, Internet-Draft, draft-mcquistin-augmented-ascii-diagrams-10, 7 March 2022][Header]
 
-### 7.2 Informative References
+### 6.2 Informative References
 1. <a id="ref4"></a>**[4]** [Cable Wire Protocol](readme.md)
 
 [noise-spec]: vendor/noise_34.pdf
