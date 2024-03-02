@@ -238,7 +238,7 @@ structures, and parameters, so this document attempts to keep to the functions,
 structures, and parameters that the Noise specification explicitly defines.
 
 The following constraints also apply:
-- The string `"CABLE1.0"` MUST be used as the `prologue` in `Initialize()`. The number "1.0" in the prologue is so because this version of the protocol is 1.0.
+- The ASCII-encoded string `"CABLE/1.0"` MUST be used as the `prologue` in `Initialize()`. The number "1.0" in the prologue is so because this version of the protocol is 1.0. The definitive bytes of this, in hexadecimal, are `43 41 42 4c 45 2f 31 2e 30`.
 - The string `"XXpsk0"` MUST be used as the `handshake_pattern` in
   `Initialize()`.
 - The initiator MUST set `initiator` to `true` in `Initialize()`. Otherwise, it
