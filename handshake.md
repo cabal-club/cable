@@ -219,7 +219,7 @@ Cable Wire Protocol. The same keypair SHOULD be used for both.
 
 ### 3.2 Process
 The Noise Handshake phase is performed by following the listed steps in the
-Noise specification, under *6. Processing rules*, which MUST be executed:
+Noise specification, under *5. Processing rules*, which MUST be executed:
 
 > To execute a Noise protocol you `Initialize()` a `HandshakeState`. During
 > initialization you specify the handshake pattern, any local key pairs, and
