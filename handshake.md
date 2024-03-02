@@ -271,7 +271,7 @@ pair of `CipherState` objects `(c1, c2)` to be used as follows:
 - For the responder, `c2` MUST be used for encryption, and `c1` for decryption.
 
 Specifically, to exchange messages during Post-Handshake Operation, the listed
-steps in the Noise specification, under *6. Processing rules*, MUST be
+steps in the Noise specification, under *5. Processing rules*, MUST be
 followed:
 
 > Transport messages are then encrypted and decrypted by calling
