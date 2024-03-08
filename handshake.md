@@ -337,7 +337,8 @@ When a Cable Wire Protocol message, `plaintext` is to be sent, it MUST follow
 these steps:
 
 1. Compute the total length of all of the cipertexts fragments, in bytes, as
-   `len`, a 32-bit unsigned little endian integer.
+   `len`, a 32-bit unsigned little endian integer. This is equal to the length
+   of the plaintext, plus an additional 16 bytes for each segment.
 
 2. `WriteBytes(len)`
 
