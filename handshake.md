@@ -448,6 +448,9 @@ ChaCha20 cipher, and data integrity via the Poly1305 authenticator. The use of
 a counter in the streaming cipher allows dropped, inserted, or replayed
 messages to be detected.
 
+Message lengths are encrypted and authenticated, hiding message boundaries and
+hindering fingerprinting efforts compared to plaintext message length prefixes.
+
 If there were no cabal key, communicating hosts would be vulnerable to a
 man-in-the-middle attack. However, a man-in-the-middle without knowledge of the
 cabal key would be unable to successfully handshake with either host.
