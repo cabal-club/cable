@@ -311,18 +311,9 @@ For the remainder of this section, define the following pseudocode elements:
 
 ### 4.2 Fragmentation
 The maximum Noise message length is 65519 bytes, so any input `plaintext`
-exceeding this length MUST be fragmented into segments, as specified below, in
-order to facilitate encrypted transport.
+exceeding this length MUST be fragmented into segments.
 
-At a high level, this is done by the following steps:
-
-1. Write an unsigned little endian 32-bit integer that states the length of all
-   ciphertext segments to be sent, in bytes.
-2. If the number of remaining unsent bytes in a message are less than or equal
-   to 65519, encrypt and send them over the network; done.
-3. Otherwise, encrypt and send the first 65519 bytes; return to step 2.
-
-See the subsequent subsections for concrete details.
+See the subsequent subsections for the concrete details.
 
 ### 4.3 Message encoding
 This subsection defines a pseudocode function `WriteMsg(plaintext)` that takes
