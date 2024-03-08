@@ -17,20 +17,25 @@ Author: Kira Oakley
     - [2.3.1 Protocol name](#231-protocol-name)
     - [2.3.2 General operation](#232-general-operation)
   + [2.4 Cabal key](#24-cabal-key)
-* [3. Noise Handshake](#4-noise-handshake)
-* [4. Post-Handshake Operation](#5-post-handshake-operation)
-  + [4.1 Pseudocode functions](#51-pseudocode-functions)
-  + [4.2 Fragmentation](#52-fragmentation)
-  + [4.3 Message encoding](#53-message-encoding)
-  + [4.4 Message decoding](#54-message-decoding)
-* [5. Security considerations](#6-security-considerations)
-  + [5.1 Out-of-scope attacks](#61-out-of-scope-attacks)
-  + [5.2 In-scope attacks](#62-in-scope-attacks)
-    - [5.2.1 Susceptible](#621-susceptible)
-    - [5.2.2 Protected](#622-protected)
-* [6. References](#7-references)
-  + [6.1 Normative References](#71-normative-references)
-  + [6.2 Informative References](#72-informative-references)
+* [3. Noise Handshake](#3-noise-handshake)
+  + [3.1 Static Keypair](#31-static-keypair)
+  + [3.2 Process](#32-process)
+* [4. Post-Handshake Operation](#4-post-handshake-operation)
+  + [4.1 Pseudocode functions](#41-pseudocode-functions)
+  + [4.2 Message encoding & transmission](#42-message-encoding--transmission)
+    - [4.2.1 Fragmentation](#421-fragmentation)
+    - [4.2.2 Encryption and Authentication](#422-encryption-and-authentication)
+    - [4.2.3 Message length](#423-message-length)
+    - [4.2.4 Message transmission](#424-message-transmission)
+  + [4.3 Message decoding](#43-message-decoding)
+* [5. Security considerations](#5-security-considerations)
+  + [5.1 Out-of-scope attacks](#51-out-of-scope-attacks)
+  + [5.2 In-scope attacks](#52-in-scope-attacks)
+    - [5.2.1 Susceptible](#521-susceptible)
+    - [5.2.2 Protected](#522-protected)
+* [6. References](#6-references)
+  + [6.1 Normative References](#61-normative-references)
+  + [6.2 Informative References](#62-informative-references)
 
 ## 1. Introduction
 Cable is a peer-to-peer protocol, communicated between a pair of hosts over an
@@ -291,6 +296,7 @@ MUST terminate the connection.
 For the remainder of this section, define the following pseudocode elements:
 
 - Let `ZERO` be an empty sequence of bytes.
+- Let `|` be byte-wise concatenation.
 - Let `EncryptWithAd()` and `DecryptWithAd()` be the Noise functions of the
   same names.
 - Let `WriteBytes(bytes)` be a function that writes `bytes` bytes over the
@@ -300,84 +306,99 @@ For the remainder of this section, define the following pseudocode elements:
 - Let `bytes.slice(start, length)` be a function on a byte sequence that
   returns a slice of a sequence of bytes, starting at position `start`, and
   including the next `length` bytes.
-- Let `result = bytes.concat(bytes2)` be a function on a byte sequence that
-  concatenates the byte sequence `bytes2` onto the existing byte sequence
-  `bytes`, producing the new byte sequence `result`.
 - Let `bytes.length` be a property of a byte sequence that returns the length
   of the byte sequence `bytes`, in bytes.
 - Let `min(a, b)` be a function that returns the smaller of two numbers, `a`
   and `b`.
 
-### 4.2 Fragmentation
-The maximum Noise message length is 65519 bytes, so any input `plaintext`
-exceeding this length MUST be fragmented into segments.
+### 4.2 Message encoding & transmission
 
-See the subsequent subsections for the concrete details.
+#### 4.2.1 Fragmentation
+The maximum length of a Noise payload is 65535 bytes. This does not include the
+message authentication code for the encrypted data, which is 16 bytes, leaving
+65519 bytes available per Noise payload for message data.
 
-### 4.3 Message encoding
-This subsection defines a pseudocode function `WriteMsg(plaintext)` that takes
-the full Cable Wire Protocol message payload, `plaintext`, as bytes, and writes
-the bytes  to the network, performing encryption and fragmentation:
+Messages to be sent with a length exceeding 65519 bytes MUST by divided into
+`n > 1` segments such that
 
-```js
-function WriteMsg (plaintext) {
-  let written = 0
-  while (written < plaintext.length) {
-    let segmentLen = min(65519, plaintext.length - written)
-    let bytes = plaintext.slice(written, segmentLen)
-    let ciphertext = EncryptWithAd(ZERO, bytes)
-    WriteBytes(ciphertext)
-    written += bytes.length
-  }
-}
+```
+message = S₁ | ... | Sₙ
 ```
 
-When a Cable Wire Protocol message, `plaintext` is to be sent, it MUST follow
-these steps:
+prior to transmission, such that the first `n - 1` segments are 65519 bytes in
+length, and the final segment is of a length constituting the remaining bytes.
+Messages with a length less than or equal to 65519 bytes MUST be sent without
+any fragmentation.
 
-1. Compute the total length of all of the cipertexts fragments, in bytes, as
-   `len`, a 32-bit unsigned little endian integer. This is equal to the length
-   of the plaintext, plus an additional 16 bytes for each segment.
+For example, a message of length 155719 bytes would be fragmented into `n = 3`
+segments, where `S₁.length = 65519` bytes, `S₂.length = 65519` bytes, and the
+final segment `S₃.length = 155719 - 65519 * 2 = 24681` bytes.
 
-2. `WriteBytes(len)`
+#### 4.2.2 Encryption and Authentication
+Each segment MUST be encrypted with a MAC using the Noise function `EncryptWithAd`.
 
-3. `WriteMsg(plaintext)`
+In pseudocode, this would look like calling this function on each segment, Sₖ,
+such that a ciphertext, Cₖ is produced:
 
-If, for example, a `plaintext` of length 90200 were to be encoded & written,
-the first 65519 bytes would first be encrypted and written, followed by the
-remaining 24681 bytes being encrypted and written. Since each ciphertext has an
-extra 16 bytes added of authentication data, and there are two segments
-written, the total written length would be `65519 + 24681 + 16 * 2 = 90232`
-bytes.
-
-### 4.4 Message decoding
-This subsection defines pseudocode function `plaintext = ReadMsg(len)` that
-reads a ciphertext message of length `len`, performing de-fragmentation and
-decryption:
-
-```js
-function ReadMsg (len) {
-  let plaintext = ZERO
-  let bytesRemaining = len
-  while (bytesRemaining > 0) {
-    let segmentLen = min(65535, bytesRemaining)
-    let ciphertext = ReadBytes(segmentLen)
-    let segment = DecryptWithAd(ZERO, ciphertext)
-    plaintext = plaintext.concat(segment)
-    bytesRemaining -= segmentLen
-  }
-}
+```
+Cₖ = EncryptWithAd(ZERO, Sₖ)
 ```
 
-Reading a Cable Wire Protocol message MUST follow these steps:
+This results in an equal number of ciphertexts as there were segments, C₁...Cₙ.
 
-1. `len = ReadBytes(4)`, interpreting these 4 bytes as a little-endian unsigned
-   integer.
+#### 4.2.3 Message length
+The total length of a sequence of message segments, S₁...Sₙ can be computed as
 
-2. `plaintext = ReadMsg(len)`
+```
+totalLen = (n - 1) * 65535 + (Sₙ.length + 16)
+```
 
-3. The resulting bytes `plaintext` may then be parsed as a Cable Wire Protocol
-   message.
+The number `totalLen` is then encoded as a 4-byte little endian integer, and
+finally encrypted with a MAC:
+
+```
+lenEncrypted = EncryptWithAd(ZERO, len)
+```
+
+#### 4.2.4 Message transmission
+Using the values produced from the preceding subsections, the final message
+MUST be transmitted in the following sequence:
+
+1. Write the encrypted ciphertexts' length: `WriteBytes(lenEncrypted)`
+
+2. Write all ciphertexts in order: `WriteBytes(C₁); ... WriteBytes(Cₙ)`
+
+### 4.3 Message decoding
+Message decoding reverses the preceding steps:
+
+1. Read 20 bytes from the network (4 bytes of length data, plus 16 bytes for the MAC):
+
+```
+lenEncrypted = ReadBytes(20)
+```
+
+2. Decrypt the total ciphertexts' length:
+
+```
+totalLen = DecryptWithAd(ZERO, lenEncrypted)
+```
+
+3. Read the ciphertexts from the network, and concatenate their decrypted
+   plaintexts' together to form the original Cable Wire Protocol message,
+   `message`:
+
+```
+let message = ZERO
+while (totalLen > 65535) {
+  let ciphertext = ReadBytes(65535)
+  let segment = DecryptWithAd(ZERO, ciphertext)
+  message = message | segment
+  totalLen -= 65535
+}
+let ciphertext = ReadBytes(totalLen)
+let segment = DecryptWithAd(ZERO, ciphertext)
+message = message | segment
+```
 
 ## 5. Security considerations
 ### 5.1 Out-of-scope attacks
