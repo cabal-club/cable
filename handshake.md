@@ -293,21 +293,20 @@ For the remainder of this section, define the following pseudocode elements:
 - Let `ZERO` be an empty sequence of bytes.
 - Let `EncryptWithAd()` and `DecryptWithAd()` be the Noise functions of the
   same names.
-- Let `WriteBytes(bytes)` be a hypothetical function that writes `bytes` bytes
-  over the network to the other host.
-- Let `bytes = ReadBytes(len)` be a hypothetical function that reads `len`
-  bytes over the network from the other host, and returns those bytes as
-  `bytes`.
- - Let `bytes.slice(start, length)` be a hypothetical function on a byte
-   sequence that returns a slice of a sequence of bytes, starting at position
-   `start`, and including the next `length` bytes.
- - Let `result = bytes.concat(bytes2)` be a hypothetical function on a byte
-   sequence that concatenates the byte sequence `bytes2` onto the existing byte
-   sequence `bytes`, producing the new byte sequence `result`.
- - Let `bytes.length` be a hypothetical property of a byte sequence that
-   returns the length of the byte sequence `bytes`, in bytes.
-- Let `min(a, b)` be a hypothetical function that returns the smaller number of
-  `a` and `b`.
+- Let `WriteBytes(bytes)` be a function that writes `bytes` bytes over the
+  network to the other host.
+- Let `bytes = ReadBytes(len)` be a function that reads `len` bytes over the
+  network from the other host, and returns those bytes as `bytes`.
+- Let `bytes.slice(start, length)` be a function on a byte sequence that
+  returns a slice of a sequence of bytes, starting at position `start`, and
+  including the next `length` bytes.
+- Let `result = bytes.concat(bytes2)` be a function on a byte sequence that
+  concatenates the byte sequence `bytes2` onto the existing byte sequence
+  `bytes`, producing the new byte sequence `result`.
+- Let `bytes.length` be a property of a byte sequence that returns the length
+  of the byte sequence `bytes`, in bytes.
+- Let `min(a, b)` be a function that returns the smaller of two numbers, `a`
+  and `b`.
 
 ### 4.2 Fragmentation
 The maximum Noise message length is 65519 bytes, so any input `plaintext`
