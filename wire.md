@@ -141,7 +141,7 @@ carry out.
 
 **peer**: A host, whom the referred host is communicating with via the Cable Wire Protocol.
 
-**Ed25519**: A public-key cryptographic signature system.
+**[Ed25519][Ed25519]**: A public-key cryptographic signature system.
 
 **hash**: A 32-byte BLAKE2b digest of a particular sequence of bytes.
 
