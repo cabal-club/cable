@@ -125,9 +125,9 @@ This protocol focuses on the over-the-wire bytes that get sent between peers
 that enable the exchange of chat messages and user and channel information.
 
 This protocol does not specify encryption nor authentication of the connection,
-nor a mechanism for the discovery of network peers. These may be provided by
-other layers in userland (e.g. [Tor][Tor], [I2P][I2P]) or specified in future
-cable work.
+nor a mechanism for the discovery of network peers. For encryption and
+authentication, it is RECOMMENDED to utilize the [Cable Handshake
+Protocol](handshake.md).
 
 It is assumed that peers speaking cable are already authorized to access its
 data. Section [Security Considerations](#7-security-considerations) includes an
