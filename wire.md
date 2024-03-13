@@ -163,7 +163,7 @@ carry out.
 
 **timestamp**: A point in time represented by the number of milliseconds since the UNIX epoch.
 
-**latest**: When used to refer to a post, the latest post is that post which, from a host's perspective at a given moment in time, is the head with the greatest timestamp.
+**latest**: When used in the context of posts, this refers to the post that, from a host's perspective at a given moment in time, is the head with the greatest timestamp.
 
 **channel**: A conceptual object with its own unique name, that users can participate in by authoring posts that reference the channel.
 
