@@ -135,11 +135,11 @@ analysis of the types of anticipated attacks that authorized members may still
 carry out.
 
 ## 3. Definitions
-**client**: A running instance of a computer program that implements cable.
+**host**: A computer running the Cable Wire Protocol.
 
-**cabal**: An instance of a private group chat, whose client participants speak the cable protocol.
+**cabal**: An instance of a private group chat, whose host participants communicate using the Cable Wire Protocol.
 
-**peer**: A client, to whom the referred to client is connected to over some transport protocol.
+**peer**: A host, whom the referred host is communicating with via the Cable Wire Protocol.
 
 **Ed25519**: A public-key cryptographic signature system.
 
@@ -159,15 +159,15 @@ carry out.
 
 **channel**: A conceptual object with its own unique name, that users can participate in by authoring posts that reference the channel.
 
-**request**: A binary payload originating from a particular client.
+**request**: A binary payload originating from a particular host.
 
-**response**: A binary payload, traversing the network from a particular client back to the client who issued the original request.
+**response**: A binary payload, traversing the network from a particular host back to the host who issued the original request.
 
 **`req_id`**: A unique 32-bit number that uniquely identifies a request traversing in the network, and any corresponding responses.
 
-**requester**: A client authoring a request, to be sent to other peers.
+**requester**: A host authoring a request, to be sent to other peers.
 
-**responder**: A client authoring a response, in reference to a request sent to them.
+**responder**: A host authoring a response, in reference to a request sent to them.
 
 **message**: Either a request or a response.
 
@@ -177,7 +177,7 @@ carry out.
 
 **head**: A post that is not referenced (linked to) by any other known post.
 
-**latest**: When used to refer to a post, the latest post is that post which, from a client's perspective at a given moment in time, is the head with the greatest timestamp.
+**latest**: When used to refer to a post, the latest post is that post which, from a host's perspective at a given moment in time, is the head with the greatest timestamp.
 
 **varint**: a variable-length unsigned integer, encoded as [Unsigned LEB128](https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128).
 
@@ -243,20 +243,20 @@ other posts by means of specifying those posts' hashes.
 Referencing a post by its hash provides a **causal proof**: it demonstrates
 that a post must have occurred after all of the other posts referenced. This
 property can be useful for ordering chat messages, since a timestamp alone can
-cause ordering problems if a client's hardware clock is skewed, or a timestamp
+cause ordering problems if a host's hardware clock is skewed, or a timestamp
 is spoofed.
 
 Implementations are RECOMMENDED to set and utilize links on chat messages
 specifically (`post/text`). Clients that do not support setting links will
 reduce the quality of the cabal's data's eventual consistency. The greater the
-number of clients that are participating in a cabal that do not set links, the
+number of hosts that are participating in a cabal that do not set links, the
 more vulnerable to clock skew or maliciously inaccurate timestamps its
 participants will be.
 
 ##### 5.1.3.1 Setting links
 In order to set links on a post, each channel's current heads MUST be tracked.
 
-If a client is setting links on new posts, it MUST set the `links` field to the
+If a host is setting links on new posts, it MUST set the `links` field to the
 hashes of all known heads in the channel being posted in. Doing so will converge
 the number of heads in a channel down to 1 (the post being made).
 
@@ -278,19 +278,19 @@ time.
 | 7                     | Channel List Response         | a list of channel names |
 
 #### 5.2.1 Time To Live
-The TTL mechanism exists to allow clients with limited connectivity to peers
+The TTL mechanism exists to allow hosts with limited connectivity to peers
 (e.g. behind a strong NAT or a restricted mobile connection) to use the peers
 they can reach as a relay to find and retrieve data they are interested in more
 easily.
 
 The `ttl` field, set in the request header, expresses an upper bound on how
-many times a request is forwarded to other peers. A client wishing a request
+many times a request is forwarded to other peers. A host wishing a request
 not be forwarded beyond its initial destination peer MUST set `ttl = 0`.
 
 An incoming request with `ttl = 0` MUST NOT be forwarded.
 
 An incoming request with a `ttl > 0` SHOULD be forwarded along to all peers the
-client is connected to. A peer forwarding a request MUST decrement the `ttl` by
+host is connected to. A peer forwarding a request MUST decrement the `ttl` by
 one before sending it, to ensure the number of network hops does not exceed
 what the original requester specified.
 
@@ -299,16 +299,16 @@ To prevent request loops in the network, an incoming request with a known
 
 #### 5.2.2 Lifetime of a Request
 In the lifetime of a given request, there are three exclusive roles an involved
-client machine can have:
+host can have:
 
-1. The **original requester**: the client who allocated the new request and has a set of
+1. The **original requester**: the host who allocated the new request and has a set of
    *outbound peers* they have sent that request to.
 
-2. An **intermediary peer**: any client who received the request from
+2. An **intermediary peer**: any host who received the request from
    one or more peers and has also forwarded it to others. An intermediary peer
    has both a set of *inbound peers* for a request as well as a set of *outbound peers*.
 
-3. A **terminal peer**: a client who received the request from one or
+3. A **terminal peer**: a host who received the request from one or
    more peers and does NOT forward it to any others. A terminal peer has only
    a set of *inbound peers*.
 
@@ -317,8 +317,8 @@ intermediary peer) MUST satisfy any of the following in order to consider a
 request concluded, for each outbound peer:
 
 1. Receives a "no more data" Hash Response (`hash_count = 0`) from the peer.
-2. Sends the peer a Cancel Request, induced by an explicit client action or,
-   for example, a local timeout a client set on the request.
+2. Sends the peer a Cancel Request, induced by an explicit host action or,
+   for example, a local timeout a host set on the request.
 3. The connection to the peer is lost.
 
 A peer handling a request who has *inbound peers* (intermediary peer, terminal
@@ -331,10 +331,10 @@ concluded, for each inbound peer:
 
 #### 5.2.3 Limits
 Some requests have a `limit` field specifying an upper bound on how many hashes
-a client wishes to receive in response. A peer responding to such a request
+a host wishes to receive in response. A peer responding to such a request
 MUST honour that limit by counting how many hashes they send back to the
 requester, including hashes received through other peers that the responding
-client has forwarded that request to.
+host has forwarded that request to.
 
 For example, assume `A` sends a request to `B` with `limit = 50` and `ttl = 1`.
 `B` forwards the request to `C` and `D`. `B` may send back 15 hashes to `A` at
@@ -345,11 +345,11 @@ A requester receiving more than `limit` hashes MAY choose to discard the
 extraneous ones.
 
 #### 5.2.4 Deduplication
-A client who is also an intermediary peer MAY elect to perform deduplication on
+A host who is also an intermediary peer MAY elect to perform deduplication on
 the behalf of a requester, in order to reduce redundant retransmission of post
 or hash data (Post Response and Hash Response, respectively).
 
-For example, consider a client `A` which sends a request to `B` with `ttl = 1`.
+For example, consider a host `A` which sends a request to `B` with `ttl = 1`.
 `B` then forwards that request to their peers `C` and `D`. If `B` responds to `A`
 with a set of N hashes or posts `B` could track what they sent. Additionally, in the
 case that `C` or `D`'s responses -- routed through `B` -- contain any
@@ -410,21 +410,21 @@ A user makes a post "to a channel" if they have set the `channel` field on said
 post to the name of that channel.
 
 A user is a member of a channel at a particular point in time if, from a
-client's perspective, that user has issued a `post/join`, `post/text`, or
+host's perspective, that user has issued a `post/join`, `post/text`, or
 `post/topic` to that channel and has not issued a `post/leave` since.
 
 If a user's latest known post to a channel is a `post/leave`, they are not a
 member of that channel.
 
 A user is an ex-member of a channel at a particular point in time if, from a
-client's perspective, that user has issued no further posts interacting with a
+host's perspective, that user has issued no further posts interacting with a
 channel since a `post/leave` post was issued.
 
 Clients SHOULD issue a `post/join` post before issuing any other posts to a
 channel.
 
 #### 5.4.4 State
-A channel at any given moment, from the perspective of a client, is fully
+A channel at any given moment, from the perspective of a host, is fully
 described by the following:
 
 1. The latest `post/info` post of all members and ex-members.
@@ -434,7 +434,7 @@ described by the following:
 
 #### 5.4.5 Synchronization
 The Channel State Request and Channel Time Range Request are sufficient for a
-client to track the state of a channel that a client is interested in. The
+host to track the state of a channel that a host is interested in. The
 former request allows tracking general state (who is in the channel, its topic,
 information about users in the channel), and the latter tracks the history of
 chat messages within that channel.
@@ -554,7 +554,7 @@ field           | type                   | desc
 
 `post_type` MUST be set to `1`.
 
-A client interpreting this post MUST only perform a local deletion of the
+A host interpreting this post MUST only perform a local deletion of the
 referenced posts if the author (`post.public_key`) matches the author of the
 post to be deleted (i.e. only the user who authored a post may delete it).
 
@@ -599,7 +599,7 @@ key       | value format | desc
 ----------|--------------|---------------------------------------
 `name`    | UTF-8        | the name this user wishes to be known as. Default value is "" (empty string).
 
-To save space, a client MAY discard older versions of these messages for a
+To save space, a host MAY discard older versions of these messages for a
 particular user.
 
 #### 6.2.5 `post/topic`
@@ -670,10 +670,10 @@ across the peers who may handle it. For networks with up to 43 million active
 requests within a single cabal, the probability of collision remains below 1%.
 (i.e. `(1 - 1 / (2**32)) ** 43_000_000 > 0.99`)
 
-When generating a new `req_id`, a client MUST discard and generate a new one if
+When generating a new `req_id`, a host MUST discard and generate a new one if
 the one generated collides with a known active `req_id`.
 
-When a client forwards a request to further peers, the `req_id` MUST NOT be
+When a host forwards a request to further peers, the `req_id` MUST NOT be
 changed, so that routing loops can be more easily detected by peers in the
 network.
 
@@ -774,9 +774,9 @@ and continue to receive any new chat messages that the responder learns of in
 the future, so long as this request is still alive. `time_start` MUST be
 respected regardless of whether `time_end` is 0 or some definite value.
 
-Responding clients SHOULD respond with all known chat messages within the
+Responding hosts SHOULD respond with all known chat messages within the
 requested time range, though they may desire not to in certain circumstances,
-particularly if a channel has a very long history and the responding client
+particularly if a channel has a very long history and the responding host
 lacks sufficient resources at the time to return thousands or hundreds of
 thousands of chat message hashes.
 
@@ -840,7 +840,7 @@ This request returns zero or more Channel List Response messages.
 If `limit` is 0, the responder MUST respond with all known channels (after
 skipping the first `offset` entries).
 
-The `offset` field can be combined with the `limit` field to allow clients to
+The `offset` field can be combined with the `limit` field to allow hosts to
 paginate through the list of all channel names known by a peer.
 
 #### 6.3.3 Responses
@@ -896,8 +896,8 @@ they have concluded the request on their side.
 
 Clients SHOULD hash an entire post to check whether it is post that it was
 expecting (i.e. had sent out a Post Request for). However, misbehaving peers
-may end up providing posts that are still coincidentally useful to the client,
-so clients MAY elect to keep certain posts.
+may end up providing posts that are still coincidentally useful to the host,
+so hosts MAY elect to keep certain posts.
 
 Each post MUST contain the complete and valid body of a known post type
 (Section 6.2).
@@ -919,7 +919,7 @@ field          | type                | desc
 A recipient reads the zero or more (`channel_len`,`channel`) pairs until
 `channel_len = 0`.
 
-In order for pagination to work properly, clients MUST use a stable sort
+In order for pagination to work properly, hosts MUST use a stable sort
 method for the names of channels.
 
 ## 7. Security Considerations
@@ -947,7 +947,7 @@ Documented here are attacks that can come from *within* a cabal — by those who
 1. An attacker could issue a `post/info` to alter their display name to be the same as another user, causing confusion as to which user is authoring certain chat messages.
     1. Client-side mitigation options exist, such as colourizing names by the public key of the user, or displaying a short hash digest of their key next to their name when there are multiple users sharing a name.
 
-2. Posts are signed by their author, but do not contain a reference to the cabal they were written to. an attacker could perform a replay attack by sharing a post made on one cabal into another cabal, and it would appear authentic. This is mitigated by the Handshake Protocol specification having an explicit advisory to never re-use identity keys between cabals, allowing for users and clients to assume that any public keys that are the same across cabals are completely coincidental and not the same person.
+2. Posts are signed by their author, but do not contain a reference to the cabal they were written to. an attacker could perform a replay attack by sharing a post made on one cabal into another cabal, and it would appear authentic. This is mitigated by the Handshake Protocol specification having an explicit advisory to never re-use identity keys between cabals, allowing for users and hosts to assume that any public keys that are the same across cabals are completely coincidental and not the same person.
 
 #### 7.2.1.3 Denial of Service
 1. Authoring very large posts (gigabytes or larger) and/or a large number of smaller posts, and sharing them with others to download.
@@ -963,7 +963,7 @@ Documented here are attacks that can come from *within* a cabal — by those who
     1. A limited mitigation could involve a user posting a new, hypothetical `post/tombstone` type post that informs other peers that this identity has been compromised, and that it should no longer be trusted as legitimate henceforth.
 
 #### 7.2.1.5 Message Omission
-1. While a machine can not issue a `post/delete` to erase another user's posts, they could choose to omit post hashes from responses to requests made to them by others. This attack is only viable if the machine is a client's only means of accessing certain data (e.g. the client was unable to directly connect to any non-attacker machines). Once that client connects to other, non-malicious machines, they will be able to "fill the gaps" of missing data within the time window & channels in which they are interested.
+1. While a machine can not issue a `post/delete` to erase another user's posts, they could choose to omit post hashes from responses to requests made to them by others. This attack is only viable if the machine is a host's only means of accessing certain data (e.g. the host was unable to directly connect to any non-attacker machines). Once that host connects to other, non-malicious machines, they will be able to "fill the gaps" of missing data within the time window & channels in which they are interested.
 
 #### 7.2.1.6 Attacker Expulsion
 1. An attacker causing problems by means of spoofing, denial of service, passive listening, or inappropriate use cannot, as per the current protocol design, be expelled from the cabal group chat. Legitimate users have no means of recourse beyond starting a new cabal and not inviting the attacker.
@@ -975,7 +975,7 @@ Documented here are attacks that can come from *within* a cabal — by those who
 
 #### 7.2.2.2 Data Integrity
 1. All posts are cryptographically signed, and cannot be altered or forged unless a user's private key has been compromised.
-2. Certain posts have implicit authorization (e.g. a `post/info` post can only alter its author's display name, and cannot be used to change another user's name), which is carried out by clients following the specification re: post ingestion logic.
+2. Certain posts have implicit authorization (e.g. a `post/info` post can only alter its author's display name, and cannot be used to change another user's name), which is carried out by hosts following the specification re: post ingestion logic.
 
 #### 7.2.2.3 Privilege Escalation
 Cabal has no privilege levels beyond that of a) member and b) non-member. Non-members have zero privileges (not even able to participate at the wire protocol level), and all members hold the same privileges.
