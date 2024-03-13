@@ -157,7 +157,7 @@ carry out.
 
 **link**: A hash appearing in a post, which acts as a reference to another post. A post that contains a link to another post's hash can be said to be "linking to" that post.
 
-**head**: A post that is not linked to by any other known post.
+**head(s)**: A post (or posts) that is (are) not linked to by any other known post.
 
 **UNIX epoch**: Midnight UTC on January 1st, 1970.
 
