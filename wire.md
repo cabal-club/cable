@@ -165,7 +165,7 @@ carry out.
 
 **message**: Either a request or a response.
 
-**`req_id`**: A unique 32-bit number that uniquely identifies a request traversing in the network, and any corresponding responses.
+**`req_id`**: A 32-bit number that identifies a particular request traversing in the network, and any corresponding responses.
 
 **requester**: A host authoring a request, to be sent to other peers.
 
