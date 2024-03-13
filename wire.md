@@ -81,11 +81,17 @@ peer-to-peer group chatrooms.
 * [9. Informative References](#9-informative-references)
 
 ## 0. Background
-[Cabal][Cabal] is a distributed peer-to-peer software platform for private
-group chats. It operates in a fashion different from the typical server-client
-model, where no machine is either an official nor de facto authority over
-others in the network. Instead, peers collaborate with each other to share data
-and build an eventually consistent view of that data.
+Cable is a peer-to-peer protocol for private group chats, called *cabals*.
+
+Cable operates differently from the traditional server-client model, where the
+server is a centralized authority. Instead, in Cable, every node in the network
+is equal to each other. Nodes of a cabal share data with each other in order to
+build an eventually consistent view of the state of that cabal.
+
+The purpose of the Cable Wire Protocol is to facilitate the creation and sync
+of cabals, by allowing peers to exchange cryptographically signed documents
+with each other, such as chat messages, spread across various user-defined
+channels.
 
 Cabal's original protocol was based off of [hypercore][hypercore], which was
 found to have limitations and trade-offs that didn't suit Cabal's needs well.
