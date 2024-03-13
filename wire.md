@@ -155,7 +155,15 @@ carry out.
 
 **post**: A binary payload of a specific format, signed with the private key of the user who created it.
 
-**link**: A hash appearing in a post, which acts as a reference to another post.
+**link**: A hash appearing in a post, which acts as a reference to another post. A post that contains a link to another post's hash can be said to be "linking to" that post.
+
+**head**: A post that is not linked to by any other known post.
+
+**UNIX epoch**: Midnight UTC on January 1st, 1970.
+
+**timestamp**: A point in time represented by the number of milliseconds since the UNIX epoch.
+
+**latest**: When used to refer to a post, the latest post is that post which, from a host's perspective at a given moment in time, is the head with the greatest timestamp.
 
 **channel**: A conceptual object with its own unique name, that users can participate in by authoring posts that reference the channel.
 
@@ -170,14 +178,6 @@ carry out.
 **requester**: A host authoring a request, to be sent to other peers.
 
 **responder**: A host authoring a response, in reference to a request sent to them.
-
-**UNIX epoch**: Midnight UTC on January 1st, 1970.
-
-**timestamp**: A point in time represented by the number of milliseconds since the UNIX epoch.
-
-**head**: A post that is not referenced (linked to) by any other known post.
-
-**latest**: When used to refer to a post, the latest post is that post which, from a host's perspective at a given moment in time, is the head with the greatest timestamp.
 
 **varint**: a variable-length unsigned integer, encoded as [Unsigned LEB128](https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128).
 
