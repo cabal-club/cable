@@ -163,13 +163,13 @@ carry out.
 
 **response**: A binary payload, traversing the network from a particular host back to the host who issued the original request.
 
+**message**: Either a request or a response.
+
 **`req_id`**: A unique 32-bit number that uniquely identifies a request traversing in the network, and any corresponding responses.
 
 **requester**: A host authoring a request, to be sent to other peers.
 
 **responder**: A host authoring a response, in reference to a request sent to them.
-
-**message**: Either a request or a response.
 
 **UNIX epoch**: Midnight UTC on January 1st, 1970.
 
