@@ -22,9 +22,8 @@ peer-to-peer group chatrooms.
   + [4.2 Ed25519](#42-ed25519)
 * [5. Data Model](#5-data-model)
   + [5.1 Posts](#51-posts)
-    - [5.1.2 Addressing](#512-addressing)
-    - [5.1.3 Links](#513-links)
-      * [5.1.3.1 Setting links](#5131-setting-links)
+    - [5.1.2 Links](#513-links)
+      * [5.1.2.1 Setting links](#5131-setting-links)
   + [5.2 Requests & Responses](#52-requests--responses)
     - [5.2.1 Time To Live](#521-time-to-live)
     - [5.2.2 Lifetime of a Request](#522-lifetime-of-a-request)
@@ -248,17 +247,17 @@ within some time range).
 | 4                      | `post/join`  | announce membership to a channel |
 | 5                      | `post/leave` | announce cessation of membership to a channel |
 
-#### 5.1.2 Addressing
-Any post in cable can be addressed or referenced by its hash.
+#### 5.1.2 Links
+Any post can be referenced by its hash: a BLAKE2b hash of a post in its
+entirety.
+
+Every post has a field called `links`: a list of BLAKE2b hashes. This fields
+allows a post to refer to 0 or more other posts by means of specifying those
+posts' hashes.
 
 The hash for a post is produced by putting a post's verbatim binary content,
 including the post header, through the BLAKE2b function. (The structure of
 posts is described below, in Section 6.)
-
-#### 5.1.3 Links
-Every post has a field called `links`, a list of BLAKE2b hashes, that enables
-any post to refer to 0 or more other posts by means of specifying those posts'
-hashes.
 
 Referencing a post by its hash provides a **causal proof**: it demonstrates
 that a post must have occurred after all of the other posts referenced. This
@@ -273,7 +272,7 @@ number of hosts that are participating in a cabal that do not set links, the
 more vulnerable to clock skew or maliciously inaccurate timestamps its
 participants will be.
 
-##### 5.1.3.1 Setting links
+##### 5.1.2.1 Setting links
 In order to set links on a post, each channel's current heads MUST be tracked.
 
 If a host is setting links on new posts, it MUST set the `links` field to the
