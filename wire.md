@@ -238,8 +238,9 @@ including the post header, through the BLAKE2b function. (The structure of
 posts is described below, in Section 6.)
 
 #### 5.1.3 Links
-The `links` field in each post's header enables any post to refer to 0 or more
-other posts by means of specifying those posts' hashes.
+Every post has a field called `links`, a list of BLAKE2b hashes, that enables
+any post to refer to 0 or more other posts by means of specifying those posts'
+hashes.
 
 Referencing a post by its hash provides a **causal proof**: it demonstrates
 that a post must have occurred after all of the other posts referenced. This
