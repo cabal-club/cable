@@ -266,10 +266,10 @@ cause ordering problems if a host's hardware clock is skewed, or a timestamp
 is spoofed.
 
 Implementations are RECOMMENDED to set and utilize links on chat messages
-specifically (`post/text`). Clients that do not support setting links will
-reduce the quality of the cabal's data's eventual consistency. The greater the
-number of hosts that are participating in a cabal that do not set links, the
-more vulnerable to clock skew or maliciously inaccurate timestamps its
+specifically (`post/text`). Implementations that do not support setting links
+will reduce the quality of the cabal's data's eventual consistency. The greater
+the number of hosts that are participating in a cabal that do not set links,
+the more vulnerable to clock skew or maliciously inaccurate timestamps its
 participants will be.
 
 ##### 5.1.2.1 Setting links
@@ -439,7 +439,7 @@ A user is an ex-member of a channel at a particular point in time if, from a
 host's perspective, that user has issued no further posts interacting with a
 channel since a `post/leave` post was issued.
 
-Clients SHOULD issue a `post/join` post before issuing any other posts to a
+Hosts SHOULD issue a `post/join` post before issuing any other posts to a
 channel.
 
 #### 5.4.4 State
@@ -458,7 +458,7 @@ former request allows tracking general state (who is in the channel, its topic,
 information about users in the channel), and the latter tracks the history of
 chat messages within that channel.
 
-Clients SHOULD set the `time_end` and `time_start` fields of Channel Time Range
+Hosts SHOULD set the `time_end` and `time_start` fields of Channel Time Range
 Requests in the following manner, to reliably track channel chat history:
 
 ```
@@ -467,7 +467,7 @@ time_start = now() - WINDOW_WIDTH
 ```
 
 where `now()` is the current system UNIX Time, and `WINDOW_WIDTH` is the size
-of the "rolling window" to track chat messages within, in milliseconds. Clients are
+of the "rolling window" to track chat messages within, in milliseconds. Hosts are
 RECOMMENDED to use a `WINDOW_WIDTH` of one week (25,200,000 milliseconds), though this
 value MAY be customized, since there are network environments where users may
 be offline for up to several months at a time, and a much wider rolling window
@@ -539,7 +539,7 @@ The protocol MAY be extended by implementers by creating additional
 `post_type`s. Implementers MUST only use `post_type > 255`. The
 first 256 are reserved for core protocol use.
 
-Clients SHOULD discard posts with a `post_type` that they don't understand or
+Hosts SHOULD discard posts with a `post_type` that they don't understand or
 support.
 
 All fields specified in the subsequent subsections MUST be present for a post
@@ -678,7 +678,7 @@ Message-specific fields follow after the `req_id`.
 Each request and response type has a unique `msg_type` (see below), which
 controls which fields will immediately follow this header.
 
-Clients encountering a `msg_type` they do not know how to parse MUST ignore and
+Hosts encountering a `msg_type` they do not know how to parse MUST ignore and
 discard it.
 
 The `reserved` field is not currently in use, and MUST be set to all zeros.
@@ -821,7 +821,7 @@ Requesters MAY discard hashes mapping to posts that do not contain relevant
 information.
 
 See Section 5.4.4 for context on what comprises channel state. Chat messages
-MUST NOT be included in responses to this request. Clients MUST be able to
+MUST NOT be included in responses to this request. Hosts MUST be able to
 handle the hashes of unexpected types appearing in responses, and MAY choose
 for themselves whether to discard them or not.
 
@@ -913,7 +913,7 @@ A responder MUST send a Post Response message with `post0_len = 0` to indicate
 that they do not intend to return any further posts for the given `req_id` and
 they have concluded the request on their side.
 
-Clients SHOULD hash an entire post to check whether it is post that it was
+Hosts SHOULD hash an entire post to check whether it is post that it was
 expecting (i.e. had sent out a Post Request for). However, misbehaving peers
 may end up providing posts that are still coincidentally useful to the host,
 so hosts MAY elect to keep certain posts.
@@ -964,14 +964,14 @@ Documented here are attacks that can come from *within* a cabal — by those who
 
 #### 7.2.1.2 Spoofing
 1. An attacker could issue a `post/info` to alter their display name to be the same as another user, causing confusion as to which user is authoring certain chat messages.
-    1. Client-side mitigation options exist, such as colourizing names by the public key of the user, or displaying a short hash digest of their key next to their name when there are multiple users sharing a name.
+    1. Host-side mitigation options exist, such as colourizing names by the public key of the user, or displaying a short hash digest of their key next to their name when there are multiple users sharing a name.
 
 2. Posts are signed by their author, but do not contain a reference to the cabal they were written to. an attacker could perform a replay attack by sharing a post made on one cabal into another cabal, and it would appear authentic. This is mitigated by the Handshake Protocol specification having an explicit advisory to never re-use identity keys between cabals, allowing for users and hosts to assume that any public keys that are the same across cabals are completely coincidental and not the same person.
 
 #### 7.2.1.3 Denial of Service
 1. Authoring very large posts (gigabytes or larger) and/or a large number of smaller posts, and sharing them with others to download.
 2. Making a large quantity of expensive requests (e.g. a time range request on a channel with a long chat history that covers its entire lifetime, repeatedly).
-    1. Clients could implement per-connection rate limiting on requests, to prevent a degradation of service from network participants.
+    1. Hosts could implement per-connection rate limiting on requests, to prevent a degradation of service from network participants.
 3. Creating an excessively large number of new channels (by writing at least one `post/text` post to each). Since channels can only be created and not removed, this attack has the potential to make a cabal somewhat unusable by legitimate users, if there are so many garbage channels they cannot locate real ones.
     1. New channel creation could be rate-limited, although even at a limit of 1 channel/day, it still would not take long to produce high levels of noise.
     2. Future moderation capabilities could curtail channels discovered to be garbage by issuing moderation posts that delete such channels.
