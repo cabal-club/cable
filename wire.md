@@ -234,7 +234,8 @@ within some time range).
 Any post in cable can be addressed or referenced by its hash.
 
 The hash for a post is produced by putting a post's verbatim binary content,
-including the post header, through the BLAKE2b function.
+including the post header, through the BLAKE2b function. (The structure of
+posts is described below, in Section 6.)
 
 #### 5.1.3 Links
 The `links` field in each post's header enables any post to refer to 0 or more
