@@ -154,7 +154,7 @@ carry out.
 
 **post**: A binary payload of a specific format, signed with the private key of the user who created it.
 
-**link**: A hash appearing in a post, which acts as a reference to another post. A post that contains a link to another post's hash can be said to be "linking to" that post.
+**link**: The BLAKE2b hash of a particular post that appears in the body of another post. A post that references another post by its hash can be said to be "linking to" that post.
 
 **head(s)**: A post (or posts) that is (are) not linked to by any other known post.
 
