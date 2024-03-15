@@ -210,11 +210,29 @@ Cable uses the Ed25519-SHA-512 variant of [Ed25519][Ed25519]:
 ## 5. Data Model
 
 ### 5.1 Posts
-All of the durable data exchanged over the protocol are composed of posts.
+A cabal is comprised of posts, made by its participants.
 
-A post MUST have an author (via the required `public_key` field), and MUST
-provide a cryptographic signature (via the required `signature` field) to prove
-that they, in fact, authored it.
+All posts have, at minimum, the following fields:
+
+field        | desc
+-------------|-------------------------------------------------------
+`public_key` | public key that authored this post
+`signature`  | signature of the fields that follow
+`num_links`  | how many hashes this post links back to (0+)
+`links`      | hashes of the latest posts in this channel/context
+`post_type`  | see custom post type sections below
+`timestamp`  | milliseconds since UNIX Epoch
+
+All posts are cryptographically signed, in order to prove the identity of its
+author and that it has not been tampered with.
+
+A post's author is identified by the `public_key` field, and the `signature`
+field provides a cryptographic signature of all of the other fields in the
+post.
+
+Depending on the `post_type`, a post will have additional fields. Those fields,
+as well as the others mentioned above, are described in much more detail in
+Section 6.
 
 When a user "makes a post", they are only writing to some local storage,
 perhaps indexed by the hash of the content for easy querying. Posts are only
