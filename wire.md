@@ -259,25 +259,28 @@ The hash for a post is produced by putting a post's verbatim binary content,
 including the post header, through the BLAKE2b function. (The structure of
 posts is described below, in Section 6.)
 
-Referencing a post by its hash provides a **causal proof**: it demonstrates
-that a post must have occurred after all of the other posts referenced. This
-property can be useful for ordering chat messages, since a timestamp alone can
-cause ordering problems if a host's hardware clock is skewed, or a timestamp
-is spoofed.
+Referencing a post by its hash provides a causal proof: it demonstrates that a
+post must have occurred after all of the other posts referenced. This property
+can be useful for ordering chat messages, since a timestamp alone can cause
+ordering problems if a host's hardware clock is skewed, or a timestamp is
+spoofed.
 
-Implementations are RECOMMENDED to set and utilize links on chat messages
-specifically (`post/text`). Implementations that do not support setting links
-will reduce the quality of the cabal's data's eventual consistency. The greater
-the number of hosts that are participating in a cabal that do not set links,
-the more vulnerable to clock skew or maliciously inaccurate timestamps its
-participants will be.
+- ok, two separate things:
+  1. the issue with timestamp+link ordering that we identified a while back
+  2. whether the post type ought to be sorted (assume a reliable sort method)
 
 ##### 5.1.2.1 Setting links
-In order to set links on a post, each channel's current heads MUST be tracked.
+Each post made to a channel should link to all known heads in that channel.
+This is explained in detail below.
 
-If a host is setting links on new posts, it MUST set the `links` field to the
-hashes of all known heads in the channel being posted in. Doing so will converge
-the number of heads in a channel down to 1 (the post being made).
+Let `linkableTypes` be the set of strings `{ 'post/text', 'post/topic', 'post/join', 'post/leave' }`.
+
+When a post 𝑃 is created such that `𝑃.type ∋ linkableTypes`, it SHOULD link to
+all other posts 𝑄ᵢ known to the host that meet the following criteria:
+
+1. `𝑄ᵢ.type ∋ linkableTypes`
+2. `𝑃.channel == 𝑄ᵢ.channel`
+3. There exists no known post 𝑅 such that `BLAKE2b(𝑄ᵢ) ∋ 𝑅.links` (i.e. that 𝑄ᵢ is a head)
 
 ### 5.2 Requests & Responses
 All request types MAY yield multiple responses from peers. This could happen
