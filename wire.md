@@ -25,8 +25,8 @@ peer-to-peer group chatrooms.
     - [5.1.2 Links](#513-links)
       * [5.1.2.1 Setting links](#5131-setting-links)
   + [5.2 Requests & Responses](#52-requests--responses)
-    - [5.2.1 Time To Live](#521-time-to-live)
-    - [5.2.2 Lifetime of a Request](#522-lifetime-of-a-request)
+    - [5.2.1 Lifetime of a Request](#522-lifetime-of-a-request)
+    - [5.2.2 Time To Live](#521-time-to-live)
     - [5.2.3 Limits](#523-limits)
     - [5.2.4 Deduplication](#524-deduplication)
   + [5.3 Users](#53-users)
@@ -302,29 +302,9 @@ time.
 | 1                     | Post Response                 | a list of posts, pertaining to some request |
 | 7                     | Channel List Response         | a list of channel names |
 
-#### 5.2.1 Time To Live
-The TTL mechanism exists to allow hosts with limited connectivity to peers
-(e.g. behind a strong NAT or a restricted mobile connection) to use the peers
-they can reach as a relay to find and retrieve data they are interested in more
-easily.
-
-The `ttl` field, set in the request header, expresses an upper bound on how
-many times a request is forwarded to other peers. A host wishing a request
-not be forwarded beyond its initial destination peer MUST set `ttl = 0`.
-
-An incoming request with `ttl = 0` MUST NOT be forwarded.
-
-An incoming request with a `ttl > 0` SHOULD be forwarded along to all peers the
-host is connected to. A peer forwarding a request MUST decrement the `ttl` by
-one before sending it, to ensure the number of network hops does not exceed
-what the original requester specified.
-
-To prevent request loops in the network, an incoming request with a known
-`req_id` MUST be discarded.
-
-#### 5.2.2 Lifetime of a Request
+#### 5.2.1 Lifetime of a Request
 In the lifetime of a given request, there are three exclusive roles an involved
-host can have:
+host may have:
 
 1. The **original requester**: the host who allocated the new request and has a set of
    *outbound peers* they have sent that request to.
@@ -336,6 +316,9 @@ host can have:
 3. A **terminal peer**: a host who received the request from one or
    more peers and does NOT forward it to any others. A terminal peer has only
    a set of *inbound peers*.
+
+A host in any of these roles for a given request is expected to track that
+request's `req_id` until said request is concluded.
 
 A peer handling a request who has *outbound peers* (original requester,
 intermediary peer) MUST satisfy any of the following in order to consider a
@@ -353,6 +336,33 @@ concluded, for each inbound peer:
 1. Sends a "no more data" response back to the peer.
 2. Receives a Cancel Request.
 3. The connection to the peer is lost.
+
+#### 5.2.2 Time To Live
+A TTL (Time To Live) mechanism exists to allow hosts with limited connectivity
+to peers (e.g. behind a strong NAT or a restricted mobile connection) to use
+the peers they can reach as relays to find and retrieve data they are
+interested in more easily.
+
+This is encoded into messages by the `ttl` field, set in the header, to express
+an upper bound on how many times a request is forwarded to other peers. A host
+wishing a request not be forwarded beyond its immediate recipient would set
+`ttl = 0`.
+
+When receiving a request from a peer, the following rules hold:
+
+1. An incoming request with `ttl = 0` MUST NOT be forwarded.
+
+2. To prevent request loops in the network, if an incoming request has a
+   `req_id` equal to an unconcluded request the host already knows of, the host
+   MUST discard said incoming request.
+
+3. An incoming request with a `ttl > 0` MAY be forwarded along to any subset of
+   peers the host is connected to, at the discretion of the sending host. This
+   could be based on the host's available resources, bandwidth, et cetera.
+
+4. A peer forwarding a request MUST decrement the `ttl` by one before sending
+   it, to ensure the number of network hops does not exceed what the original
+   requester specified.
 
 #### 5.2.3 Limits
 Some requests have a `limit` field specifying an upper bound on how many hashes
