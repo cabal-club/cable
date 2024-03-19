@@ -238,14 +238,17 @@ perhaps indexed by the hash of the content for easy querying. Posts are only
 sent to other peers in response to queries about them (e.g. chat messages
 within some time range).
 
-| `post_type` numeric id | common name  | description |
-|------------------------|--------------|-------------|
-| 0                      | `post/text`  | a textual chat message, posted to a channel |
-| 1                      | `post/delete`| the deletion of a previously published post |
-| 2                      | `post/info`  | set or clear informative key/value pairs on a user  |
-| 3                      | `post/topic` | set or clear a channel's topic string |
-| 4                      | `post/join`  | announce membership to a channel |
-| 5                      | `post/leave` | announce cessation of membership to a channel |
+Cable defines the following post types, which are described in much more detail
+in Section 6:
+
+| post type    | description |
+|--------------|-------------|
+| `post/text`  | a textual chat message, posted to a channel |
+| `post/delete`| the deletion of a previously published post |
+| `post/info`  | set or clear informative key/value pairs on a user  |
+| `post/topic` | set or clear a channel's topic string |
+| `post/join`  | announce membership to a channel |
+| `post/leave` | announce cessation of membership to a channel |
 
 #### 5.1.2 Links
 Any post can be referenced by its hash: a BLAKE2b hash of a post in its
