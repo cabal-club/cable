@@ -286,43 +286,66 @@ all other posts 𝑄ᵢ known to the host that meet the following criteria:
 3. There exists no known post 𝑅 such that `BLAKE2b(𝑄ᵢ) ∋ 𝑅.links` (i.e. that 𝑄ᵢ is a head)
 
 ### 5.2 Requests & Responses
-All request types MAY yield multiple responses from peers. This could happen
-for multiple reasons, such as due to the delays inherent in a peer forwarding a
-request to its own set of peers, who may trickle back their own responses over
-time.
+Requests and responses are the two types of messages in the Cable Wire
+Protocol.
 
-| `msg_type` numeric id | common name                   | description |
-|-----------------------|-------------------------------|-------------|
-| 2                     | Post Request                  | request the posts identified by a particular set of hashes |
-| 3                     | Cancel Request                | abort a previously issued request |
-| 4                     | Channel Time Range Request    | request hashes of chat messages and deletions within a time range |
-| 5                     | Channel State Request         | request hashes describing a given channel's state |
-| 6                     | Channel List Request          | request a list of all known channel names |
-| 0                     | Hash Response                 | a list of hashes, pertaining to some request |
-| 1                     | Post Response                 | a list of posts, pertaining to some request |
-| 7                     | Channel List Response         | a list of channel names |
+A request is created by a host, and sent to one or more peers. Under certain
+conditions (described below in 5.2.2), those peers can then forward that
+request to other additional peers. A request may be forwarded again like this
+several times, and reach several hosts in the network.
+
+Each host in this tree of peers that a request passes through may produce one
+or more responses in reply to the request. A request and a response are set to
+share the same unique value in their `req_id` field, so hosts know that a
+response is regarding a particular request.
+
+Responses travel along the reciprocal path of the original request that was
+sent. So, if host `A` sends a request to `B`, and `B` forwards that request to
+`C`, then `B` could issue responses back to `A` directly, while any responses
+from `C` would route back through `B`, who would route that response back to
+`A`.
+
+Below is a brief listing of the request and response types defined. A more
+detailed normative section follows in Section 6.
+
+| request name                  | description |
+|-------------------------------|-------------|
+| Post Request                  | request posts identified by a particular set of hashes |
+| Cancel Request                | abort a previously issued request |
+| Channel Time Range Request    | request post hashes of chat messages and deletions within a time range |
+| Channel State Request         | request post hashes describing a given channel's state |
+| Channel List Request          | list all known channel names |
+
+| response name                 | description |
+|-------------------------------|-------------|
+| Hash Response                 | list hashes, pertaining to some request |
+| Post Response                 | list posts, pertaining to some request |
+| Channel List Response         | list channel names |
 
 #### 5.2.1 Lifetime of a Request
+Hosts only need to track the `req_id`s of messages that are alive. Messages
+that are no longer alive are said to be "concluded".
+
 In the lifetime of a given request, there are three exclusive roles an involved
 host may have:
 
-1. The **original requester**: the host who allocated the new request and has a set of
-   *outbound peers* they have sent that request to.
+1. The **original requester**: the host who allocated the new request and has a
+   set of *outbound peers* they have sent that request to.
 
-2. An **intermediary peer**: any host who received the request from
-   one or more peers and has also forwarded it to others. An intermediary peer
-   has both a set of *inbound peers* for a request as well as a set of *outbound peers*.
+2. An **intermediary peer**: any host who received the request from one or more
+   peers and has also forwarded it to others. An intermediary peer has both a
+   set of *inbound peers* for a request as well as a set of *outbound peers*.
 
 3. A **terminal peer**: a host who received the request from one or
-   more peers and does NOT forward it to any others. A terminal peer has only
+   more peers and does not forward it to any others. A terminal peer has only
    a set of *inbound peers*.
 
 A host in any of these roles for a given request is expected to track that
 request's `req_id` until said request is concluded.
 
-A peer handling a request who has *outbound peers* (original requester,
-intermediary peer) MUST satisfy any of the following in order to consider a
-request concluded, for each outbound peer:
+For a peer handling a request who has *outbound peers* (original requester,
+intermediary peer) a request is considered concluded when any of the following
+criteria are met, for each outbound peer:
 
 1. Receives a "no more data" Hash Response (`hash_count = 0`) from the peer.
 2. Sends the peer a Cancel Request, induced by an explicit host action or,
