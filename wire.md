@@ -403,9 +403,9 @@ A requester receiving more than `limit` hashes MAY choose to discard the
 extraneous ones.
 
 #### 5.2.4 Deduplication
-A host who is also an intermediary peer MAY elect to perform deduplication on
-the behalf of a requester, in order to reduce redundant retransmission of post
-or hash data (Post Response and Hash Response, respectively).
+A host who is also an intermediary peer SHOULD perform deduplication on the
+behalf of a requester, in order to reduce redundant retransmission of post or
+hash data (Post Response and Hash Response, respectively).
 
 For example, consider a host `A` which sends a request to `B` with `ttl = 1`.
 `B` then forwards that request to their peers `C` and `D`. If `B` responds to `A`
