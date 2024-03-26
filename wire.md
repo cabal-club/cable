@@ -434,13 +434,13 @@ further peers.
 #### 5.3.2 State
 A user has the following properties:
 
-1. their public key
-2. the key/value pairs of the latest known `post/info` post made by that user.
+1. a public key
+2. a set of key/value pairs
 
-As of present, the only supported key is `name`, which defines a user's chosen
-display name.
+A user's public key is known because it is included in every post made by them.
 
-`post/info` posts older than the latest for a user are considered obsolete.
+The set of key/value pairs comes from the latest known `post/info` post made by
+that user, which contains key/value pairs.
 
 ### 5.4 Channels
 A channel is a named collection consisting of the following:
@@ -651,14 +651,15 @@ A value field MUST NOT exceed 4096 bytes (4 kibibytes) in length.
 
 The valid bytes for a value depends on the key. See the table below.
 
-The following keys SHOULD be supported:
+The following keys MUST be supported:
 
 key       | value format | desc
 ----------|--------------|---------------------------------------
-`name`    | UTF-8        | the name this user wishes to be known as. Default value is "" (empty string).
+`name`    | UTF-8        | the name this user wishes to be known as. The default value is the a string containing the hexadecimal encoding of the user's public key.
 
-To save space, a host MAY discard older versions of these messages for a
-particular user.
+A post MAY contain other keys, even if they are unknown to an implementation at the time.
+
+To save space, a host MAY discard older versions of a `post/info` for a user.
 
 #### 6.2.5 `post/topic`
 
