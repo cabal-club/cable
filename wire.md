@@ -432,13 +432,13 @@ further peers.
 - A valid user name MUST between 1 and 32 codepoints.
 
 #### 5.3.2 State
-A user is described by the following:
+A user has the following properties:
 
 1. their public key
 2. the key/value pairs of the latest known `post/info` post made by that user.
 
-As of present, the only supported key is `name`, which defines a user's display
-name.
+As of present, the only supported key is `name`, which defines a user's chosen
+display name.
 
 `post/info` posts older than the latest for a user are considered obsolete.
 
