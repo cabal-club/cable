@@ -774,6 +774,9 @@ The responder SHOULD immediately return what data is locally available, rather
 than holding on to the request in anticipation of perhaps seeing the requested
 hashes in the future.
 
+Hosts MUST be able to handle receiving posts of unexpected types appearing in
+responses, and MAY choose for themselves whether to discard them or not.
+
 ##### 6.3.2.3 Cancel Request
 
 Conclude a given `req_id` and stop receiving responses for that request.
@@ -861,9 +864,7 @@ Requesters MAY discard hashes mapping to posts that do not contain relevant
 information.
 
 See Section 5.4.4 for context on what comprises channel state. Chat messages
-MUST NOT be included in responses to this request. Hosts MUST be able to
-handle the hashes of unexpected types appearing in responses, and MAY choose
-for themselves whether to discard them or not.
+SHOULD NOT be included in responses to this request.
 
 `future` MUST be set to either `1` or `0`.
 
