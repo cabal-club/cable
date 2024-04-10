@@ -560,7 +560,7 @@ Every post MUST begin with the following 6-field header:
 field        | type              | desc
 -------------|-------------------|-------------------------------------------------------
 `public_key` | `u8[32]`          | public key that authored this post
-`signature`  | `u8[64]`          | signature of the fields that follow
+`signature`  | `u8[64]`          | signature over the fields that follow
 `num_links`  | `varint`          | how many hashes this post links back to (0+)
 `links`      | `u8[32*num_links]`| hashes of the latest posts in this channel/context
 `post_type`  | `varint`          | see custom post type sections below
