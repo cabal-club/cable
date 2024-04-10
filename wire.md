@@ -478,12 +478,8 @@ A user is a member of a channel at a particular point in time if, from a
 host's perspective, that user has issued a `post/join`, `post/text`, or
 `post/topic` to that channel and has not issued a `post/leave` since.
 
-If a user's latest known post to a channel is a `post/leave`, they are not a
-member of that channel.
-
-A user is an ex-member of a channel at a particular point in time if, from a
-host's perspective, that user has issued no further posts interacting with a
-channel since a `post/leave` post was issued.
+If a user has issued none of the above posts, or a user's latest known post to
+a channel is a `post/leave`, they are not a member of that channel.
 
 Hosts SHOULD issue a `post/join` post before issuing any other posts to a
 channel.
@@ -492,7 +488,7 @@ channel.
 A channel at any given moment, from the perspective of a host, is fully
 described by the following:
 
-1. The latest `post/info` post of all members and ex-members.
+1. The latest `post/info` post of all members.
 2. The latest of all users' `post/join` or `post/leave` posts to the channel.
 3. The latest `post/topic` post made to the channel.
 4. All known `post/text` posts made to channel.
