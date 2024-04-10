@@ -674,10 +674,11 @@ Several key/value pairs MAY be set at once. A post MUST indicate it is done
 specifying pairs by setting the final `keyN_len` to 0.
 
 A `post/info` post is a complete description of a user's self-published
-information. A `post/info` post fully replaces a previously known version, and
-are not additive. If a key is set in one `post/info` but not the subsequent
-one, that key MUST be treated as being set to its default. See the table of
-keys/values below for each key's default value.
+information. The latest `post/info` post by a user fully replaces any
+previously known versions. They are not additive. If a key is set in one
+`post/info` but not the subsequent one, that key MUST be treated as being set
+to its default. See the table of keys/values below for each key's default
+value.
 
 Keys MUST be UTF-8 strings, and MUST be between 1 and 128 codepoints in length.
 
