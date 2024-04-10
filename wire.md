@@ -295,11 +295,6 @@ all other posts 𝑄ᵢ known to the host that meet the following criteria:
 #### 5.1.3 Causal Sorting
 Causal sorting is the act of sorting a set of posts in ascending order.
 
-At a high level, the highest priority for sorting is the existance of a chain
-of links between two posts such that one post must have happened before the
-other. Failing that, timestamp is used to determine order. Finally, failing
-that, the hexadecimal encoding of the post hashes are compared.
-
 Let `hash(P)` be the string representing the hexadecimal encoding of the hash of post P.
 
 Let the `>` and `<` binary operators, when used to compare two strings, refer to a lexicographic comparison of the two strings, in ascending order.
@@ -315,6 +310,11 @@ The comparison of two posts, Q and P, happens in a series of comparisons:
 4. If `Q.timestamp == P.timestamp` and `hash(Q) > hash(P)`, then `Q > P`. Otherwise, continue.
 
 5. `P > Q`.
+
+At a high level, the highest priority for sorting is the existance of a chain
+of links between two posts such that one post must have happened before the
+other. Failing that, timestamp is used to determine order. Finally, failing
+that, the hexadecimal encoding of the post hashes are compared.
 
 ### 5.2 Requests & Responses
 Requests and responses are the two types of messages in the Cable Wire
