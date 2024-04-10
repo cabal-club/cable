@@ -456,6 +456,7 @@ in future Channel List Requests.
 #### 5.4.1 Names
 - A valid channel name MUST be a UTF-8 string.
 - A valid channel name MUST between 1 and 64 codepoints.
+- Channel names are case insensitive. (e.g. "cAbAL" is the same channel as "cabal")
 
 #### 5.4.2 Topics
 - A valid channel topic MUST be a UTF-8 string.
