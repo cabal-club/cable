@@ -305,7 +305,7 @@ The comparison of two posts, Q and P, happens in a series of comparisons:
 
 2. If `hasChain(P, Q)` is true, then `P > Q`. Otherwise, continue.
 
-3. If `Q.timestamp > P.timestamp`, then `P > Q`. Otherwise, continue.
+3. If `Q.timestamp > P.timestamp`, then `Q > P`. Otherwise, continue.
 
 4. If `Q.timestamp == P.timestamp` and `hash(Q) > hash(P)`, then `Q > P`. Otherwise, continue.
 
