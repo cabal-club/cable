@@ -431,6 +431,12 @@ further peers.
 - A valid user name MUST be a UTF-8 string.
 - A valid user name MUST between 1 and 32 codepoints.
 
+Codepoints are used instead of bytes to try to offset some of the social
+privilege embedded in the UTF-8 encoding. Latin-derived languages get a big
+advantage in UTF-8 when it comes to how many characters they can encode in a
+fixed number of bytes: one can encode 64 English letters in 64 bytes, but only
+21 hiragana or sanskrit characters.
+
 #### 5.3.2 State
 A user has the following properties:
 
