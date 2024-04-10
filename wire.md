@@ -22,8 +22,9 @@ peer-to-peer group chatrooms.
   + [4.2 Ed25519](#42-ed25519)
 * [5. Data Model](#5-data-model)
   + [5.1 Posts](#51-posts)
-    - [5.1.2 Links](#513-links)
+    - [5.1.2 Links](#512-links)
       * [5.1.2.1 Setting links](#5131-setting-links)
+    - [5.1.3 Causal Sorting](#513-causal-sorting)
   + [5.2 Requests & Responses](#52-requests--responses)
     - [5.2.1 Lifetime of a Request](#522-lifetime-of-a-request)
     - [5.2.2 Time To Live](#521-time-to-live)
@@ -152,17 +153,23 @@ carry out.
 
 **user**: A pair of Ed25519 keys -- a public key and private key -- identifying a distinct person or program in a cabal. A user is known by others by their public key.
 
-**post**: A binary payload of a specific format, signed with the private key of the user who created it.
+**post**: A data structure with various fields, conforming to a particular format. Always contains a signature from the private key of the user who created it. See [6. Wire Formats](#6-wire-formats) for more details.
 
-**link**: The BLAKE2b hash of a particular post that appears in the body of another post. A post that references another post by its hash can be said to be "linking to" that post.
+**link**: A post, P, is said to "link" to another post, Q, if the `links` field of P contains the BLAKE2b hash Q.
 
-**head(s)**: A post (or posts) that is (are) not linked to by any other known post.
+**`P → Q`**: A short-hand convention for indicating that the post P links to the post Q.
+
+**`hasChain(P, Q)`**: True if the host knows of some sequence of posts `R₀...Rₙ`, where `n >= 0`, such that `P → R₀ → ... → Rₙ → Q`; false otherwise.
+
+**head**: A post Q is a "head" if there is no post P known to the host such that `P → Q`.
 
 **UNIX epoch**: Midnight UTC on January 1st, 1970.
 
 **timestamp**: A point in time represented by the number of milliseconds since the UNIX epoch.
 
-**latest**: When used in the context of posts, this refers to the post that, from a host's perspective at a given moment in time, is the head with the greatest timestamp.
+**causal sort**: A specific ordering of a set of posts. See [5.1.3 Causal Sorting](#513-causal-sorting) for a full explanation.
+
+**latest**: When used in the context of ordering a set of posts, this refers to the post that, from a particular host's perspective at a given moment in time, has the highest causal sort value.
 
 **channel**: A conceptual object with its own unique name, that users can participate in by authoring posts that reference the channel.
 
@@ -284,6 +291,30 @@ all other posts 𝑄ᵢ known to the host that meet the following criteria:
 1. `𝑄ᵢ.type ∋ linkableTypes`
 2. `𝑃.channel == 𝑄ᵢ.channel`
 3. There exists no known post 𝑅 such that `BLAKE2b(𝑄ᵢ) ∋ 𝑅.links` (i.e. that 𝑄ᵢ is a head)
+
+#### 5.1.3 Causal Sorting
+Causal sorting is the act of sorting a set of posts in ascending order.
+
+At a high level, the highest priority for sorting is the existance of a chain
+of links between two posts such that one post must have happened before the
+other. Failing that, timestamp is used to determine order. Finally, failing
+that, the hexadecimal encoding of the post hashes are compared.
+
+Let `hash(P)` be the string representing the hexadecimal encoding of the hash of post P.
+
+Let the `>` and `<` binary operators, when used to compare two strings, refer to a lexicographic comparison of the two strings, in ascending order.
+
+The comparison of two posts, Q and P, happens in a series of comparisons:
+
+1. If `hasChain(Q, P)` is true, then `Q > P`. Otherwise, continue.
+
+2. If `hasChain(P, Q)` is true, then `P > Q`. Otherwise, continue.
+
+3. If `Q.timestamp > P.timestamp`, then `P > Q`. Otherwise, continue.
+
+4. If `Q.timestamp == P.timestamp` and `hash(Q) > hash(P)`, then `Q > P`. Otherwise, continue.
+
+5. `P > Q`.
 
 ### 5.2 Requests & Responses
 Requests and responses are the two types of messages in the Cable Wire
