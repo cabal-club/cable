@@ -1,6 +1,6 @@
 # Cable Moderation
 
-Version: 1.0-draft1
+Version: 1.0-draft2
 
 Author: Alexander Cobleigh
 
@@ -26,6 +26,7 @@ chatrooms.
 - [3 Definitions](#3-definitions)
 - [4 Data model](#4-data-model)
   * [4.1 Channel context](#41-channel-context)
+    + [4.1.1 The cabal context](#411-the-cabal-context)
   * [4.2 Roles](#42-roles)
     + [4.2.1 Moderation authority](#421-moderation-authority)
       - [4.2.1.1 Subjective authority](#4211-subjective-authority)
@@ -250,6 +251,11 @@ and so on.
 
 ## 3 Definitions
 
+**keywords _before_, _after_**: used to compare field `timestamp`
+between two or more posts. A post whose `timestamp` is less than the
+`timestamp` of another post happens _before_, and vice
+versa.
+
 **field `privacy`**: determines whether a post will be stored locally in
 an encrypted format, never being sent as part of requests. Enables
 actions taken privately by a user without other users able to know about
@@ -258,7 +264,7 @@ it.
 **field `reason`**: an optional description for an action, useful for
 understanding why it was taken.
 
-**field `recipient`**: when acting on users: the `public_key` the action
+**fields `recipient`, `recipients`**: when acting on users: the `public_key` the action
 is being performed on; for posts: the hash of the post being acted on.
 
 **moderation actions**: also referred to as *actions*. Actions on users,
@@ -295,14 +301,20 @@ admin role assignments.
 
 ### 4.1 Channel context
 
-A user MAY have different roles in different channels. Therefor we say
-that a particular role is issued for a particular *channel context*. A
-channel context MUST be considered to be either the entire cabal or a
-specific channel.
+A user MAY have different roles in different channels and actions MAY
+target different channels. Therefor we say that a post is issued for a
+particular *channel context*. A channel context MUST be considered to be
+either the entire cabal or a specific channel.
 
 The channel context applies to `channel` fields found in `post/role` as
 well as to `post/moderation` (such as when issued with
 `action = 0 hide user`).
+
+#### 4.1.1 The cabal context
+
+When a post's channel context is set to the entire cabal the effect of
+that post MUST be considered applicable to all channels comprising the
+cabal.
 
 ### 4.2 Roles
 
@@ -378,17 +390,17 @@ considered a *relevant role* if:
 
 Example:
 
--   User A authors a `post/role` setting `recipient = B.public_key` and
+-   User Aleph authors a `post/role` setting `recipient = Bert.public_key` and
     `role = 1 mod` where the channel context is the entire cabal
--   Some time later, A authors another `post/role`, setting
-    `recipient = B.public_key` and `role = 2 admin` for the previous
+-   Some time later, Aleph authors another `post/role`, setting
+    `recipient = Bert.public_key` and `role = 2 admin` for the previous
     channel context
 
 Result:
 
-User A views user B as an admin for the entire cabal, and A's active
-role for B is that `post/role` setting B as an admin (A's newest role
-for B). The role from A to B setting B as a moderator is obsolete and
+User Aleph views user Bert as an admin for the entire cabal, and Aleph's active
+role for Bert is that `post/role` setting Bert as an admin (Aleph's newest role
+for Bert). The role from Aleph to Bert setting Bert as a moderator is obsolete and
 may be discarded.
 
 #### 4.2.4 Declining roles
@@ -421,8 +433,10 @@ the admin from that point on MUST be applied. Roles issued from before
 the admin assignment MUST NOT be applied; i.e. historic roles should not
 be inherited.
 
-If an admin has their role revoked, the roles they issued MUST NOT
-remain applied.
+If an admin has their role revoked, the roles they issued for that
+channel context MUST NOT remain applied. If the role was revoked for the
+cabal context then their issued roles MUST be revoked for all channels
+except those where they still retain role admin.
 
 If multiple active roles are set for a single user, for example as a
 result of roles issued by the local user and other admins, the way to
@@ -454,24 +468,25 @@ removing their moderation authority. Given rule 2, the demoted admin
 should still be regarded as an admin from the perspective of the local
 user.
 
-Another example: the local user sets user A as an admin and sets another
-user, X, as a normal user. Admin A issues a `post/role` setting X as a
-mod. Given rule 2, from the perspective of the local user, X should not
+Another example: the local user sets user Aleph as an admin and sets another
+user, Xu, as a normal user. Admin Aleph issues a `post/role` setting Xu as a
+mod. Given rule 2, from the perspective of the local user, Xu should not
 be promoted to mod and should instead remain a normal user. This can be
 employed to ignore role assignments for a user whose moderation
 decisions the local user knows upfront that they disagree with.
 
 ###### 4.2.5.1.2 The *relevant role* with the most capabilities trumps roles that have lower capabilities
 
-Given users U, A, B, and C where:
+Given users Ursula, Aleph, Bert, and Cashew from Ursula's perspective where:
 
--   U sets B as an admin
--   U sets A as an admin
--   A sets C as a mod
--   B sets C as an admin
+-   Ursula sets Bert as an admin
+-   Ursula sets Aleph as an admin
+-   Aleph sets Cashew as a mod
+-   Bert sets Cashew as an admin
 
-Then U should regard C as having role admin, because role admin (issued
-by B for C) has more capabilities than role mod (issued by A for C) .
+Then Ursula should regard Cashew as having role admin, because role
+admin (issued by Bert) has more capabilities than role mod (issued by
+Aleph).
 
 ###### 4.2.5.1.3 The default role is a normal user
 
@@ -481,21 +496,26 @@ as a normal user.
 ###### 4.2.5.1.4 Combined example
 
 Using a combination of the previous precedence rules, we now consider
-the following scenario involving users U, A, and B from U's perspective:
+the following scenario involving users Ursula, Aleph, and Bert from
+Ursula's perspective:
 
-1.  User U sets B as an admin for the cabal
-2.  User U sets A as a mod for channel `test`
-3.  User B sets A as an admin for the cabal
-4.  User U sets A as a normal user for the cabal
+1.  Ursula sets Bert as an admin for the cabal
+2.  Ursula sets Aleph as a mod for channel `test`
+3.  Bert sets Aleph as an admin for the cabal
+4.  Ursula sets Aleph as a normal user for the cabal
 
-After applying step 3, user U considers A to have role mod in channel
+After applying step 3, Ursula considers Aleph to have role mod in channel
 `test` (rule *2. the local user's roles trump all other roles*) and as
-role admin in all the other channels of the cabal (rule *4. the relevant
+role admin in all the other channels of the cabal (rule *3. the relevant
 role with the most capabilities trumps roles that have lower
 capabilities*).
 
-After applying step 4, user U considers A to have role normal user in
-the entire cabal including in channel `test`.
+After step 4, Ursula considers Aleph to have role normal user
+in the entire cabal with the exception of channel `test` where they
+retain their moderator role (rule *3.  The relevant role with the most
+capabilities trumps roles that have lower capabilities* causes mod to be
+retained in `test` due to being a relevant role and having greater
+capabilities).
 
 ### 4.3 Displaying posts
 
@@ -525,7 +545,13 @@ A moderation action is any post of type `post/moderation`, `post/block`,
 and `post/unblock`.
 
 One user MAY have many moderation actions apply to them at once; for
-instance, a user may be hidden and blocked.
+instance, a user may be hidden and blocked. 
+
+Actions for a given recipient taken on both the cabal context and on a
+specific channel SHOULD interact in the following way: A user that is
+e.g. hidden for the cabal context and subsequently unhidden in a
+specific channel SHOULD be hidden in all channels except the channel
+where they were unhidden.
 
 When a moderation action is acted on, we say it *takes effect*. By take
 effect, we mean that the acting client applies the encoded action:
@@ -539,6 +565,7 @@ them as a moderation authority.
 In general, moderation actions that take effect SHOULD be displayed in
 some manner. Moderation actions that do not take effect, for instance
 due to lack of moderation authority, MAY be displayed.
+
 
 #### 4.4.1 Undoing a moderation action
 
@@ -624,11 +651,11 @@ considered obsolete and MAY be discarded.
 
 Example:
 
--   User A authors a `post/moderation` hiding user B in channel `test`
--   Some time later, A authors a `post/moderation` unhiding B in channel
+-   User Aleph authors a `post/moderation` hiding user Bert in channel `test`
+-   Some time later, Aleph authors a `post/moderation` unhiding Bert in channel
     `test`
--   The `post/moderation` unhiding B is (one of) A's relevant moderation
-    actions, in the channel context represented by channel `test`, for B
+-   The `post/moderation` unhiding Bert is (one of) Aleph's relevant moderation
+    actions, in the channel context represented by channel `test`, for Bert
 
 #### 4.4.3 Applicable moderation actions
 
@@ -704,10 +731,10 @@ action MAY be displayed.
 
 Example:
 
--   User U sets users A and B to role mod
--   A blocks B
--   U should not apply A's block of B; A's action should be displayed
-    for U
+-   User Ursula sets users Aleph and Bert to role mod
+-   Aleph blocks Bert
+-   Ursula should not apply Aleph's block of Bert; Aleph's action should be displayed
+    for Ursula
 
 A user MAY issue moderation authority for a user that has been hidden or
 blocked. In that case, the role recipient SHOULD still remain hidden or
@@ -834,7 +861,7 @@ the authentication tag.
 Network blocks affect post synchronization and are represented by post
 type `post/block` and undone with `post/unblock`.
 
-A user blocking another MUST NOT request nor store new posts from the
+A user blocking another SHOULD NOT request nor store new posts from the
 blocked user. In the event of receiving a blocked user's posts, the
 received posts MUST be discarded. Peers SHOULD NOT forward a blocking
 user's posts to a blocked user, the behaviour of which is described in
@@ -851,16 +878,25 @@ the blocked user, then that user SHOULD receive the `post/block`.
 
 #### 4.6.1 Impact on synchronization
 
-Users SHOULD associate each blocked user with whom is blocking them. We
+Clients SHOULD associate each blocked user with whom is blocking them. We
 illustrate this with the logical pairwise mapping of the blocking user
 to the blocked user:
 `[blocking-user.public_key, blocked-user.public_key]`.
 
 In the following situations, a user acting as a terminal peer MUST
-discard any posts received in a Post Request if they were authored by:
+discard any posts received in a Post Response if they were authored by:
 
 -   a user they have blocked, or
 -   a user they have been blocked by
+
+A user blocking another user through actions issued by moderation
+authorities MUST behave as if they were the author of the block. A
+blocked user MUST discard posts they receive from a user blocking them
+if they have been notified of the block and if the author of the
+received posts was the same as the author of the `post/block`.  There
+is no requirement for a blocked user to keep track of the subjective
+moderation graph of all other users in order to honor not storing
+blockers.
 
 The blocking semantics operate at their intended full capacity when
 combined with the *Authenticated Connections* described in the next
@@ -880,15 +916,15 @@ If the local user establishes an authenticated connection with a peer
 they block the connection SHOULD be terminated.
 
 When a terminal peer receives a Post Request over an authenticated
-connection where the public key of the other peer matches a user known
-to be blocked (notably: in this case, the terminal peer MUST NOT block
-the requesting user), they MUST omit any posts authored by all users
-blocking the requester when responding.
+connection where the requester's associated public key matches a user
+known to be blocked (notably: in this case, the terminal peer MUST NOT
+block the requesting user), the responder MUST omit any posts authored
+by all users blocking the requester.
 
 When a terminal peer receives a Post Request over an authenticated
-connection where the public key of the other peer matches a user known
-to currently block other users, the responding peer MUST omit all posts
-authored by users the requester is blocking when responding.
+connection where the requester's associated public key matches a user
+known to currently block other users, the responder MUST omit all posts
+authored by users the requester is blocking.
 
 ### 4.7 Moderation seed
 
@@ -909,10 +945,21 @@ would be exposed to the posts of these lingering moderated users.
 To address the above scenario and others like it, users MAY join with a
 *moderation seed*. A moderation seed describes a set of public keys and
 roles to temporarily assign the users represented by those public keys.
-The moderation seed is defined as an unordered set of
-`<varint role><32 byte ed25519 public key>`, one pair for each user
-being assigned a role and MUST contain at most 16 public key
-assignments.
+
+The moderation seed for a set of recipients MUST be constructed in the
+following manner: 
+
+1. Take a recipient from the set in no particular order.
+2. Write the bytes for the varint representing their moderation seed role assignment.
+3. Immediately following the role bytes, write the bytes representing the
+   recipient's public key.
+4. Continue until the recipient set is empty.
+
+Following the procedure for a non-empty set of recipients and their roles
+results in a byte sequence consisting of `<varint role><32 byte ed25519 public key>` 
+pairs, one pair for each user being assigned a role. 
+
+The moderation seed MUST contain no more than 16 public key assignments.
 
 Conceptually, the moderation seed MUST temporarily change the default
 role of the users it references from that of a normal user to that of
@@ -948,18 +995,18 @@ example below.
 
 #### 4.7.3 Moderation seed example
 
-Three users A, B, and C (their respective public keys in hexadecimal
-representation below) are assigned roles in a moderation seed. Users A
-and B are assigned admin (varint value `2`) and user C is assigned role
+Three users Aleph, Bert, and Cashew (their respective public keys in hexadecimal
+representation below) are assigned roles in a moderation seed. Users Aleph
+and Bert are assigned admin (varint value `2`) and user Cashew is assigned role
 mod (varint value `1`).
 
 The users' ed25519 public keys (hexadecimal):
 
--   A:
+-   Aleph:
     `c869744624581c4a7dfd0452f1b70dd4289fd14245eeb0a0c2b3a87f0e3a5b9d`
--   B:
+-   Bert:
     `656f9b6195035a063dd1f1f50def3a5a6ee19005384c49e1740df7dc192f722f`
--   C:
+-   Cashew:
     `1f03bd1d7430e5d47cf197d0ec412707a7e211ee7d45f298bf596378dd4c14a4`
 
 The resulting moderation seed, where each role varint is followed by the
@@ -972,8 +1019,8 @@ representation for a total of 99 bytes.
     2656f9b6195035a063dd1f1f50def3a5a6ee19005384c49e1740df7dc192f722f
     11f03bd1d7430e5d47cf197d0ec412707a7e211ee7d45f298bf596378dd4c14a4
 
-In the above representation we have chosen the ordering of having A's
-role & public key being followed by B and finally by C, but as stated
+In the above representation we have chosen the ordering of having Aleph's
+role & public key being followed by Bert and finally by Cashew, but as stated
 above the order has no significance so long as the sequence consists of
 bytes conforming to the `<role varint><32 byte ed25519 public key>`
 scheme.
@@ -1093,7 +1140,7 @@ Perform moderation actions on users, posts, and channels.
 | channel_size    | varint                      | length of the channel's name, in bytes, set to 0 to apply to entire cabal                               |
 | channel         | u8\[channel_size\]          | channel name (UTF-8)                                                                                    |
 | recipient_count | varint                      | set to 0 if acting on a channel and not a user or a post                                                |
-| recipient       | u8\[recipient_count \* 32\] | when operating on users contains the public key of recipient and when operating on posts, the post hash |
+| recipients      | u8\[recipient_count \* 32\] | when operating on users contains the public key of recipient and when operating on posts, the post hash |
 | action          | varint                      | 0 = hide user, 2 = hide post, 4 = drop post, 6 = drop (archive) channel                                 |
 |                 |                             | 1 = unhide user, 3 = unhide post, 5 = undrop post, 7 = undrop (archive) channel                         |
 
@@ -1104,7 +1151,7 @@ value between 1 and 16 otherwise it should be set to 0.
 
 ##### 5.1.3.1 Acting on users
 
-Field `recipient` MUST be set to a sequence of 32 byte ed25519 public
+Field `recipients` MUST be set to a sequence of 32 byte ed25519 public
 keys representing the users being acted on.
 
 If `channel_size` and `channel` are set when acting on a user, the
@@ -1118,9 +1165,10 @@ section [Dropping a user](#5141-dropping-a-user).
 ##### 5.1.3.2 Acting on posts
 
 Field `recipient_count` MUST be set to the number of post hashes being
-acted on. Field `recipient` MUST be set to the post hashes.
+acted on. Field `recipients` MUST be set to the post hashes.
 
-Field `channel_size` and `channel` MUST NOT be set.
+Field `channel` MUST be set to the same value as the `channel` field of 
+the posts being acted on.
 
 ##### 5.1.3.3 Acting on channels
 
@@ -1145,8 +1193,6 @@ post type `post/text`. All other post types MUST NOT be hidden with this
 action. Hidden posts MUST still be stored and returned in response to
 requests by other users.
 
-`channel_size` MUST be set to `0`.
-
 If `reason` is set, it MAY be used to replace the contents of the post
 with a content warning reflecting the contents of `reason`.
 
@@ -1160,8 +1206,6 @@ The post being dropped MUST be of either post type `post/text` or
 
 Dropped posts MUST be removed from the local store in the manner
 described in section [Dropping posts](#446-dropping-posts).
-
-`channel_size` MUST be set to `0`.
 
 The undoing action is `action = 5 undrop post`. An undropped post SHOULD
 be possible to request and store.
@@ -1194,16 +1238,16 @@ author.
 | field           | type                        | desc                                                    |
 |-----------------|-----------------------------|---------------------------------------------------------|
 | recipient_count | varint                      | number of recipients to block                           |
-| recipient       | u8\[recipient_count \* 32\] | public key of recipient, concatenated together          |
+| recipients      | u8\[recipient_count \* 32\] | public key of recipient, concatenated together          |
 | drop            | varint                      | 0 = keep old posts, 1 = drop all old posts              |
 | notify          | varint                      | 0 = do not notify blocked user, 1 = notify blocked user |
 
 `post_type` MUST be set to `8`.
 
-`recipient_count` MUST be set to a value between 1 and 16. `recipient`
+`recipient_count` MUST be set to a value between 1 and 16. `recipients`
 MUST contain a sequence of 32 byte ed25519 public keys.
 
-Setting `drop` to 1 MUST drop all posts authored by `recipient` from the
+Setting `drop` to 1 MUST drop all posts authored by `recipients` from the
 local database. Setting `drop` to 0 MUST keep the posts in the local
 database. Allowing posts to be kept enables situations where a user may
 want to keep posts from blocked peers, for instance when preserving
@@ -1233,7 +1277,7 @@ Unblock users, allowing the unblocked user's posts to be synchronized.
 | field           | type                        | desc                                                   |
 |-----------------|-----------------------------|--------------------------------------------------------|
 | recipient_count | varint                      | number of recipients to unblock                        |
-| recipient       | u8\[recipient_count \* 32\] | public key of recipient, concatenated together         |
+| recipients      | u8\[recipient_count \* 32\] | public key of recipient, concatenated together         |
 | undrop          | varint                      | 0 = keep user's old posts as dropped, 1 = undrop posts |
 
 `post_type` MUST be set to `9`.
@@ -1241,7 +1285,7 @@ Unblock users, allowing the unblocked user's posts to be synchronized.
 `recipient_count` MUST be set to a value between 1 and 16.
 
 Setting `undrop` to 1 SHOULD undo the drop of all posts authored by
-`recipient`, making them possible to retrieve again. Setting `undrop` to
+`recipients`, making them possible to retrieve again. Setting `undrop` to
 0 SHOULD keep the old posts as dropped.
 
 ### 5.2 Message Formats
@@ -1271,6 +1315,11 @@ channels, and optionally subscribe to future state changes.
 | future        | varint              | whether to include future state hashes                |
 | oldest        | varint              | milliseconds since UNIX Epoch. Set to 0 for all posts |
 
+`msg_type` MUST be set to 8.
+
+A request MUST indicate it is done specifying channels by setting the final
+`channelN_size` to 0.
+
 Responders SHOULD be a member of at least one of the requested channels
 and respond with hashes for:
 
@@ -1285,20 +1334,31 @@ Responders MUST NOT include post hashes corresponding to `post/role` set
 on users who have opted out of roles by setting `accept-role = 0` in
 `post/info`.
 
-Field `oldest` is a time, expressed in milliseconds since UNIX Epoch,
-limiting the amount of history sent when set. If `oldest > 0` then the
-posts whose hashes are being returned SHOULD fulfill
-`post.timestamp >= oldest`. Implementations are RECOMMENDED to set a
-large value for `oldest`, for example on the order of 1 year from the
-time of requesting: `oldest = <current time ms> - 31536000000`.
+`future` MUST be set to either `1` or `0`.
+
+If `future = 1`, the responder SHOULD respond with future moderation state changes
+as they become known to the responder. The request SHOULD be held open
+indefinitely on both the requester and responder side until a Cancel Request is
+issued by the requester, or the responder elects to end the request by sending
+a Hash Response with `hash_count = 0`.
+
+If `future = 0`, only presently known moderation state hashes SHOULD be included
+in the response, limited by `oldest` and channel membership, and the request
+MUST NOT be held open.
+
+Field `oldest` is a time, expressed in milliseconds since UNIX Epoch, limiting
+the amount of history sent when set. If `oldest > 0` then the posts whose hashes
+are being returned SHOULD fulfill `post.timestamp >= oldest`. If `oldest = 0`
+then this SHOULD be regarded as the limit being unset.
+
+Implementations are RECOMMENDED to set a large value for `oldest`, for example
+on the order of 1 year from the time of requesting: `oldest = <current time ms>
+- 31536000000`.
 
 A response to this request SHOULD return **all** known hashes concerning
 types `post/block` and `post/unblock`, i.e. disregarding the value of field
 `oldest` if set. This to ensure user safety by respecting issued
 blocks such that they will reach all users of a channel.
-
-A post MUST indicate it is done specifying channels by setting the final
-`channelN_size` to 0.
 
 ## 6 Security Considerations
 
