@@ -742,7 +742,6 @@ field         | type     | desc
 --------------|----------|-------------------------------------------------------------
 `msg_len`     | `varint` | number of bytes in rest of message, not including the `msg_len` field
 `msg_type`    | `varint` | a type identifier for the message, which controls which fields follow this header
-`reserved`    | `u8[4]`  | MUST be set to all zeroes
 `req_id`      | `u8[4]`  | unique id of this request (random)
 
 Message-specific fields follow after the `req_id`.
@@ -752,8 +751,6 @@ controls which fields will immediately follow this header.
 
 Hosts encountering a `msg_type` they do not know how to parse MUST ignore and
 discard it.
-
-The `reserved` field is not currently in use, and MUST be set to all zeros.
 
 The request ID, `req_id`, is a 32-bit number, generated randomly by the
 requester. It is used to uniquely identify the request during its lifetime
