@@ -649,8 +649,6 @@ A host interpreting this post MUST only perform a local deletion of the
 referenced posts if the author (`post.public_key`) matches the author of the
 post to be deleted (i.e. only the user who authored a post may delete it).
 
-`num_deletions` MUST be set to 1 or greater.
-
 #### 6.2.4 `post/info`
 
 Set public information about one's self.
