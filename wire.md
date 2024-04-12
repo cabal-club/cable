@@ -86,7 +86,7 @@ Cable is a peer-to-peer protocol for private group chats, called *cabals*.
 Cable operates differently from the traditional server-client model, where the
 server is a centralized authority. Instead, in Cable, every node in the network
 is equal to each other. Nodes of a cabal share data with each other in order to
-build an eventually consistent view of the state of that cabal.
+build a view of the state of that cabal.
 
 The purpose of the Cable Wire Protocol is to facilitate the creation and sync
 of cabals, by allowing peers to exchange cryptographically signed documents
@@ -525,25 +525,27 @@ described by the following:
 4. All known `post/text` posts made to channel.
 
 #### 5.4.5 Synchronization
-The Channel State Request and Channel Time Range Request are sufficient for a
-host to track the state of a channel that a host is interested in. The
-former request allows tracking general state (who is in the channel, its topic,
-information about users in the channel), and the latter tracks the history of
-chat messages within that channel.
+There are two types of requests that allow a host to track the state of any
+channels that a host is interested in: the Channel State Request allows
+tracking general state (who is in the channel, its topic, information about
+users in the channel), and the Channel Time Range Request tracks the history of
+chat messages within that channel and any deletions of those chat messages.
 
-Hosts SHOULD set the `time_end` and `time_start` fields of Channel Time Range
-Requests in the following manner, to reliably track channel chat history:
+When building a Channel Time Range Request, hosts SHOULD set the `time_end` and
+`time_start` fields in the following manner, to reliably track recent channel
+chat history:
 
 ```
 time_end = now()
 time_start = now() - WINDOW_WIDTH
 ```
 
-where `now()` is the current system UNIX Time, and `WINDOW_WIDTH` is the size
+where `now()` is the current system timestamp, and `WINDOW_WIDTH` is the size
 of the "rolling window" to track chat messages within, in milliseconds. Hosts are
-RECOMMENDED to use a `WINDOW_WIDTH` of one week (25,200,000 milliseconds), though this
-value MAY be customized, since there are network environments where users may
-be offline for up to several months at a time, and a much wider rolling window
+RECOMMENDED to use a `WINDOW_WIDTH` of one week (25,200,000 milliseconds).
+
+This value MAY be customized, since there are network environments where users
+may be offline for up to several months at a time, and a wider rolling window
 would be necessary to ensure those chat messages are synchronized when such a
 user connects once again to other peers in the cabal.
 
@@ -1083,7 +1085,6 @@ Future work is planned around the outer layers of cable security:
 3. **Against inappropriate use by members**: having a system for moderation and write-access controls internal to a cabal, so that users can mitigate and expel attacks from those who have already gained legitimate membership.
 
 ## 8. Normative References
-- [Vogels, W. "Eventually consistent." *Communications of the ACM*, 52, 40–44, Janury 2009](https://dl.acm.org/doi/pdf/10.1145/1435417.1435432)
 - [Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", RFC 2119, July 2003](https://www.rfc-editor.org/rfc/rfc2119)
 - [Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", RFC 8174, May 2017](https://www.rfc-editor.org/rfc/rfc8174)
 - [BLAKE2b](https://www.blake2.net/blake2.pdf)

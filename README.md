@@ -5,7 +5,7 @@ Cable is a peer-to-peer protocol for private group chats, called *cabals*.
 Cable operates differently from the traditional server-client model, where the
 server is a centralized authority. Instead, in Cable, every node in the network
 is equal to each other. Nodes of a cabal share data with each other in order to
-build an eventually consistent view of the state of that cabal.
+build a view of the state of that cabal.
 
 The purpose of the Cable Protocol is to facilitate the creation and sync of
 cabals, by allowing peers to exchange cryptographically signed documents with
