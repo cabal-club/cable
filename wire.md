@@ -655,6 +655,7 @@ Set public information about one's self.
 
 field        | type               | desc
 -------------|--------------------|-------------------------
+`num_keypairs`|`varint`           | how many key/value pairs follow
 `key1_len`   | `varint`           | length of the first key to set, in bytes
 `key1`       | `u8[key1_len]`     | name of the first key to set (UTF-8)
 `value1_len` | `varint`           | length of the first value to set, belonging to `key1`, in bytes
@@ -667,8 +668,7 @@ field        | type               | desc
 
 `post_type` MUST be set to `2`.
 
-Several key/value pairs MAY be set at once. A post MUST indicate it is done
-specifying pairs by setting the final `keyN_len` to 0.
+Several key/value pairs MAY be set at once.
 
 A `post/info` post is a complete description of a user's self-published
 information. The latest `post/info` post by a user fully replaces any
