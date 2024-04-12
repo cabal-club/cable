@@ -1041,6 +1041,8 @@ Documented here are attacks that can come from *within* a cabal — by those who
 
 2. Posts are signed by their author, but do not contain a reference to the cabal they were written to. an attacker could perform a replay attack by sharing a post made on one cabal into another cabal, and it would appear authentic. This is mitigated by the Handshake Protocol specification having an explicit advisory to never re-use identity keys between cabals, allowing for users and hosts to assume that any public keys that are the same across cabals are completely coincidental and not the same person.
 
+3. Messages are not signed. If a message is forwarded from one peer to another, that peer has the opportunity to rewrite that message. Note that this only applies to authorized peers, who have completed a Cable Handshake, and not any intermediary network node.
+
 #### 7.2.1.3 Denial of Service
 1. Authoring very large posts (gigabytes or larger) and/or a large number of smaller posts, and sharing them with others to download.
 2. Making a large quantity of expensive requests (e.g. a time range request on a channel with a long chat history that covers its entire lifetime, repeatedly).
