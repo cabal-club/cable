@@ -614,9 +614,6 @@ The protocol MAY be extended by implementers by creating additional
 `post_type`s. Implementers MUST only use `post_type > 255`. The
 first 256 are reserved for core protocol use.
 
-Hosts SHOULD discard posts with a `post_type` that they don't understand or
-support.
-
 All fields specified in the subsequent subsections MUST be present for a post
 of a given `post_type`.
 
