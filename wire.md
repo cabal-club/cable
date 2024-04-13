@@ -824,11 +824,10 @@ Like any other request, this request MUST have its own unique `req_id` in order
 to function as intended. `cancel_id` is used to set the request identifier to
 cancel, not the `req_id`.
 
-A peer receiving a Cancel Request MUST forward it along the same route and
+A peer receiving a Cancel Request SHOULD forward it along the same route and
 peers it forwarded the original message with `req_id = cancel_id`, to the same
 peers as the original request, so that all peers who know of the original
-request are notified. This request's `ttl` MUST be ignored, in order to ensure
-all original recipients of the original request are reached.
+request are notified.
 
 ##### 6.3.2.4 Channel Time Range Request
 
