@@ -179,7 +179,7 @@ carry out.
 
 **message**: Either a request or a response.
 
-**`req_id`**: A 32-bit number that identifies a particular request traversing in the network, and any corresponding responses.
+**`req_id`**: A 64-bit number that identifies a particular request traversing in the network, and any corresponding responses.
 
 **requester**: A host authoring a request, to be sent to other peers.
 
@@ -742,7 +742,7 @@ field         | type     | desc
 --------------|----------|-------------------------------------------------------------
 `msg_len`     | `varint` | number of bytes in rest of message, not including the `msg_len` field
 `msg_type`    | `varint` | a type identifier for the message, which controls which fields follow this header
-`req_id`      | `u8[4]`  | unique id of this request (random)
+`req_id`      | `u8[8]`  | unique id of this request (random)
 
 Message-specific fields follow after the `req_id`.
 
@@ -752,14 +752,9 @@ controls which fields will immediately follow this header.
 Hosts encountering a `msg_type` they do not know how to parse MUST ignore and
 discard it.
 
-The request ID, `req_id`, is a 32-bit number, generated randomly by the
+The request ID, `req_id`, is a 64-bit number, generated randomly by the
 requester. It is used to uniquely identify the request during its lifetime
-across the peers who may handle it. For networks with up to 43 million active
-requests within a single cabal, the probability of collision remains below 1%.
-(i.e. `(1 - 1 / (2**32)) ** 43_000_000 > 0.99`)
-
-When generating a new `req_id`, a host MUST discard and generate a new one if
-the one generated collides with a known active `req_id`.
+across the peers who may handle it.
 
 When a host forwards a request to further peers, the `req_id` MUST NOT be
 changed, so that routing loops can be more easily detected by peers in the
