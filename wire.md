@@ -818,7 +818,7 @@ Receiving this request indicates that any further responses sent back with a
 
 `cancel_id` MUST be set to the `req_id` of the request to be cancelled.
 
-There MUST NOT be any responses to this request.
+There is no expected response to this request.
 
 Like any other request, this request MUST have its own unique `req_id` in order
 to function as intended. `cancel_id` is used to set the request identifier to
