@@ -210,8 +210,7 @@ The pre-shared key MUST be mixed into the handshake state as per the rules in
 ## 3. Noise Handshake
 
 ### 3.1 Static Keypair
-Each user in a cabal is identified by a static public/private Curve25519 key
-pair.
+Each user in a cabal is identified by a static public/private Ed25519 key pair.
 
 This keypair SHOULD be generated when a user first joins or creates a cabal,
 and SHOULD be persisted in some manner, so that it can be re-used for the
