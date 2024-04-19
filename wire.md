@@ -932,8 +932,7 @@ field          | type                | desc
 A recipient reads the zero or more (`channel_len`,`channel`) pairs until
 `channel_len = 0`.
 
-In order for pagination to work properly, hosts MUST use a stable sort
-method for the names of channels.
+The channel names SHOULD be sorted lexicographically in ascending order, so that requesters can effectively sent subsequent requests to paginate through the results.
 
 Unlike Hash Response and Post Response, only a single Channel List Response may
 be sent. Sending this response concludes the request for the sender.
