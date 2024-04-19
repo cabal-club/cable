@@ -51,12 +51,11 @@ peer-to-peer group chatrooms.
   + [6.3 Message Formats](#63-message-formats)
     - [6.3.1 Message Header](#631-message-header)
     - [6.3.2 Requests](#632-requests)
-      * [6.3.2.1 Header](#6321-header)
-      * [6.3.2.2 Post Request](#6322-post-request)
-      * [6.3.2.3 Cancel Request](#6323-cancel-request)
-      * [6.3.2.4 Channel Time Range Request](#6324-channel-time-range-request)
-      * [6.3.2.5 Channel State Request](#6325-channel-state-request)
-      * [6.3.2.6 Channel List Request](#6326-channel-list-request)
+      * [6.3.2.1 Post Request](#6322-post-request)
+      * [6.3.2.2 Cancel Request](#6323-cancel-request)
+      * [6.3.2.3 Channel Time Range Request](#6324-channel-time-range-request)
+      * [6.3.2.4 Channel State Request](#6325-channel-state-request)
+      * [6.3.2.5 Channel List Request](#6326-channel-list-request)
     - [6.3.3 Responses](#633-responses)
       * [6.3.3.1 Hash Response](#6331-hash-response)
       * [6.3.3.2 Post Response](#6332-post-response)
@@ -381,8 +380,6 @@ following criteria are true:
    expected. (Again, see Sections 6.3.3.1 through 6.3.3.3.)
 2. Received a Cancel Request with the original request's `req_id` specified.
 3. The connection to the peer was lost.
-
-TODO: note *somewhere* about discarding incoming requests /w a known `req_id`
 
 Further, any host who receives an incoming request with a `req_id` equal to a
 known alive request's `req_id` SHOULD be discarded.
@@ -735,8 +732,7 @@ first 256 are reserved for core protocol use.
 
 #### 6.3.2 Requests
 
-
-##### 6.3.2.2 Post Request
+##### 6.3.2.1 Post Request
 
 Request a set of posts, given their hashes.
 
@@ -756,7 +752,7 @@ hashes in the future.
 Hosts MUST be able to handle receiving posts of unexpected types appearing in
 responses, and MAY choose for themselves whether to discard them or not.
 
-##### 6.3.2.3 Cancel Request
+##### 6.3.2.2 Cancel Request
 
 Conclude a given `req_id` and stop receiving responses for that request.
 
@@ -784,7 +780,7 @@ peers it forwarded the original message with `req_id = cancel_id`, to the same
 peers as the original request, so that all peers who know of the original
 request are notified.
 
-##### 6.3.2.4 Channel Time Range Request
+##### 6.3.2.3 Channel Time Range Request
 
 Request chat messages and chat message deletions written to a channel between a
 start and end time, optionally subscribing to future chat messages.
@@ -822,7 +818,7 @@ thousands of chat message hashes.
 A `limit` of 0 MUST be understood as having no maximum on the number of hashes
 the requester wishes to receive.
 
-##### 6.3.2.5 Channel State Request
+##### 6.3.2.4 Channel State Request
 
 Request posts that describe the current state of a channel and its members, and
 optionally subscribe to future state changes.
@@ -861,7 +857,7 @@ SHOULD be sent.
 If `future = 0`, only the latest state posts will be included, and the request
 MUST NOT be held open.
 
-##### 6.3.2.6 Channel List Request
+##### 6.3.2.5 Channel List Request
 
 Request a list of known channels from peers.
 
