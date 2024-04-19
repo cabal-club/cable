@@ -27,8 +27,7 @@ peer-to-peer group chatrooms.
     - [5.1.3 Causal Sorting](#513-causal-sorting)
   + [5.2 Requests & Responses](#52-requests--responses)
     - [5.2.1 Lifetime of a Request](#522-lifetime-of-a-request)
-    - [5.2.3 Limits](#523-limits)
-    - [5.2.4 Deduplication](#524-deduplication)
+    - [5.2.2 Limits](#523-limits)
   + [5.3 Users](#53-users)
     - [5.3.1 Names](#531-names)
     - [5.3.2 State](#532-state)
@@ -384,7 +383,7 @@ following criteria are true:
 Further, any host who receives an incoming request with a `req_id` equal to a
 known alive request's `req_id` SHOULD be discarded.
 
-#### 5.2.3 Limits
+#### 5.2.2 Limits
 Some requests have a `limit` field specifying an upper bound on how many hashes
 a host wishes to receive in response. A peer responding to such a request
 MUST honour that limit by counting how many hashes they send back to the
@@ -398,29 +397,6 @@ combined for `B` to potentially send back.
 
 A requester receiving more than `limit` hashes MAY choose to discard the
 extraneous ones.
-
-#### 5.2.4 Deduplication
-A host who is also an intermediary peer SHOULD perform deduplication on the
-behalf of a requester, in order to reduce redundant retransmission of post or
-hash data (Post Response and Hash Response, respectively).
-
-For example, consider a host `A` which sends a request to `B`. `B` then
-forwards that request to their peers `C` and `D`. If `B` responds to `A` with a
-set of N hashes or posts `B` could track what they sent. Additionally, in the
-case that `C` or `D`'s responses -- routed through `B` -- contain any
-duplicates that `B` knows were already sent back to `A`, `B` could choose to
-edit these response messages, to omit the duplicates from being needlessly
-retransmitted onwards back to `A`.
-
-Regarding the above section (5.2.3 Limits), hashes that are deduplicated by an
-intermediary peer, and thus not transmitted back to the requester, do not count
-against the `limit`.
-
-An intermediary peer MAY also elect to perform deduplication in the other
-direction on Post Requests, by first checking their local database to see which
-hashes they already have posts for, and editing the original Post Request
-message to no longer request those posts, before forwarding that message on to
-further peers.
 
 ### 5.3 Users
 
