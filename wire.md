@@ -27,7 +27,6 @@ peer-to-peer group chatrooms.
     - [5.1.3 Causal Sorting](#513-causal-sorting)
   + [5.2 Requests & Responses](#52-requests--responses)
     - [5.2.1 Lifetime of a Request](#522-lifetime-of-a-request)
-    - [5.2.2 Time To Live](#521-time-to-live)
     - [5.2.3 Limits](#523-limits)
     - [5.2.4 Deduplication](#524-deduplication)
   + [5.3 Users](#53-users)
@@ -354,69 +353,39 @@ detailed normative section follows in Section 6.
 | Channel List Response         | list channel names |
 
 #### 5.2.1 Lifetime of a Request
-Hosts only need to track the `req_id`s of messages that are alive. Messages
-that are no longer alive are said to be "concluded".
+Any given request on any host is identified by its `req_id`, and is either
+considered to be "alive" or "concluded". When a request becomes concluded from
+a host's perspective, that request and its `req_id` may be safely forgotten.
 
-In the lifetime of a given request, there are three exclusive roles an involved
-host may have:
+In the lifetime of a given request, there are two mutually exclusive roles an
+involved host may have, each with their own criteria for considering a request
+concluded.
 
-1. The **original requester**: the host who allocated the new request and has a
-   set of *outbound peers* they have sent that request to.
+The first role is the **requester**, who is the host who allocated the new
+request and has sent it to a peer. That request is considered concluded when
+any of the following criteria are true:
 
-2. An **intermediary peer**: any host who received the request from one or more
-   peers and has also forwarded it to others. An intermediary peer has both a
-   set of *inbound peers* for a request as well as a set of *outbound peers*.
+1. Received a response message indicating there are no further responses to be
+   expected. (See Sections 6.3.3.1 through 6.3.3.3 for details on specific
+   terminating responses.)
+2. Sent the responder a Cancel Request with the original request's `req_id`
+   specified.
+3. The connection to the peer was lost.
 
-3. A **terminal peer**: a host who received the request from one or
-   more peers and does not forward it to any others. A terminal peer has only
-   a set of *inbound peers*.
+The second role is the **responder**, who is the host receiving the request,
+and may send one or more responses back to the requester, depending on the
+response type. A given request is considered concluded when any of the
+following criteria are true:
 
-A host in any of these roles for a given request is expected to track that
-request's `req_id` until said request is concluded.
+1. Sent a response message indicating there are no further responses to be
+   expected. (Again, see Sections 6.3.3.1 through 6.3.3.3.)
+2. Received a Cancel Request with the original request's `req_id` specified.
+3. The connection to the peer was lost.
 
-For a peer handling a request who has *outbound peers* (original requester,
-intermediary peer) a request is considered concluded when any of the following
-criteria are met, for each outbound peer:
+TODO: note *somewhere* about discarding incoming requests /w a known `req_id`
 
-1. Receives a "no more data" Hash Response (`hash_count = 0`) from the peer.
-2. Sends the peer a Cancel Request, induced by an explicit host action or,
-   for example, a local timeout a host set on the request.
-3. The connection to the peer is lost.
-
-A peer handling a request who has *inbound peers* (intermediary peer, terminal
-peer) MUST satisfy any of the following in order to consider a request
-concluded, for each inbound peer:
-
-1. Sends a "no more data" response back to the peer.
-2. Receives a Cancel Request.
-3. The connection to the peer is lost.
-
-#### 5.2.2 Time To Live
-A TTL (Time To Live) mechanism exists to allow hosts with limited connectivity
-to peers (e.g. behind a strong NAT or a restricted mobile connection) to use
-the peers they can reach as relays to find and retrieve data they are
-interested in more easily.
-
-This is encoded into messages by the `ttl` field, set in the header, to express
-an upper bound on how many times a request is forwarded to other peers. A host
-wishing a request not be forwarded beyond its immediate recipient would set
-`ttl = 0`.
-
-When receiving a request from a peer, the following rules hold:
-
-1. An incoming request with `ttl = 0` MUST NOT be forwarded.
-
-2. To prevent request loops in the network, if an incoming request has a
-   `req_id` equal to an unconcluded request the host already knows of, the host
-   MUST discard said incoming request.
-
-3. An incoming request with a `ttl > 0` MAY be forwarded along to any subset of
-   peers the host is connected to, at the discretion of the sending host. This
-   could be based on the host's available resources, bandwidth, et cetera.
-
-4. A peer forwarding a request MUST decrement the `ttl` by one before sending
-   it, to ensure the number of network hops does not exceed what the original
-   requester specified.
+Further, any host who receives an incoming request with a `req_id` equal to a
+known alive request's `req_id` SHOULD be discarded.
 
 #### 5.2.3 Limits
 Some requests have a `limit` field specifying an upper bound on how many hashes
@@ -425,10 +394,10 @@ MUST honour that limit by counting how many hashes they send back to the
 requester, including hashes received through other peers that the responding
 host has forwarded that request to.
 
-For example, assume `A` sends a request to `B` with `limit = 50` and `ttl = 1`.
-`B` forwards the request to `C` and `D`. `B` may send back 15 hashes to `A` at
-first, which means there are now a maximum of `50 - 15 = 35` hashes left for `C`
-and `D` combined for `B` to potentially send back.
+For example, assume `A` sends a request to `B` with `limit = 50`. `B` forwards
+the request to `C` and `D`. `B` may send back 15 hashes to `A` at first, which
+means there are now a maximum of `50 - 15 = 35` hashes left for `C` and `D`
+combined for `B` to potentially send back.
 
 A requester receiving more than `limit` hashes MAY choose to discard the
 extraneous ones.
@@ -438,9 +407,9 @@ A host who is also an intermediary peer SHOULD perform deduplication on the
 behalf of a requester, in order to reduce redundant retransmission of post or
 hash data (Post Response and Hash Response, respectively).
 
-For example, consider a host `A` which sends a request to `B` with `ttl = 1`.
-`B` then forwards that request to their peers `C` and `D`. If `B` responds to `A`
-with a set of N hashes or posts `B` could track what they sent. Additionally, in the
+For example, consider a host `A` which sends a request to `B`. `B` then
+forwards that request to their peers `C` and `D`. If `B` responds to `A` with a
+set of N hashes or posts `B` could track what they sent. Additionally, in the
 case that `C` or `D`'s responses -- routed through `B` -- contain any
 duplicates that `B` knows were already sent back to `A`, `B` could choose to
 edit these response messages, to omit the duplicates from being needlessly
@@ -766,20 +735,6 @@ first 256 are reserved for core protocol use.
 
 #### 6.3.2 Requests
 
-##### 6.3.2.1 Header
-
-Every request MUST have its header bytes be proceeded by the following request
-header fields:
-
-field      | type       | desc
------------|------------|-----------------------------------
-`ttl`      | `u8`       | number of network hops remaining
-
-The value of `ttl` MUST be between 0 and 16. 0 means "do not forward this
-request to any other peers".
-
-More fields follow below for the different request types, whose bytes MUST
-immediately follow the above message and request header bytes.
 
 ##### 6.3.2.2 Post Request
 
@@ -1003,6 +958,9 @@ A recipient reads the zero or more (`channel_len`,`channel`) pairs until
 
 In order for pagination to work properly, hosts MUST use a stable sort
 method for the names of channels.
+
+Unlike Hash Response and Post Response, only a single Channel List Response may
+be sent. Sending this response concludes the request for the sender.
 
 ## 7. Security Considerations
 
