@@ -447,15 +447,13 @@ in future Channel List Requests.
 A user makes a post "to a channel" if they have set the `channel` field on said
 post to the name of that channel.
 
-A user is a member of a channel at a particular point in time if, from a
-host's perspective, that user has issued a `post/join`, `post/text`, or
+A user is a member of a channel at a particular point in time if and only if,
+from a host's perspective, that user has issued a `post/join`, `post/text`, or
 `post/topic` to that channel and has not issued a `post/leave` since.
 
-If a user has issued none of the above posts, or a user's latest known post to
-a channel is a `post/leave`, they are not a member of that channel.
-
 Hosts SHOULD issue a `post/join` post before issuing any other posts to a
-channel.
+channel, and SHOULD issue a `post/leave` post when the user of the program
+expresses a desire to leave a channel.
 
 #### 5.4.4 State
 A channel at any given moment, from the perspective of a host, is fully
