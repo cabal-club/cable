@@ -783,11 +783,17 @@ even after all known hashes in the range `time_start` to `now()` are provided,
 and continue to receive any new chat messages that the responder learns of in
 the future, so long as this request is still alive.
 
-Responding hosts SHOULD respond with all known chat messages within the
-requested time range, though they may desire not to in certain circumstances,
-particularly if a channel has a very long history and the responding host
-lacks sufficient resources at the time to return thousands or hundreds of
-thousands of chat message hashes.
+A responder SHOULD respond with all known chat messages within the requested
+time range, though they may desire not to in certain circumstances,
+particularly if a channel has a very long history and the responding host lacks
+sufficient resources at the time to return thousands or hundreds of thousands
+of chat message hashes.
+
+A responder is RECOMMENDED to send posts in reverse chronological order by post
+timestamp, so that, if the requester sees that they received a number of hashes
+equal to their `limit`, they can be assured that they now have all posts newer
+than the oldest post hash the responder did send, and can make subsequent
+requests to paginate backwards in time.
 
 A `limit` of 0 MUST be understood as having no maximum on the number of hashes
 the requester wishes to receive.
