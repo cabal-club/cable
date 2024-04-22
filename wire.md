@@ -166,6 +166,8 @@ carry out.
 
 **timestamp**: A point in time represented by the number of milliseconds since the UNIX epoch.
 
+**`now()`**: A function that returns the host's current local timestamp.
+
 **causal sort**: A specific ordering of a set of posts. See [5.1.3 Causal Sorting](#513-causal-sorting) for a full explanation.
 
 **latest**: When used in the context of ordering a set of posts, this refers to the post that, from a particular host's perspective at a given moment in time, has the highest causal sort value.
@@ -211,6 +213,12 @@ Cable uses the Ed25519-SHA-512 variant of [Ed25519][Ed25519]:
 - ℓ = 2<sup>252</sup> + 27742317777372353535851937790883648493
 - *d* = -121655 / 121666 ∈ **F**<sub>q</sub>
 - *B* is the unique point (*x*,4/5) ∈ *E* for which *x* is positive
+
+Henceforth, consider use of the function **`verify(P)`**, which returns true or
+false, to refer the result of verifying the Ed25519 signature of a post, P,
+against its contents. This is done by checking `P.signature` against all fields
+in P following (but not including) the `signature` field. The fields that a
+post may contain are described in the next section.
 
 ## 5. Data Model
 
@@ -312,6 +320,17 @@ At a high level, the highest priority for sorting is the existance of a chain
 of links between two posts such that one post must have happened before the
 other. Failing that, timestamp is used to determine order. Finally, failing
 that, the hexadecimal encoding of the post hashes are compared.
+
+#### 5.1.4 Ingesting a New Post
+When a host receives any new post, P, in a Post Response message, it MUST pass
+the following criteria to be accepted and stored by said host:
+
+1. `verify(P)` is true. That is, the signature of P matches the contents of P.
+
+2. P is well-formed. This means it is formatted according to [6.2 Post Formats](#62-post-formats). This also means posts with an unknown `post_type` are discarded.
+
+3. `P.timestamp < now() + ONE_WEEK` (604800000 milliseconds). Posts that are a
+   week or more into the future are discarded.
 
 ### 5.2 Requests & Responses
 Requests and responses are the two types of messages in the Cable Wire
@@ -836,6 +855,30 @@ SHOULD be sent.
 
 If `future = 0`, only the latest state posts will be included, and the request
 MUST NOT be held open.
+
+##### 6.3.2.4.1 Special Case of Transmission of Causal Chains
+There is an additional requirement of responders to this request, to be
+followed when one of the hashes returned by a responder belongs to a particular
+post, P, such that the following is true about any other post, Q:
+
+```
+hasChain(P, Q) && Q.timestamp > P.timestamp
+```
+
+That is, when there is an earlier known post Q in the causal chain starting at
+P that has a later timestamp than P (the latest known post). This can happen
+because of natural clock skew -- someone's clock is several hours ahead or
+behind due to not syncing to internet time services -- or intentional
+inappropriate use.
+
+In order to ensure sync operates consistently in these cases, when the above is
+true about a post P, the responder SHOULD also include the hashes of all posts
+that make up the causal chain `P -> ... -> Q` (including Q).
+
+This is very important, because without these post hashes, there may be, for
+example, a causal chain like `P -> R -> Q`, and if a host knows only P and Q
+but not R, they would lack a causal chain and conclude that Q is newer than P,
+since `Q.timestamp > P.timestamp`.
 
 ##### 6.3.2.5 Channel List Request
 
