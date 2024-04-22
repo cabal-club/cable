@@ -142,6 +142,8 @@ carry out.
 
 **hash**: A 32-byte BLAKE2b digest of a particular sequence of bytes.
 
+**`BLAKE2b(...)`**: The application of the BLAKE2b hashing function, producing a hexadecimal string of 32 characters.
+
 **public key**: An Ed25519 key that can be known by others.
 
 **private key**: An Ed25519 key, used for signing data. Kept secret to all but whoever controls it.
@@ -292,8 +294,6 @@ all other posts 𝑄ᵢ known to the host that meet the following criteria:
 #### 5.1.3 Causal Sorting
 Causal sorting is the act of sorting a set of posts in ascending order.
 
-Let `hash(P)` be the string representing the hexadecimal encoding of the hash of post P.
-
 Let the `>` and `<` binary operators, when used to compare two strings, refer to a lexicographic comparison of the two strings, in ascending order.
 
 The comparison of two posts, Q and P, happens in a series of comparisons:
@@ -304,7 +304,7 @@ The comparison of two posts, Q and P, happens in a series of comparisons:
 
 3. If `Q.timestamp > P.timestamp`, then `Q > P`. Otherwise, continue.
 
-4. If `Q.timestamp == P.timestamp` and `hash(Q) > hash(P)`, then `Q > P`. Otherwise, continue.
+4. If `Q.timestamp == P.timestamp` and `BLAKE2b(Q) > BLAKE2b(P)`, then `Q > P`. Otherwise, continue.
 
 5. `P > Q`.
 
