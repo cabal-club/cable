@@ -9,7 +9,7 @@ Contributors: Alexander Cobleigh, Noelle Leigh, Henry (cryptix)
 ## Abstract
 
 This document describes the network protocol "cable", used to facilitate
-peer-to-peer group chatrooms.
+peer-to-peer group chat rooms.
 
 ## Table of Contents
 * [0. Background](#0-background)
@@ -282,10 +282,6 @@ can be useful for ordering chat messages, since a timestamp alone can cause
 ordering problems if a host's hardware clock is skewed, or a timestamp is
 spoofed.
 
-- ok, two separate things:
-  1. the issue with timestamp+link ordering that we identified a while back
-  2. whether the post type ought to be sorted (assume a reliable sort method)
-
 ##### 5.1.2.1 Setting links
 Each post made to a channel should link to all known heads in that channel.
 This is explained in detail below.
@@ -316,7 +312,7 @@ The comparison of two posts, Q and P, happens in a series of comparisons:
 
 5. `P > Q`.
 
-At a high level, the highest priority for sorting is the existance of a chain
+At a high level, the highest priority for sorting is the existence of a chain
 of links between two posts such that one post must have happened before the
 other. Failing that, timestamp is used to determine order. Finally, failing
 that, the hexadecimal encoding of the post hashes are compared.
@@ -646,7 +642,7 @@ The following keys MUST be supported:
 
 key       | value format | desc
 ----------|--------------|---------------------------------------
-`name`    | UTF-8        | the name this user wishes to be known as. The default value is the a string containing the hexadecimal encoding of the user's public key.
+`name`    | UTF-8        | the name this user wishes to be known as. The default value is a string containing the hexadecimal encoding of the user's public key.
 
 A post MAY contain other keys, even if they are unknown to an implementation at the time.
 
@@ -1005,7 +1001,7 @@ Documented here are attacks that can come from *within* a cabal — by those who
 1. An attacker could issue a `post/info` to alter their display name to be the same as another user, causing confusion as to which user is authoring certain chat messages.
     1. Host-side mitigation options exist, such as colourizing names by the public key of the user, or displaying a short hash digest of their key next to their name when there are multiple users sharing a name.
 
-2. Posts are signed by their author, but do not contain a reference to the cabal they were written to. an attacker could perform a replay attack by sharing a post made on one cabal into another cabal, and it would appear authentic. This is mitigated by the Handshake Protocol specification having an explicit advisory to never re-use identity keys between cabals, allowing for users and hosts to assume that any public keys that are the same across cabals are completely coincidental and not the same person.
+2. Posts are signed by their author, but do not contain a reference to the cabal they were written to. An attacker could perform a replay attack by sharing a post made on one cabal into another cabal, and it would appear authentic. This is mitigated by the Handshake Protocol specification having an explicit advisory to never re-use identity keys between cabals, allowing for users and hosts to assume that any public keys that are the same across cabals are completely coincidental and not the same person.
 
 3. Messages are not signed. If a message is forwarded from one peer to another, that peer has the opportunity to rewrite that message. Note that this only applies to authorized peers, who have completed a Cable Handshake, and not any intermediary network node.
 
