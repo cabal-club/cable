@@ -282,12 +282,12 @@ This is explained in detail below.
 
 Let `linkableTypes` be the set of strings `{ 'post/text', 'post/topic', 'post/join', 'post/leave' }`.
 
-When a post 𝑃 is created such that `𝑃.type ∋ linkableTypes`, it SHOULD link to
+When a post 𝑃 is created such that `𝑃.type ∈ linkableTypes`, it SHOULD link to
 all other posts 𝑄ᵢ known to the host that meet the following criteria:
 
-1. `𝑄ᵢ.type ∋ linkableTypes`
+1. `𝑄ᵢ.type ∈ linkableTypes`
 2. `𝑃.channel == 𝑄ᵢ.channel`
-3. There exists no known post 𝑅 such that `BLAKE2b(𝑄ᵢ) ∋ 𝑅.links` (i.e. that 𝑄ᵢ is a head)
+3. There exists no known post 𝑅 such that `BLAKE2b(𝑄ᵢ) ∈ 𝑅.links` (i.e. that 𝑄ᵢ is a head)
 
 #### 5.1.3 Causal Sorting
 Causal sorting is the act of sorting a set of posts in ascending order.
