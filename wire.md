@@ -4,7 +4,7 @@ Version: 1.0-draft1
 
 Author: Kira Oakley
 
-Contributors: Alexander Cobleigh, Noelle Leigh, Henry (cryptix)
+Contributors: Alexander Cobleigh, Henry (cryptix), Noelle Leigh, nthia
 
 ## Abstract
 
@@ -26,6 +26,7 @@ peer-to-peer group chat rooms.
       * [5.1.2.1 Setting links](#5121-setting-links)
     - [5.1.3 Causal Sorting](#513-causal-sorting)
     - [5.1.4 Ingesting a New Post](#514-ingesting-a-new-post)
+    - [5.1.5 Keeping & Discarding Posts](#515-keeping--discarding-posts)
   + [5.2 Requests & Responses](#52-requests--responses)
     - [5.2.1 Lifetime of a Request](#521-lifetime-of-a-request)
     - [5.2.2 Limits](#522-limits)
@@ -329,6 +330,25 @@ the following criteria to be accepted and stored by said host:
 
 3. `P.timestamp < now() + ONE_WEEK` (604800000 milliseconds). Posts that are a
    week or more into the future are discarded.
+
+#### 5.1.5 Keeping & Discarding Posts
+A host MAY discard any post at any time, whether in the interest of saving disk
+space, processing time, or not wanting to contribute to the propagate of
+certain content.
+
+However, in the interest of keeping synchronization robust and effective, it is
+suggested that hosts prefer to KEEP posts in the following circumstances:
+
+1. Posts representing channel state that are latest, second-latest, or
+   third-latest. It is preferred to hold onto second-latest and third-latest in
+   case the latest post is deleted, so there is another older, known value to
+   fall back to.
+
+2. `post/text` posts newer than the oldest history for a channel of which they
+   are a member. (e.g. Choosing to discard chat messages older than 6 months.)
+
+3. All `post/delete` posts.
+
 
 ### 5.2 Requests & Responses
 Requests and responses are the two types of messages in the Cable Wire
