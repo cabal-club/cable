@@ -1304,11 +1304,9 @@ Setting `undrop` to 1 SHOULD undo the drop of all posts authored by
 #### 5.2.1 Requests
 
 Requests described in this document—as of writing there is only one
-request—have the same message and request header as documented in
-sections [6.3.1 Message
+request—have the same message header as documented in
+section [6.3.1 Message
 Header](https://github.com/cabal-club/cable/blob/main/wire.md#631-message-header)
-and [6.3.2.1
-Header](https://github.com/cabal-club/cable/blob/main/wire.md#6321-header)
 of the Cable Wire Protocol document.
 
 ##### 5.2.1.1 Moderation State Request
