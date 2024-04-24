@@ -4,7 +4,7 @@ Version: 1.0-draft1
 
 Author: Kira Oakley
 
-Contributors: Alexander Cobleigh, Henry (cryptix), Noelle Leigh, nthia
+Contributors: nthia, Alexander Cobleigh, Henry (cryptix), Noelle Leigh, Aljoscha Meyer, Jan Winkelmann
 
 ## Abstract
 
