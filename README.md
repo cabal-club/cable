@@ -1,5 +1,7 @@
 # Cable Protocol
 
+> Version: 1.0-draft8
+
 Cable is a peer-to-peer protocol for private group chats, called *cabals*.
 
 Cable operates differently from the traditional server-client model, where the
