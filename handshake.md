@@ -360,6 +360,10 @@ finally encrypted with a MAC:
 lenEncrypted = EncryptWithAd(ZERO, len)
 ```
 
+`lenEncrypted` MUST be computed first, followed by each ciphertext in sequence,
+C₁ through Cₙ. The order of encryption is essential, since `EncryptWithAd` is a
+stateful function.
+
 #### 4.2.4 Message transmission
 Using the values produced from the preceding subsections, the final message
 MUST be transmitted in the following sequence:
