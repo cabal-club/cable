@@ -879,7 +879,7 @@ user's posts to a blocked user, the behaviour of which is described in
 detail in section [Authenticated
 Connections](#4611-authenticated-connections). The `post/block`
 establishing the block SHOULD NOT be sent to the blocked user
-`post/block` unless field `notify = 1` is set. Already stored posts
+unless field `notify = 1` is set. Already stored posts
 authored by the blocked user MAY continue to be stored and displayed
 unless explicitly dropped by setting `drop = 1`.
 
