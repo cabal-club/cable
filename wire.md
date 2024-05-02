@@ -76,7 +76,6 @@ peer-to-peer group chat rooms.
     - [7.2.2.1 Replay Attacks](#7221-replay-attacks)
     - [7.2.2.2 Data Integrity](#7222-data-integrity)
     - [7.2.2.3 Privilege Escalation](#7223-privilege-escalation)
-  + [7.3 Future Work](#73-future-work)
 * [8. Normative References](#8-normative-references)
 * [9. Informative References](#9-informative-references)
 
@@ -1065,13 +1064,6 @@ Documented here are attacks that can come from *within* a cabal — by those who
 
 #### 7.2.2.3 Privilege Escalation
 Cabal has no privilege levels beyond that of a) member and b) non-member. Non-members have zero privileges (not even able to participate at the wire protocol level), and all members hold the same privileges.
-
-### 7.3 Future Work
-Future work is planned around the outer layers of cable security:
-
-1. **Against non-member active & passive attackers**: having transport security (to prevent non-members of cabals from reading, modifying, or otherwise interacting with data sent between members) via a mechanism with end-to-end encryption
-2. **Against unauthorized access**: having a handshake protocol, to prevent non-members from gaining illicit access
-3. **Against inappropriate use by members**: having a system for moderation and write-access controls internal to a cabal, so that users can mitigate and expel attacks from those who have already gained legitimate membership.
 
 ## 8. Normative References
 - [Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", RFC 2119, July 2003](https://www.rfc-editor.org/rfc/rfc2119)
