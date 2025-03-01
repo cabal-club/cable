@@ -664,7 +664,6 @@ The following keys MUST be supported:
 key             | value format | desc
 ----------------|--------------|---------------------------------------
 `name`    | UTF-8        | the name this user wishes to be known as. The default value is a string containing the hexadecimal encoding of the user's public key.
-`accept-role`   | varint       | determines whether this user accepts moderation roles being assigned them. Default value is 1 (accepts roles).
 
 The following keys are RECOMMENDED to be supported:
 
